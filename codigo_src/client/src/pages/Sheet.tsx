@@ -56,7 +56,6 @@ export default function Sheet() {
   const esquiva = reflexosVal + localChar.defense;
 
   const handleUpdate = (field: string, value: any) => {
-    if (!isMaster) return;
     const newChar = { ...localChar, [field]: value };
     setLocalChar(newChar);
     updateMutation.mutate({ id: localChar.id, updates: { [field]: value } });
