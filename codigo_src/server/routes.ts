@@ -8,6 +8,7 @@ import {
   CHARACTER_CLASSES,
   getClassInitialStats,
   getClassLevelGains,
+  getExpectedPeAtNex,
   getNexAbilities,
   getNexLevel,
   getNextNex,
@@ -17,7 +18,10 @@ import {
 import { z } from "zod";
 
 const MASTER_PROTECTED_FIELDS = ["nex", "characterClass", "peMax", "peLimit"] as const;
-const classUpdateSchema = z.object({ characterClass: z.enum(CHARACTER_CLASSES) });
+const classUpdateSchema = z.object({
+  characterClass: z.enum(CHARACTER_CLASSES),
+  recalculateInitial: z.boolean().optional().default(false),
+});
 
 function hasValidMasterKey(req: Request, res: Response): boolean {
   const configuredKey = process.env.MASTER_KEY;
@@ -121,12 +125,29 @@ export async function registerRoutes(
 
     try {
       const input = classUpdateSchema.parse(req.body);
-      const char = await storage.updateCharacter(req.params.id, {
-        characterClass: input.characterClass,
-      });
-      if (!char) {
+      const current = await storage.getCharacter(req.params.id);
+      if (!current) {
         return res.status(404).json({ message: "Character not found" });
       }
+
+      const updates: Record<string, string | number> = {
+        characterClass: input.characterClass,
+      };
+
+      if (input.recalculateInitial && current.nex === 5) {
+        const initialStats = getClassInitialStats(input.characterClass, current.attVig, current.attPre);
+        Object.assign(updates, {
+          pvActual: initialStats.pv,
+          pvMax: initialStats.pv,
+          peActual: initialStats.pe,
+          peMax: initialStats.pe,
+          peLimit: 1,
+          pdActual: initialStats.san,
+          pdMax: initialStats.san,
+        });
+      }
+
+      const char = await storage.updateCharacter(req.params.id, updates);
       res.json(char);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -152,12 +173,16 @@ export async function registerRoutes(
     const characterClass = isCharacterClass(char.characterClass) ? char.characterClass : "combatente";
     const gains = getClassLevelGains(characterClass, char.attVig, char.attPre);
     const peLimit = getPeLimit(nextNex);
+    const expectedCurrentPeMax = getExpectedPeAtNex(characterClass, char.nex, char.attPre);
+    const basePeMax = char.peMax > 0 ? char.peMax : expectedCurrentPeMax;
+    const basePeActual = char.peMax > 0 ? char.peActual : expectedCurrentPeMax;
+
     const updated = await storage.updateCharacter(char.id, {
       nex: nextNex,
       pvActual: char.pvActual + gains.pv,
       pvMax: char.pvMax + gains.pv,
-      peActual: char.peActual + gains.pe,
-      peMax: char.peMax + gains.pe,
+      peActual: basePeActual + gains.pe,
+      peMax: basePeMax + gains.pe,
       peLimit,
       pdActual: char.pdActual + gains.san,
       pdMax: char.pdMax + gains.san,
