@@ -27,6 +27,8 @@ Depois de publicar a versão, execute:
 npm run db:push
 ```
 
-## Agentes já existentes
+## Classe e agentes existentes
 
-As estatísticas já gravadas não são recalculadas, para não apagar bônus de origem, poderes ou ajustes da campanha. A partir do próximo avanço, os acréscimos passam a seguir a classe escolhida no painel.
+Em NEX 5%, ao trocar a classe, o mestre pode recalcular PV, PE e SAN iniciais segundo os valores oficiais da nova classe. Também pode manter os valores atuais quando houver ajustes próprios da campanha.
+
+Acima de NEX 5%, a troca de classe não refaz níveis passados: apenas os próximos avanços usam a nova progressão. Para agentes antigos que ainda não possuam PE registrado, o primeiro avanço calcula automaticamente o PE que deveriam possuir no NEX atual antes de aplicar o novo nível.
