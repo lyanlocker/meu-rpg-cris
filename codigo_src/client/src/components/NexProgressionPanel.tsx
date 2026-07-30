@@ -103,18 +103,29 @@ export function NexProgressionPanel() {
 
   const handleClassChange = async (newClass: CharacterClass) => {
     if (newClass === characterClass) return;
-    if (character.nex > 5 && !window.confirm("Trocar a classe altera apenas as próximas evoluções e não recalcula níveis anteriores. Continuar?")) {
+
+    let recalculateInitial = false;
+    if (character.nex === 5) {
+      recalculateInitial = window.confirm(
+        "Recalcular PV, PE e SAN iniciais conforme a nova classe?\n\nEscolha OK para aplicar os valores oficiais da classe ou Cancelar para manter os valores atuais."
+      );
+    } else if (!window.confirm("Trocar a classe altera apenas as próximas evoluções e não recalcula níveis anteriores. Continuar?")) {
       return;
     }
 
     setIsChangingClass(true);
     try {
-      const response = await masterRequest(`/api/characters/${character.id}/class`, { characterClass: newClass });
+      const response = await masterRequest(`/api/characters/${character.id}/class`, {
+        characterClass: newClass,
+        recalculateInitial,
+      });
       if (!response.ok) throw new Error(await readError(response));
       await refreshCharacter();
       toast({
         title: "Classe de progressão atualizada",
-        description: `Os próximos avanços usarão a tabela de ${CLASS_PROGRESSIONS[newClass].label}.`,
+        description: recalculateInitial
+          ? `Valores iniciais recalculados como ${CLASS_PROGRESSIONS[newClass].label}.`
+          : `Os próximos avanços usarão a tabela de ${CLASS_PROGRESSIONS[newClass].label}.`,
       });
     } catch (error) {
       toast({
