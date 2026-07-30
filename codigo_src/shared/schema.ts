@@ -42,7 +42,7 @@ export const characters = pgTable("characters", {
 });
 
 export const insertCharacterSchema = createInsertSchema(characters, {
-  characterClass: z.enum(CHARACTER_CLASSES),
+  characterClass: z.enum(CHARACTER_CLASSES).optional(),
 }).omit({ id: true });
 
 export type InsertCharacter = z.infer<typeof insertCharacterSchema>;
