@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { timingSafeEqual } from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
-import { insertDiceRollSchema } from "@shared/schema";
+import { insertDiceRollSchema, type UpdateCharacterRequest } from "@shared/schema";
 import {
   CHARACTER_CLASSES,
   getClassInitialStats,
@@ -130,7 +130,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Character not found" });
       }
 
-      const updates: Record<string, string | number> = {
+      const updates: UpdateCharacterRequest = {
         characterClass: input.characterClass,
       };
 
