@@ -147,3 +147,10 @@ export function getClassLevelGains(characterClass: CharacterClass, vigor: number
     san: perLevel.san,
   };
 }
+
+export function getExpectedPeAtNex(characterClass: CharacterClass, nex: number, presenca: number): number {
+  const level = Math.max(1, getNexLevel(nex));
+  const initial = getClassInitialStats(characterClass, 0, presenca).pe;
+  const perLevel = getClassLevelGains(characterClass, 0, presenca).pe;
+  return initial + Math.max(0, level - 1) * perLevel;
+}
