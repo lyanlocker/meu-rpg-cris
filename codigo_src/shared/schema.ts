@@ -1,6 +1,7 @@
 import { pgTable, text, integer, boolean, jsonb, timestamp, serial } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { CHARACTER_CLASSES } from "./nex";
 
 export const characters = pgTable("characters", {
   id: text("id").primaryKey(), // We will use a unique string (e.g. nanoid) for shareable links
@@ -11,19 +12,23 @@ export const characters = pgTable("characters", {
   pvMax: integer("pv_max").notNull().default(0),
   pdActual: integer("pd_actual").notNull().default(0),
   pdMax: integer("pd_max").notNull().default(0),
+  peActual: integer("pe_actual").notNull().default(0),
+  peMax: integer("pe_max").notNull().default(0),
+  peLimit: integer("pe_limit").notNull().default(1),
   defense: integer("defense").notNull().default(0),
-  nex: integer("nex").notNull().default(0),
+  nex: integer("nex").notNull().default(5),
+  characterClass: text("character_class").notNull().default("combatente"),
   appearance: text("appearance").notNull().default(""),
-  
+
   // Atributos
   attAgi: integer("att_agi").notNull().default(1),
   attFor: integer("att_for").notNull().default(1),
   attInt: integer("att_int").notNull().default(1),
   attPre: integer("att_pre").notNull().default(1),
   attVig: integer("att_vig").notNull().default(1),
-  
+
   resistances: text("resistances").notNull().default(""),
-  
+
   // JSONB for flexible skills and powers
   skills: jsonb("skills").notNull().default({}), // Record<string, number>
   powers: jsonb("powers").notNull().default([]), // Array of { id: string, name: string, description: string } - Normal powers
@@ -31,12 +36,14 @@ export const characters = pgTable("characters", {
   attacks: jsonb("attacks").notNull().default([]), // Array of { id, name, test, attackDice, damageDice } - Normal attacks
   maskAttacks: jsonb("mask_attacks").notNull().default([]), // Array of { id, name, test, attackDice, damageDice } - Mask attacks
   inventory: jsonb("inventory").notNull().default([]), // Array of { id, name, description, quantity }
-  
+
   isMaskActive: boolean("is_mask_active").notNull().default(false),
   element: text("element").notNull().default(""), // "sangue" | "morte" | "conhecimento" | "energia" | ""
 });
 
-export const insertCharacterSchema = createInsertSchema(characters).omit({ id: true });
+export const insertCharacterSchema = createInsertSchema(characters, {
+  characterClass: z.enum(CHARACTER_CLASSES).optional(),
+}).omit({ id: true });
 
 export type InsertCharacter = z.infer<typeof insertCharacterSchema>;
 export type Character = typeof characters.$inferSelect;
