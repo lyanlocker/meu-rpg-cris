@@ -1,12 +1,19 @@
-# Sistema oficial de NEX
+# Sistema de NEX com Pontos de Determinação
 
-Esta implementação usa a progressão padrão do Livro de Regras de Ordem Paranormal RPG:
+Esta implementação combina a progressão padrão de NEX com a regra opcional **Jogando sem Sanidade**, de *Sobrevivendo ao Horror*:
 
 - NEX 5% equivale ao nível 1.
 - Cada avanço segue os marcos de 5% até 95%; o último avanço é para 99%.
-- O limite de PE vai de 1 a 20.
-- PV, PE e SAN aumentam conforme a classe, Vigor e Presença.
+- PE e SAN não são usados como reservas separadas; ambos são representados por Pontos de Determinação (PD).
+- O limite de gasto vai de 1 a 20 e é apresentado na interface como limite de PD.
+- PV e PD aumentam conforme a classe, Vigor e Presença.
 - Os benefícios de classe de cada marco são mostrados no painel de progressão.
+
+## Progressão de PD
+
+- Combatente: começa com 6 + PRE PD e recebe 3 + PRE por novo NEX.
+- Especialista: começa com 8 + PRE PD e recebe 4 + PRE por novo NEX.
+- Ocultista: começa com 10 + PRE PD e recebe 5 + PRE por novo NEX.
 
 ## Acesso de mestre e jogador
 
@@ -16,19 +23,10 @@ O sistema segue o acesso já utilizado no site:
 - o link com `?mode=player` mostra a progressão somente para consulta;
 - no modo jogador, a classe e o botão de avanço de NEX ficam bloqueados.
 
-Não é necessário configurar uma nova variável de ambiente para o NEX.
+## Banco e compatibilidade
 
-## Atualização automática do banco
+As colunas antigas de PE continuam no banco para compatibilidade, mas não são usadas pela interface nem pela progressão. O campo técnico `pe_limit` guarda o limite de gasto exibido como **Limite de PD**.
 
-Foram adicionadas as colunas `character_class`, `pe_actual`, `pe_max` e `pe_limit`.
-O script `prebuild` executa `npm run db:push` antes do build, usando a `DATABASE_URL` já configurada no Render para atualizar o banco Neon.
+As estatísticas já gravadas não são recalculadas automaticamente. Quando uma ficha com PD personalizados avança, o sistema preserva o valor atual e acrescenta apenas o ganho do novo NEX.
 
-## Agentes já existentes
-
-As estatísticas já gravadas não são recalculadas automaticamente, para não apagar bônus de origem, poderes ou ajustes da campanha. A partir do próximo avanço, os acréscimos passam a seguir a classe escolhida no painel.
-
-Em NEX 5%, ao trocar de classe, o mestre pode escolher recalcular PV, PE e SAN iniciais conforme a nova classe.
-
-## Observação de acesso
-
-O bloqueio segue o mesmo modelo já usado pelo site: os controles ficam indisponíveis no modo jogador. Ele não adiciona um segundo sistema de login ou senha.
+Em NEX 5%, ao trocar de classe, o mestre pode optar por recalcular os valores iniciais de PV e PD ou manter os valores personalizados.
