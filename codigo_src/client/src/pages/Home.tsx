@@ -4,7 +4,18 @@ import { useCharacters, useCreateCharacter } from "@/hooks/use-characters";
 import { MasterShield } from "@/components/MasterShield";
 import { DeleteCharacterDialog } from "@/components/DeleteCharacterDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, User, Shield, Activity, Trash2, Sparkles } from "lucide-react";
+import {
+  Activity,
+  Building2,
+  Orbit,
+  Plus,
+  Radio,
+  Satellite,
+  Shield,
+  Sparkles,
+  Trash2,
+  User,
+} from "lucide-react";
 
 export default function Home() {
   const { data: characters, isLoading } = useCharacters();
@@ -14,7 +25,7 @@ export default function Home() {
   const handleCreate = async () => {
     try {
       const newChar = await createMutation.mutateAsync({
-        name: "Agente Desconhecido",
+        name: "Operador Desconhecido",
         imageUrl: "",
         maskImageUrl: "",
         pvActual: 10,
@@ -36,114 +47,153 @@ export default function Home() {
         element: ""
       });
       setLocation(`/character/${newChar.id}`);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background scanlines relative p-6 md:p-12 overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen scanlines relative z-10 px-4 py-8 md:px-10 md:py-12 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto relative">
+        <header className="tech-border hud-panel mb-10 p-5 md:p-8">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="data-chip"><Building2 className="w-3 h-3" /> Panaceia Industries</span>
+                <span className="data-chip"><Orbit className="w-3 h-3" /> Divisão Adunatio</span>
+                <span className="data-chip text-emerald-300 border-emerald-400/25 bg-emerald-400/5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" /> Rede operacional
+                </span>
+              </div>
 
-      <div className="max-w-5xl mx-auto relative z-10">
-        <header className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6 border-b border-primary/20 pb-6">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-primary glow-text tracking-widest uppercase">
-              Ordem Paranormal
-            </h1>
-            <p className="text-muted-foreground font-mono mt-2 tracking-widest text-sm">
-              SISTEMA DE ARQUIVOS DA ORDEM // ACESSO RESTRITO
-            </p>
+              <div>
+                <p className="section-kicker mb-2">CRIS // Central de Registro e Inteligência de Campo</p>
+                <h1 className="text-4xl md:text-6xl font-extrabold text-primary glow-text tracking-[0.08em] uppercase">
+                  Deep Space
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm md:text-base text-muted-foreground font-mono leading-relaxed">
+                  Sistema interno de monitoramento, exposição anômala e prontuários operacionais da Panaceia Industries.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-x-6 gap-y-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                <span className="flex items-center gap-2"><Radio className="w-3.5 h-3.5 text-primary" /> Sinal estabilizado</span>
+                <span className="flex items-center gap-2"><Satellite className="w-3.5 h-3.5 text-accent" /> Canal orbital ADU-01</span>
+                <span>{characters?.length ?? 0} dossiês ativos</span>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleCreate}
+              disabled={createMutation.isPending}
+              className="group relative overflow-hidden bg-primary text-primary-foreground hover:bg-primary/90 glow-box font-bold uppercase tracking-[0.14em] px-7 py-6 h-auto border border-primary shrink-0"
+            >
+              <span className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:translate-x-[120%] transition-transform duration-700" />
+              {createMutation.isPending ? "Inicializando dossiê..." : (
+                <>
+                  <Plus className="mr-2 w-5 h-5" />
+                  Novo Operador
+                </>
+              )}
+            </Button>
           </div>
-          <Button
-            onClick={handleCreate}
-            disabled={createMutation.isPending}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 glow-box font-bold uppercase tracking-wider px-8 py-6 h-auto border border-primary"
-          >
-            {createMutation.isPending ? "Inicializando..." : (
-              <>
-                <Plus className="mr-2 w-5 h-5" />
-                Novo Agente
-              </>
-            )}
-          </Button>
         </header>
 
+        <div className="flex items-end justify-between mb-5 gap-4">
+          <div>
+            <p className="section-kicker">Arquivo corporativo // acesso restrito</p>
+            <h2 className="section-title mt-1">Operadores designados</h2>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span className="w-8 h-px bg-primary/40" /> Selecione um registro
+          </div>
+        </div>
+
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1,2,3].map(i => (
-              <div key={i} className="h-64 tech-border animate-pulse bg-card/50" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1, 2, 3].map((index) => (
+              <div key={index} className="h-72 tech-border animate-pulse" />
             ))}
           </div>
         ) : characters?.length === 0 ? (
-          <div className="text-center py-24 tech-border bg-black/40">
-            <User className="w-16 h-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-            <h2 className="text-xl font-mono text-muted-foreground uppercase tracking-widest">Nenhum registro encontrado</h2>
-            <p className="text-sm mt-2 text-muted-foreground/60">Inicie um novo arquivo de agente para começar.</p>
+          <div className="text-center py-24 tech-border hud-panel">
+            <div className="mx-auto mb-5 w-20 h-20 border border-primary/25 bg-primary/5 grid place-items-center rotate-45">
+              <User className="w-10 h-10 text-primary/45 -rotate-45" />
+            </div>
+            <h2 className="text-xl font-mono text-primary/75 uppercase tracking-widest">Nenhum operador localizado</h2>
+            <p className="text-sm mt-2 text-muted-foreground/70">Inicialize um dossiê operacional para estabelecer o primeiro vínculo.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {characters?.map(char => (
-              <div key={char.id} className="relative group">
-                <Link href={`/character/${char.id}`} className="block h-full">
-                  <div className="tech-border h-full bg-black/60 hover:bg-primary/5 transition-all duration-300 p-6 flex flex-col relative overflow-hidden group-hover:-translate-y-1">
-                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {characters?.map((character, index) => (
+              <div key={character.id} className="relative group">
+                <Link href={`/character/${character.id}`} className="block h-full">
+                  <article className="operator-card tech-border hud-panel h-full min-h-[292px] p-5 flex flex-col">
+                    <div className="absolute top-0 right-0 px-3 py-1 border-l border-b border-primary/20 bg-primary/5 font-mono text-[9px] tracking-[0.18em] text-primary/55">
+                      OP-{String(index + 1).padStart(3, "0")}
+                    </div>
+                    <div className="absolute left-0 top-16 bottom-16 w-px bg-gradient-to-b from-transparent via-primary/45 to-transparent" />
 
-                    <div className="flex items-start gap-4 mb-6 pr-8">
-                      <div className="w-16 h-16 rounded overflow-hidden bg-secondary border border-primary/30 flex-shrink-0">
-                        {char.imageUrl ? (
-                          <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                    <div className="flex items-start gap-4 mb-5 pr-7">
+                      <div className="portrait-frame w-20 h-20 overflow-hidden flex-shrink-0">
+                        {character.imageUrl ? (
+                          <img
+                            src={character.imageUrl}
+                            alt={character.name}
+                            className="w-full h-full object-cover grayscale-[65%] contrast-110 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+                          />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-primary/30 font-mono text-2xl">?</div>
+                          <div className="w-full h-full grid place-items-center text-primary/35 font-mono text-2xl">∅</div>
                         )}
+                        <div className="absolute inset-x-0 bottom-0 h-px bg-primary/60 shadow-[0_0_8px_hsl(var(--primary))] group-hover:animate-pulse" />
                       </div>
-                      <div className="min-w-0">
-                        <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">{char.name}</h3>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          <span className="text-xs font-mono text-primary/70 bg-primary/10 px-2 py-0.5 inline-flex items-center gap-1 border border-primary/20">
-                            <Sparkles className="w-3 h-3" /> NEX {char.nex}%
-                          </span>
-                          <span className="text-xs font-mono text-primary/70 bg-primary/10 px-2 py-0.5 inline-block border border-primary/20">
-                            DEF {char.defense}
-                          </span>
+                      <div className="min-w-0 pt-1">
+                        <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Dossiê operacional</p>
+                        <h3 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors line-clamp-2 mt-1">
+                          {character.name}
+                        </h3>
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          <span className="data-chip"><Sparkles className="w-3 h-3" /> NEX {character.nex}%</span>
+                          <span className="data-chip">DEF {character.defense}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-auto grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs font-mono text-muted-foreground">
-                          <span className="flex items-center gap-1"><Activity className="w-3 h-3 text-red-500" /> PV</span>
-                          <span>{char.pvActual}/{char.pvMax}</span>
+                    <div className="grid grid-cols-2 gap-3 mt-auto">
+                      <div className="module-card p-3">
+                        <div className="flex justify-between text-[10px] font-mono uppercase text-muted-foreground mb-2">
+                          <span className="flex items-center gap-1.5"><Activity className="w-3 h-3 text-red-400" /> Integridade</span>
+                          <span className="text-foreground">{character.pvActual}/{character.pvMax}</span>
                         </div>
-                        <div className="h-1 bg-secondary w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-red-500" style={{ width: `${Math.min(100, Math.max(0, (char.pvActual / (char.pvMax || 1)) * 100))}%` }} />
+                        <div className="resource-track h-1.5">
+                          <div className="h-full bg-gradient-to-r from-red-800 to-red-400 shadow-[0_0_8px_rgba(248,113,113,.45)]" style={{ width: `${Math.min(100, Math.max(0, character.pvActual / (character.pvMax || 1) * 100))}%` }} />
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs font-mono text-muted-foreground">
-                          <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-blue-500" /> PD</span>
-                          <span>{char.pdActual}/{char.pdMax}</span>
+                      <div className="module-card p-3">
+                        <div className="flex justify-between text-[10px] font-mono uppercase text-muted-foreground mb-2">
+                          <span className="flex items-center gap-1.5"><Shield className="w-3 h-3 text-cyan-300" /> Determinação</span>
+                          <span className="text-foreground">{character.pdActual}/{character.pdMax}</span>
                         </div>
-                        <div className="h-1 bg-secondary w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, Math.max(0, (char.pdActual / (char.pdMax || 1)) * 100))}%` }} />
+                        <div className="resource-track h-1.5">
+                          <div className="h-full bg-gradient-to-r from-cyan-800 to-cyan-300 shadow-[0_0_8px_rgba(103,232,249,.45)]" style={{ width: `${Math.min(100, Math.max(0, character.pdActual / (character.pdMax || 1) * 100))}%` }} />
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </article>
                 </Link>
 
                 <div className="absolute top-3 right-3 z-20">
                   <DeleteCharacterDialog
-                    characterId={char.id}
-                    characterName={char.name}
+                    characterId={character.id}
+                    characterName={character.name}
                     trigger={
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 border-red-500/40 bg-black/70 text-red-400 opacity-70 hover:opacity-100 hover:bg-red-500/20"
-                        aria-label={`Excluir ficha de ${char.name}`}
+                        className="h-8 w-8 border-red-500/35 bg-background/75 text-red-400 opacity-55 hover:opacity-100 hover:bg-red-500/15"
+                        aria-label={`Excluir ficha de ${character.name}`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -154,6 +204,11 @@ export default function Home() {
             ))}
           </div>
         )}
+
+        <footer className="mt-12 pt-5 border-t border-primary/15 flex flex-col sm:flex-row justify-between gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/45">
+          <span>Panaceia Industries // Operações Especiais</span>
+          <span>Protocolo Adunatio // CRIS v.Orbit</span>
+        </footer>
       </div>
       <MasterShield />
     </div>
