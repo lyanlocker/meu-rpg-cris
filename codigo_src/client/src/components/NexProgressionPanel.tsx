@@ -16,8 +16,6 @@ import {
   type CharacterClass,
 } from "@shared/nex";
 
-const MASTER_KEY_STORAGE = "ordem-master-key";
-
 interface AdvancementResponse {
   character: unknown;
   advancement: {
@@ -28,21 +26,6 @@ interface AdvancementResponse {
     gains: { pv: number; pe: number; san: number };
     abilities: string[];
   };
-}
-
-function getStoredMasterKey(): string | null {
-  return window.sessionStorage.getItem(MASTER_KEY_STORAGE);
-}
-
-function requestMasterKey(): string | null {
-  const stored = getStoredMasterKey();
-  if (stored) return stored;
-
-  const entered = window.prompt("Digite o código do mestre para alterar a progressão de NEX:");
-  const normalized = entered?.trim();
-  if (!normalized) return null;
-  window.sessionStorage.setItem(MASTER_KEY_STORAGE, normalized);
-  return normalized;
 }
 
 export function NexProgressionPanel() {
@@ -68,23 +51,16 @@ export function NexProgressionPanel() {
   const currentAbilities = getNexAbilities(characterClass, character.nex);
 
   const masterRequest = async (path: string, body: unknown): Promise<Response> => {
-    const masterKey = requestMasterKey();
-    if (!masterKey) throw new Error("Operação cancelada: código do mestre não informado.");
+    if (isPlayerMode) {
+      throw new Error("O modo jogador não pode alterar a progressão de NEX.");
+    }
 
-    const response = await fetch(path, {
+    return fetch(path, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-master-key": masterKey,
-      },
+      headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify(body),
     });
-
-    if (response.status === 403) {
-      window.sessionStorage.removeItem(MASTER_KEY_STORAGE);
-    }
-    return response;
   };
 
   const refreshCharacter = async () => {
@@ -102,7 +78,7 @@ export function NexProgressionPanel() {
   };
 
   const handleClassChange = async (newClass: CharacterClass) => {
-    if (newClass === characterClass) return;
+    if (newClass === characterClass || isPlayerMode) return;
 
     let recalculateInitial = false;
     if (character.nex === 5) {
@@ -139,7 +115,7 @@ export function NexProgressionPanel() {
   };
 
   const handleAdvanceNex = async () => {
-    if (nextNex === null) return;
+    if (nextNex === null || isPlayerMode) return;
     const nextAbilities = getNexAbilities(characterClass, nextNex);
     const confirmation = [
       `Avançar ${character.name} de NEX ${character.nex}% para ${nextNex}%?`,
