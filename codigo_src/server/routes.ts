@@ -7,11 +7,11 @@ import {
   CHARACTER_CLASSES,
   getClassInitialStats,
   getClassLevelGains,
-  getExpectedPeAtNex,
+  getExpectedPdAtNex,
   getNexAbilities,
   getNexLevel,
   getNextNex,
-  getPeLimit,
+  getPdLimit,
   isCharacterClass,
 } from "@shared/nex";
 import { z } from "zod";
@@ -51,11 +51,11 @@ export async function registerRoutes(
         nex: 5,
         pvActual: initialStats.pv,
         pvMax: initialStats.pv,
-        peActual: initialStats.pe,
-        peMax: initialStats.pe,
+        pdActual: initialStats.pd,
+        pdMax: initialStats.pd,
+        peActual: 0,
+        peMax: 0,
         peLimit: 1,
-        pdActual: initialStats.san,
-        pdMax: initialStats.san,
       });
       res.status(201).json(char);
     } catch (err) {
@@ -76,7 +76,7 @@ export async function registerRoutes(
       );
       if (containsMasterField) {
         return res.status(403).json({
-          message: "NEX, classe e limites de progressão só podem ser alterados pelo painel do mestre.",
+          message: "NEX, classe e limite de PD só podem ser alterados pelo painel do mestre.",
         });
       }
 
@@ -114,11 +114,11 @@ export async function registerRoutes(
         Object.assign(updates, {
           pvActual: initialStats.pv,
           pvMax: initialStats.pv,
-          peActual: initialStats.pe,
-          peMax: initialStats.pe,
+          pdActual: initialStats.pd,
+          pdMax: initialStats.pd,
+          peActual: 0,
+          peMax: 0,
           peLimit: 1,
-          pdActual: initialStats.san,
-          pdMax: initialStats.san,
         });
       }
 
@@ -145,20 +145,18 @@ export async function registerRoutes(
 
     const characterClass = isCharacterClass(char.characterClass) ? char.characterClass : "combatente";
     const gains = getClassLevelGains(characterClass, char.attVig, char.attPre);
-    const peLimit = getPeLimit(nextNex);
-    const expectedCurrentPeMax = getExpectedPeAtNex(characterClass, char.nex, char.attPre);
-    const basePeMax = char.peMax > 0 ? char.peMax : expectedCurrentPeMax;
-    const basePeActual = char.peMax > 0 ? char.peActual : expectedCurrentPeMax;
+    const pdLimit = getPdLimit(nextNex);
+    const expectedCurrentPdMax = getExpectedPdAtNex(characterClass, char.nex, char.attPre);
+    const basePdMax = char.pdMax > 0 ? char.pdMax : expectedCurrentPdMax;
+    const basePdActual = char.pdMax > 0 ? char.pdActual : expectedCurrentPdMax;
 
     const updated = await storage.updateCharacter(char.id, {
       nex: nextNex,
       pvActual: char.pvActual + gains.pv,
       pvMax: char.pvMax + gains.pv,
-      peActual: basePeActual + gains.pe,
-      peMax: basePeMax + gains.pe,
-      peLimit,
-      pdActual: char.pdActual + gains.san,
-      pdMax: char.pdMax + gains.san,
+      pdActual: basePdActual + gains.pd,
+      pdMax: basePdMax + gains.pd,
+      peLimit: pdLimit,
     });
 
     res.json({
@@ -167,7 +165,7 @@ export async function registerRoutes(
         fromNex: char.nex,
         toNex: nextNex,
         level: getNexLevel(nextNex),
-        peLimit,
+        pdLimit,
         gains,
         abilities: getNexAbilities(characterClass, nextNex),
       },

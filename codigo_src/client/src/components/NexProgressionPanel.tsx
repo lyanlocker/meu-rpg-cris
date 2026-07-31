@@ -1,9 +1,8 @@
-import React, { useMemo, useState } from "react";
-import { useLocation } from "wouter";
+import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Activity, Brain, ChevronDown, ChevronUp, LockKeyhole, Minus, Plus, Sparkles, TrendingUp } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, LockKeyhole, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCharacter, useUpdateCharacter } from "@/hooks/use-characters";
+import { useCharacter } from "@/hooks/use-characters";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@shared/routes";
 import {
@@ -16,31 +15,32 @@ import {
   type CharacterClass,
 } from "@shared/nex";
 
+interface NexProgressionPanelProps {
+  characterId: string;
+  isPlayerMode: boolean;
+}
+
 interface AdvancementResponse {
   character: unknown;
   advancement: {
     fromNex: number;
     toNex: number;
     level: number;
-    peLimit: number;
-    gains: { pv: number; pe: number; san: number };
+    pdLimit: number;
+    gains: { pv: number; pd: number };
     abilities: string[];
   };
 }
 
-export function NexProgressionPanel() {
-  const [location] = useLocation();
-  const characterId = useMemo(() => location.match(/^\/character\/([^/]+)/)?.[1] ?? "", [location]);
-  const isPlayerMode = new URLSearchParams(window.location.search).get("mode") === "player";
+export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressionPanelProps) {
   const { data: character } = useCharacter(characterId);
-  const updateMutation = useUpdateCharacter();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(true);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [isChangingClass, setIsChangingClass] = useState(false);
 
-  if (!characterId || !character) return null;
+  if (!character) return null;
 
   const characterClass: CharacterClass = isCharacterClass(character.characterClass)
     ? character.characterClass
@@ -83,9 +83,9 @@ export function NexProgressionPanel() {
     let recalculateInitial = false;
     if (character.nex === 5) {
       recalculateInitial = window.confirm(
-        "Recalcular PV, PE e SAN iniciais conforme a nova classe?\n\nEscolha OK para aplicar os valores oficiais da classe ou Cancelar para manter os valores atuais."
+        "Recalcular PV e PD iniciais conforme a nova classe?\n\nOK aplica os valores de Jogando sem Sanidade. Cancelar mantém os valores personalizados atuais."
       );
-    } else if (!window.confirm("Trocar a classe altera apenas as próximas evoluções e não recalcula níveis anteriores. Continuar?")) {
+    } else if (!window.confirm("Trocar a classe altera apenas os próximos avanços e não recalcula NEX anteriores. Continuar?")) {
       return;
     }
 
@@ -100,7 +100,7 @@ export function NexProgressionPanel() {
       toast({
         title: "Classe de progressão atualizada",
         description: recalculateInitial
-          ? `Valores iniciais recalculados como ${CLASS_PROGRESSIONS[newClass].label}.`
+          ? `PV e PD iniciais recalculados como ${CLASS_PROGRESSIONS[newClass].label}.`
           : `Os próximos avanços usarão a tabela de ${CLASS_PROGRESSIONS[newClass].label}.`,
       });
     } catch (error) {
@@ -119,6 +119,7 @@ export function NexProgressionPanel() {
     const nextAbilities = getNexAbilities(characterClass, nextNex);
     const confirmation = [
       `Avançar ${character.name} de NEX ${character.nex}% para ${nextNex}%?`,
+      "O avanço aumenta PV e Pontos de Determinação conforme a classe e os atributos atuais.",
       nextAbilities.length ? `Benefícios: ${nextAbilities.join(", ")}.` : "",
     ].filter(Boolean).join("\n\n");
     if (!window.confirm(confirmation)) return;
@@ -136,7 +137,7 @@ export function NexProgressionPanel() {
         : "Nenhuma habilidade adicional neste marco.";
       toast({
         title: `NEX ${advancement.toNex}% — nível ${advancement.level}`,
-        description: `+${advancement.gains.pv} PV, +${advancement.gains.pe} PE, +${advancement.gains.san} SAN. Limite de PE ${advancement.peLimit}. ${benefits}`,
+        description: `+${advancement.gains.pv} PV e +${advancement.gains.pd} PD. Limite de PD ${advancement.pdLimit}. ${benefits}`,
       });
     } catch (error) {
       toast({
@@ -149,18 +150,12 @@ export function NexProgressionPanel() {
     }
   };
 
-  const changeCurrentPe = (delta: number) => {
-    const nextValue = Math.max(0, Math.min(character.peMax, character.peActual + delta));
-    if (nextValue === character.peActual) return;
-    updateMutation.mutate({ id: character.id, updates: { peActual: nextValue } });
-  };
-
   return (
-    <aside className="fixed top-20 right-4 z-50 w-[min(22rem,calc(100vw-2rem))] tech-border bg-black/90 shadow-2xl shadow-primary/20 backdrop-blur-md">
+    <section className="tech-border bg-black/50 overflow-hidden">
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
-        className="w-full px-4 py-3 flex items-center justify-between border-b border-primary/30 bg-primary/10 text-left"
+        className="w-full px-5 py-4 flex items-center justify-between border-b border-primary/30 bg-primary/10 text-left"
       >
         <span className="flex items-center gap-2 text-primary font-mono font-bold uppercase tracking-wider">
           <Sparkles className="w-4 h-4" /> Progressão de NEX
@@ -169,7 +164,7 @@ export function NexProgressionPanel() {
       </button>
 
       {expanded && (
-        <div className="p-4 space-y-4">
+        <div className="p-5 space-y-4">
           <div className="grid grid-cols-3 gap-2 text-center font-mono">
             <div className="border border-primary/30 bg-primary/5 p-2">
               <div className="text-[10px] text-muted-foreground uppercase">NEX</div>
@@ -179,9 +174,9 @@ export function NexProgressionPanel() {
               <div className="text-[10px] text-muted-foreground uppercase">Nível</div>
               <div className="text-xl font-bold text-primary">{level}</div>
             </div>
-            <div className="border border-primary/30 bg-primary/5 p-2">
-              <div className="text-[10px] text-muted-foreground uppercase">Limite PE</div>
-              <div className="text-xl font-bold text-primary">{character.peLimit}</div>
+            <div className="border border-blue-500/30 bg-blue-500/5 p-2">
+              <div className="text-[10px] text-muted-foreground uppercase">Limite PD</div>
+              <div className="text-xl font-bold text-blue-400">{character.peLimit}</div>
             </div>
           </div>
 
@@ -216,21 +211,8 @@ export function NexProgressionPanel() {
             )}
           </div>
 
-          <div className="border border-blue-500/30 bg-blue-500/5 p-3">
-            <div className="flex items-center justify-between font-mono">
-              <span className="flex items-center gap-2 text-xs uppercase text-blue-400">
-                <Activity className="w-4 h-4" /> Pontos de Esforço
-              </span>
-              <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" size="icon" onClick={() => changeCurrentPe(-1)} className="h-7 w-7 border-blue-500/40 text-blue-400">
-                  <Minus className="w-3 h-3" />
-                </Button>
-                <strong className="min-w-14 text-center text-blue-300">{character.peActual}/{character.peMax}</strong>
-                <Button type="button" variant="outline" size="icon" onClick={() => changeCurrentPe(1)} className="h-7 w-7 border-blue-500/40 text-blue-400">
-                  <Plus className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
+          <div className="border border-blue-500/25 bg-blue-500/5 p-3 text-xs leading-relaxed text-blue-200/80">
+            Nesta ficha, PD reúne esforço e sanidade. Habilidades e dano mental usam a mesma reserva de Pontos de Determinação.
           </div>
 
           <div className="border border-primary/20 p-3 space-y-1">
@@ -262,6 +244,6 @@ export function NexProgressionPanel() {
           )}
         </div>
       )}
-    </aside>
+    </section>
   );
 }
