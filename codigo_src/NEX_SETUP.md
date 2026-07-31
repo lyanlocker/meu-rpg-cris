@@ -8,27 +8,23 @@ Esta implementação usa a progressão padrão do Livro de Regras de Ordem Paran
 - PV, PE e SAN aumentam conforme a classe, Vigor e Presença.
 - Os benefícios de classe de cada marco são mostrados no painel de progressão.
 
-## Configuração obrigatória
+## Acesso de mestre e jogador
 
-Defina uma variável de ambiente no servidor:
+O sistema segue o acesso já utilizado no site:
 
-```text
-MASTER_KEY=um-codigo-secreto-forte
-```
+- o link normal mostra os controles do mestre;
+- o link com `?mode=player` mostra a progressão somente para consulta;
+- no modo jogador, a classe e o botão de avanço de NEX ficam bloqueados.
 
-O código não é enviado aos jogadores. O mestre o informa no navegador quando tenta alterar a classe ou avançar o NEX, e ele fica guardado apenas na sessão daquela aba.
+Não é necessário configurar uma nova variável de ambiente para o NEX.
 
-## Atualização do banco
+## Atualização automática do banco
 
 Foram adicionadas as colunas `character_class`, `pe_actual`, `pe_max` e `pe_limit`.
-Depois de publicar a versão, execute:
+O script `prebuild` executa `npm run db:push` antes do build, usando a `DATABASE_URL` já configurada no Render para atualizar o banco Neon.
 
-```bash
-npm run db:push
-```
+## Agentes já existentes
 
-## Classe e agentes existentes
+As estatísticas já gravadas não são recalculadas automaticamente, para não apagar bônus de origem, poderes ou ajustes da campanha. A partir do próximo avanço, os acréscimos passam a seguir a classe escolhida no painel.
 
-Em NEX 5%, ao trocar a classe, o mestre pode recalcular PV, PE e SAN iniciais segundo os valores oficiais da nova classe. Também pode manter os valores atuais quando houver ajustes próprios da campanha.
-
-Acima de NEX 5%, a troca de classe não refaz níveis passados: apenas os próximos avanços usam a nova progressão. Para agentes antigos que ainda não possuam PE registrado, o primeiro avanço calcula automaticamente o PE que deveriam possuir no NEX atual antes de aplicar o novo nível.
+Em NEX 5%, ao trocar de classe, o mestre pode escolher recalcular PV, PE e SAN iniciais conforme a nova classe.
