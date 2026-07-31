@@ -1,6 +1,5 @@
-import type { Express, Request, Response } from "express";
+import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { timingSafeEqual } from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { insertDiceRollSchema, type UpdateCharacterRequest } from "@shared/schema";
@@ -22,28 +21,6 @@ const classUpdateSchema = z.object({
   characterClass: z.enum(CHARACTER_CLASSES),
   recalculateInitial: z.boolean().optional().default(false),
 });
-
-function hasValidMasterKey(req: Request, res: Response): boolean {
-  const configuredKey = process.env.MASTER_KEY;
-  if (!configuredKey) {
-    res.status(503).json({
-      message: "MASTER_KEY não configurada no servidor. Defina a variável antes de usar a progressão de NEX.",
-    });
-    return false;
-  }
-
-  const suppliedKey = req.header("x-master-key") ?? "";
-  const expected = Buffer.from(configuredKey);
-  const supplied = Buffer.from(suppliedKey);
-  const isValid = supplied.length === expected.length && timingSafeEqual(supplied, expected);
-
-  if (!isValid) {
-    res.status(403).json({ message: "Código do mestre inválido." });
-    return false;
-  }
-
-  return true;
-}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -121,8 +98,6 @@ export async function registerRoutes(
   });
 
   app.post("/api/characters/:id/class", async (req, res) => {
-    if (!hasValidMasterKey(req, res)) return;
-
     try {
       const input = classUpdateSchema.parse(req.body);
       const current = await storage.getCharacter(req.params.id);
@@ -158,8 +133,6 @@ export async function registerRoutes(
   });
 
   app.post("/api/characters/:id/advance-nex", async (req, res) => {
-    if (!hasValidMasterKey(req, res)) return;
-
     const char = await storage.getCharacter(req.params.id);
     if (!char) {
       return res.status(404).json({ message: "Character not found" });
