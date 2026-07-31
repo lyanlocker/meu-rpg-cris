@@ -10,6 +10,18 @@ export default {
         md: ".375rem", /* 6px */
         sm: ".1875rem", /* 3px */
       },
+      opacity: {
+        "12": "0.12",
+        "15": "0.15",
+        "18": "0.18",
+        "35": "0.35",
+        "45": "0.45",
+        "48": "0.48",
+        "55": "0.55",
+        "65": "0.65",
+        "72": "0.72",
+        "85": "0.85",
+      },
       colors: {
         // Flat / base colors (regular buttons)
         background: "hsl(var(--background) / <alpha-value>)",
