@@ -57,7 +57,7 @@ export function DeleteCharacterDialog({
       }}
     >
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
-      <AlertDialogContent className="tech-border border-red-500 w-[calc(100%-2rem)] sm:max-w-md">
+      <AlertDialogContent className="tech-border border-red-500 w-[calc(100%_-_2rem)] sm:max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-red-500 flex items-center gap-2 uppercase font-mono">
             <AlertTriangle className="w-5 h-5" /> Excluir ficha
