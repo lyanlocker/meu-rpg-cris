@@ -28,3 +28,7 @@ O script `prebuild` executa `npm run db:push` antes do build, usando a `DATABASE
 As estatísticas já gravadas não são recalculadas automaticamente, para não apagar bônus de origem, poderes ou ajustes da campanha. A partir do próximo avanço, os acréscimos passam a seguir a classe escolhida no painel.
 
 Em NEX 5%, ao trocar de classe, o mestre pode escolher recalcular PV, PE e SAN iniciais conforme a nova classe.
+
+## Observação de acesso
+
+O bloqueio segue o mesmo modelo já usado pelo site: os controles ficam indisponíveis no modo jogador. Ele não adiciona um segundo sistema de login ou senha.
