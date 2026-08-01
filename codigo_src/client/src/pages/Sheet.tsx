@@ -193,7 +193,7 @@ export default function Sheet() {
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-primary font-mono text-[10px] uppercase tracking-[0.18em]">
                 <Orbit className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Panaceia Industries // Adunatio</span>
+                <span className="truncate">Panaceia Industries // Operações Especiais</span>
               </div>
               <div className="hidden md:flex items-center gap-2 text-[9px] font-mono uppercase tracking-wider text-muted-foreground/55 mt-0.5">
                 <Radio className="w-3 h-3 text-emerald-300" /> Canal seguro // Dossiê {localChar.id.toUpperCase()}
@@ -345,7 +345,7 @@ export default function Sheet() {
           </section>
 
           <section className="tech-border hud-panel p-5 md:p-6">
-            <ModuleHeader code="MOD-02 // Perfil operacional" title="Capacidades operacionais" icon={<Activity className="w-5 h-5" />} description="Treinamentos, competências e respostas condicionadas" />
+            <ModuleHeader code="MOD-02 // Perfil operacional" title="Perícias" icon={<Activity className="w-5 h-5" />} description="Treinamentos, competências e valores de perícia do operador" />
             <SkillList skills={localChar.skills as Record<string, number>} onChange={(value) => update("skills", value)} isMaskActive={isMaskActive} />
           </section>
 
@@ -378,7 +378,7 @@ export default function Sheet() {
 
       <footer className="max-w-7xl mx-auto px-4 md:px-8 pb-8 pt-2 flex flex-col sm:flex-row justify-between gap-2 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/45">
         <span className="flex items-center gap-2"><Shield className="w-3 h-3" /> Panaceia Industries // Dossiê confidencial</span>
-        <span>Adunatio Deep Space // Link {localChar.id.toUpperCase()}</span>
+        <span>Operações Deep Space // Link {localChar.id.toUpperCase()}</span>
       </footer>
 
       {isMaster && <MasterShield />}
