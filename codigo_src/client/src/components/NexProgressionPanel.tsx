@@ -1,6 +1,17 @@
 import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Brain, ChevronDown, ChevronUp, LockKeyhole, Sparkles, TrendingUp } from "lucide-react";
+import {
+  Brain,
+  ChevronDown,
+  ChevronUp,
+  LockKeyhole,
+  Orbit,
+  RadioTower,
+  ScanLine,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCharacter } from "@/hooks/use-characters";
 import { useToast } from "@/hooks/use-toast";
@@ -98,14 +109,14 @@ export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressio
       if (!response.ok) throw new Error(await readError(response));
       await refreshCharacter();
       toast({
-        title: "Classe de progressão atualizada",
+        title: "FUNÇÃO OPERACIONAL ATUALIZADA",
         description: recalculateInitial
           ? `PV e PD iniciais recalculados como ${CLASS_PROGRESSIONS[newClass].label}.`
           : `Os próximos avanços usarão a tabela de ${CLASS_PROGRESSIONS[newClass].label}.`,
       });
     } catch (error) {
       toast({
-        title: "Não foi possível alterar a classe",
+        title: "Falha ao atualizar função",
         description: error instanceof Error ? error.message : "Erro desconhecido.",
         variant: "destructive",
       });
@@ -118,9 +129,9 @@ export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressio
     if (nextNex === null || isPlayerMode) return;
     const nextAbilities = getNexAbilities(characterClass, nextNex);
     const confirmation = [
-      `Avançar ${character.name} de NEX ${character.nex}% para ${nextNex}%?`,
-      "O avanço aumenta PV e Pontos de Determinação conforme a classe e os atributos atuais.",
-      nextAbilities.length ? `Benefícios: ${nextAbilities.join(", ")}.` : "",
+      `Autorizar avanço de ${character.name}: NEX ${character.nex}% → ${nextNex}%?`,
+      "O procedimento aumenta PV e Pontos de Determinação conforme a função operacional e os atributos atuais.",
+      nextAbilities.length ? `Protocolos liberados: ${nextAbilities.join(", ")}.` : "",
     ].filter(Boolean).join("\n\n");
     if (!window.confirm(confirmation)) return;
 
@@ -134,14 +145,14 @@ export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressio
       const { advancement } = payload;
       const benefits = advancement.abilities.length
         ? advancement.abilities.join(" • ")
-        : "Nenhuma habilidade adicional neste marco.";
+        : "Nenhum protocolo adicional neste marco.";
       toast({
-        title: `NEX ${advancement.toNex}% — nível ${advancement.level}`,
+        title: `EXPOSIÇÃO NEX ${advancement.toNex}% // NÍVEL ${advancement.level}`,
         description: `+${advancement.gains.pv} PV e +${advancement.gains.pd} PD. Limite de PD ${advancement.pdLimit}. ${benefits}`,
       });
     } catch (error) {
       toast({
-        title: "Falha ao avançar NEX",
+        title: "Falha na sincronização de NEX",
         description: error instanceof Error ? error.message : "Erro desconhecido.",
         variant: "destructive",
       });
@@ -151,14 +162,17 @@ export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressio
   };
 
   return (
-    <section className="tech-border bg-black/50 overflow-hidden">
+    <section className="tech-border hud-panel overflow-hidden">
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
-        className="w-full px-5 py-4 flex items-center justify-between border-b border-primary/30 bg-primary/10 text-left"
+        className="w-full px-5 py-4 flex items-center justify-between border-b border-primary/25 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent text-left"
       >
-        <span className="flex items-center gap-2 text-primary font-mono font-bold uppercase tracking-wider">
-          <Sparkles className="w-4 h-4" /> Progressão de NEX
+        <span>
+          <span className="section-kicker block mb-1">MOD-NEX // Telemetria anômala</span>
+          <span className="flex items-center gap-2 text-primary font-mono font-bold uppercase tracking-[0.1em]">
+            <Orbit className="w-4 h-4" /> Índice de exposição
+          </span>
         </span>
         {expanded ? <ChevronUp className="w-4 h-4 text-primary" /> : <ChevronDown className="w-4 h-4 text-primary" />}
       </button>
@@ -166,34 +180,37 @@ export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressio
       {expanded && (
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-3 gap-2 text-center font-mono">
-            <div className="border border-primary/30 bg-primary/5 p-2">
-              <div className="text-[10px] text-muted-foreground uppercase">NEX</div>
-              <div className="text-xl font-bold text-primary">{character.nex}%</div>
+            <div className="module-card p-3">
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wider">NEX</div>
+              <div className="text-2xl font-bold text-primary glow-text mt-1">{character.nex}%</div>
             </div>
-            <div className="border border-primary/30 bg-primary/5 p-2">
-              <div className="text-[10px] text-muted-foreground uppercase">Nível</div>
-              <div className="text-xl font-bold text-primary">{level}</div>
+            <div className="module-card p-3">
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Nível</div>
+              <div className="text-2xl font-bold text-primary mt-1">{level}</div>
             </div>
-            <div className="border border-blue-500/30 bg-blue-500/5 p-2">
-              <div className="text-[10px] text-muted-foreground uppercase">Limite PD</div>
-              <div className="text-xl font-bold text-blue-400">{character.peLimit}</div>
+            <div className="module-card p-3 border-cyan-400/25">
+              <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Limite PD</div>
+              <div className="text-2xl font-bold text-cyan-300 mt-1">{character.peLimit}</div>
             </div>
           </div>
 
-          <div>
-            <div className="flex justify-between text-[10px] font-mono text-muted-foreground uppercase mb-1">
-              <span>Exposição paranormal</span>
+          <div className="module-card p-3">
+            <div className="flex justify-between text-[9px] font-mono text-muted-foreground uppercase tracking-wider mb-2">
+              <span className="flex items-center gap-1.5"><ScanLine className="w-3 h-3 text-primary" /> Saturação paranormal</span>
               <span>{character.nex}/99</span>
             </div>
-            <div className="h-2 border border-primary/30 bg-secondary overflow-hidden">
-              <div className="h-full bg-primary transition-all" style={{ width: `${Math.min(100, (character.nex / 99) * 100)}%` }} />
+            <div className="resource-track h-2">
+              <div
+                className="h-full bg-gradient-to-r from-cyan-800 via-primary to-violet-400 shadow-[0_0_12px_hsl(var(--primary)/.45)] transition-all duration-700"
+                style={{ width: `${Math.min(100, (character.nex / 99) * 100)}%` }}
+              />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-muted-foreground uppercase">Classe</label>
+            <label className="section-kicker">Função operacional</label>
             {isPlayerMode ? (
-              <div className="border border-primary/30 px-3 py-2 font-mono text-sm text-foreground flex items-center justify-between">
+              <div className="module-card px-3 py-2.5 font-mono text-sm text-foreground flex items-center justify-between">
                 <span>{classInfo.label}</span>
                 <LockKeyhole className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
@@ -202,7 +219,7 @@ export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressio
                 value={characterClass}
                 disabled={isChangingClass}
                 onChange={(event) => handleClassChange(event.target.value as CharacterClass)}
-                className="w-full bg-black border border-primary/40 px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:border-primary"
+                className="w-full bg-background/75 border border-primary/35 px-3 py-2.5 font-mono text-sm text-foreground focus:outline-none focus:border-primary"
               >
                 {CHARACTER_CLASSES.map((value) => (
                   <option key={value} value={value}>{CLASS_PROGRESSIONS[value].label}</option>
@@ -211,16 +228,17 @@ export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressio
             )}
           </div>
 
-          <div className="border border-blue-500/25 bg-blue-500/5 p-3 text-xs leading-relaxed text-blue-200/80">
-            Nesta ficha, PD reúne esforço e sanidade. Habilidades e dano mental usam a mesma reserva de Pontos de Determinação.
+          <div className="module-card p-3 text-xs leading-relaxed text-cyan-100/70 flex gap-2">
+            <RadioTower className="w-4 h-4 text-cyan-300 shrink-0 mt-0.5" />
+            <span>PD reúne esforço e estabilidade mental. Custos de habilidades e dano mental utilizam a mesma reserva operacional.</span>
           </div>
 
-          <div className="border border-primary/20 p-3 space-y-1">
-            <div className="flex items-center gap-2 text-[10px] uppercase font-mono text-muted-foreground">
-              <Brain className="w-3.5 h-3.5" /> Benefícios deste NEX
+          <div className="module-card p-3 space-y-2">
+            <div className="flex items-center gap-2 text-[9px] uppercase font-mono tracking-wider text-muted-foreground">
+              <Brain className="w-3.5 h-3.5 text-violet-300" /> Protocolos liberados neste NEX
             </div>
-            <div className="text-sm text-foreground/80">
-              {currentAbilities.length ? currentAbilities.join(" • ") : "Nenhum benefício específico registrado neste marco."}
+            <div className="text-sm text-foreground/80 leading-relaxed">
+              {currentAbilities.length ? currentAbilities.join(" • ") : "Nenhum protocolo específico registrado neste marco."}
             </div>
           </div>
 
@@ -229,17 +247,17 @@ export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressio
               type="button"
               onClick={handleAdvanceNex}
               disabled={isAdvancing || nextNex === null}
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-mono font-bold uppercase tracking-wider"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-mono font-bold uppercase tracking-[0.1em] glow-box"
             >
               <TrendingUp className="w-4 h-4 mr-2" />
-              {nextNex === null ? "NEX máximo atingido" : isAdvancing ? "Aplicando progressão..." : `Avançar para NEX ${nextNex}%`}
+              {nextNex === null ? "Exposição máxima registrada" : isAdvancing ? "Sincronizando exposição..." : `Autorizar NEX ${nextNex}%`}
             </Button>
           )}
 
           {isPlayerMode && (
-            <p className="text-[10px] leading-relaxed font-mono text-muted-foreground uppercase flex items-start gap-2">
-              <LockKeyhole className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-              Somente o mestre pode alterar a classe ou avançar o NEX.
+            <p className="text-[9px] leading-relaxed font-mono text-muted-foreground uppercase tracking-wider flex items-start gap-2">
+              <ShieldCheck className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" />
+              Progressão bloqueada no terminal do operador. Somente o controle de missão pode alterar função ou NEX.
             </p>
           )}
         </div>

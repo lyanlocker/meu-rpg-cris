@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, DatabaseZap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -36,13 +36,13 @@ export function DeleteCharacterDialog({
       await deleteMutation.mutateAsync(characterId);
       setOpen(false);
       toast({
-        title: "Ficha excluída",
-        description: `${characterName} foi removido dos arquivos.`,
+        title: "DOSSIÊ EXPURGADO",
+        description: `${characterName} foi removido dos arquivos da Panaceia.`,
       });
       onDeleted?.();
     } catch (error) {
       toast({
-        title: "Não foi possível excluir a ficha",
+        title: "Falha no expurgo",
         description: error instanceof Error ? error.message : "Tente novamente.",
         variant: "destructive",
       });
@@ -57,31 +57,34 @@ export function DeleteCharacterDialog({
       }}
     >
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
-      <AlertDialogContent className="tech-border border-red-500 w-[calc(100%_-_2rem)] sm:max-w-md">
+      <AlertDialogContent className="tech-border hud-panel border-red-500/65 w-[calc(100%_-_2rem)] sm:max-w-md bg-background/95">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-red-500 flex items-center gap-2 uppercase font-mono">
-            <AlertTriangle className="w-5 h-5" /> Excluir ficha
+          <div className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] text-red-300/65 mb-1">
+            <DatabaseZap className="w-3.5 h-3.5" /> Protocolo de remoção irreversível
+          </div>
+          <AlertDialogTitle className="text-red-400 flex items-center gap-2 uppercase font-mono tracking-wider">
+            <AlertTriangle className="w-5 h-5" /> Expurgar dossiê
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-muted-foreground leading-relaxed">
-            A ficha de <strong className="text-foreground">{characterName}</strong> será removida permanentemente. Esta ação não pode ser desfeita.
+          <AlertDialogDescription className="text-muted-foreground leading-relaxed border-l border-red-500/30 pl-3 mt-2">
+            O registro operacional de <strong className="text-foreground">{characterName}</strong> será removido permanentemente da base da Panaceia Industries. Esta ação não pode ser desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteMutation.isPending} className="border-primary text-primary">
-            Cancelar
+          <AlertDialogCancel disabled={deleteMutation.isPending} className="border-primary/40 text-primary bg-background/50">
+            Manter dossiê
           </AlertDialogCancel>
           <Button
             type="button"
             onClick={handleDelete}
             disabled={deleteMutation.isPending}
-            className="bg-red-600 text-white hover:bg-red-700"
+            className="bg-red-600 text-white hover:bg-red-700 font-mono uppercase tracking-wider"
           >
             {deleteMutation.isPending ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Excluindo...
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Expurgando...
               </>
             ) : (
-              "Excluir permanentemente"
+              "Confirmar expurgo"
             )}
           </Button>
         </AlertDialogFooter>
