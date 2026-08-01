@@ -29,23 +29,28 @@ export function SkillList({ skills, onChange, isMaskActive }: SkillListProps) {
         const maskBuff = isMaskActive && baseVal > 0 ? 5 : 0;
 
         return (
-          <div key={skill} className={`skill-node group ${baseVal > 0 ? "border-primary/25 bg-primary/[0.035]" : ""}`}>
-            <div className="min-w-0 flex items-center gap-2.5">
-              <span className="font-mono text-[9px] text-primary/35 group-hover:text-primary/65 transition-colors">
-                {String(index + 1).padStart(2, "0")}
+          <div
+            key={skill}
+            className={`skill-node group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 ${baseVal > 0 ? "border-primary/30 bg-primary/[0.045]" : ""}`}
+          >
+            <span className="font-mono text-[9px] text-primary/45 group-hover:text-primary/75 transition-colors">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+
+            <div className="min-w-0 py-0.5">
+              <span className="block text-sm font-semibold leading-tight text-foreground/90 group-hover:text-primary transition-colors whitespace-normal break-words">
+                {skill}
               </span>
-              <div className="min-w-0">
-                <span className="block text-sm text-muted-foreground group-hover:text-primary transition-colors truncate">
-                  {skill}
+              {baseVal > 0 && (
+                <span className="block mt-1 font-mono text-[8px] uppercase tracking-[0.16em] text-primary/55">
+                  Treinamento ativo
                 </span>
-                {baseVal > 0 && (
-                  <span className="block font-mono text-[8px] uppercase tracking-[0.16em] text-primary/40">Treinamento ativo</span>
-                )}
-              </div>
+              )}
             </div>
+
             <div className="flex items-center gap-2 shrink-0">
               {maskBuff > 0 && (
-                <span className="data-chip border-red-400/30 bg-red-400/5 text-red-300 glow-text">
+                <span className="data-chip hidden 2xl:inline-flex border-red-400/30 bg-red-400/5 text-red-300 glow-text">
                   Ruptura +{maskBuff}
                 </span>
               )}
@@ -54,6 +59,7 @@ export function SkillList({ skills, onChange, isMaskActive }: SkillListProps) {
                 min="0"
                 value={baseVal}
                 onChange={(value) => handleSkillChange(skill, value)}
+                aria-label={`Valor da perícia ${skill}`}
                 className={`w-14 h-8 text-center font-mono tech-input ${maskBuff > 0 ? "text-red-300 glow-text" : "text-primary"}`}
               />
             </div>
