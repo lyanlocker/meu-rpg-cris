@@ -23,7 +23,7 @@ export function SkillList({ skills, onChange, isMaskActive }: SkillListProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
       {SKILL_NAMES.map((skill, index) => {
         const baseVal = skills[skill] || 0;
         const maskBuff = isMaskActive && baseVal > 0 ? 5 : 0;
@@ -31,38 +31,34 @@ export function SkillList({ skills, onChange, isMaskActive }: SkillListProps) {
         return (
           <div
             key={skill}
-            className={`skill-node group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 ${baseVal > 0 ? "border-primary/30 bg-primary/[0.045]" : ""}`}
+            className={`group grid min-h-[58px] grid-cols-[1.75rem_minmax(0,1fr)_4rem] items-center gap-3 border px-3 py-2 transition-all hover:translate-x-0.5 hover:border-primary/45 hover:bg-primary/[0.055] ${baseVal > 0 ? "border-primary/30 bg-primary/[0.045]" : "border-primary/15 bg-background/30"}`}
           >
             <span className="font-mono text-[9px] text-primary/45 group-hover:text-primary/75 transition-colors">
               {String(index + 1).padStart(2, "0")}
             </span>
 
-            <div className="min-w-0 py-0.5">
-              <span className="block text-sm font-semibold leading-tight text-foreground/90 group-hover:text-primary transition-colors whitespace-normal break-words">
+            <div className="min-w-0">
+              <span
+                className="block overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold leading-tight text-foreground/90 group-hover:text-primary transition-colors"
+                title={skill}
+              >
                 {skill}
               </span>
               {baseVal > 0 && (
-                <span className="block mt-1 font-mono text-[8px] uppercase tracking-[0.16em] text-primary/55">
-                  Treinamento ativo
+                <span className="mt-1 block whitespace-nowrap font-mono text-[8px] uppercase tracking-[0.14em] text-primary/55">
+                  Treinamento ativo{maskBuff > 0 ? ` // Ruptura +${maskBuff}` : ""}
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              {maskBuff > 0 && (
-                <span className="data-chip hidden 2xl:inline-flex border-red-400/30 bg-red-400/5 text-red-300 glow-text">
-                  Ruptura +{maskBuff}
-                </span>
-              )}
-              <DebouncedInput
-                type="number"
-                min="0"
-                value={baseVal}
-                onChange={(value) => handleSkillChange(skill, value)}
-                aria-label={`Valor da perícia ${skill}`}
-                className={`w-14 h-8 text-center font-mono tech-input ${maskBuff > 0 ? "text-red-300 glow-text" : "text-primary"}`}
-              />
-            </div>
+            <DebouncedInput
+              type="number"
+              min="0"
+              value={baseVal}
+              onChange={(value) => handleSkillChange(skill, value)}
+              aria-label={`Valor da perícia ${skill}`}
+              className={`h-8 w-16 shrink-0 text-center font-mono tech-input ${maskBuff > 0 ? "text-red-300 glow-text" : "text-primary"}`}
+            />
           </div>
         );
       })}
