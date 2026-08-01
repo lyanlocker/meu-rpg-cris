@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Cpu, GripHorizontal, Plus, Sparkles, Trash2, X } from "lucide-react";
+import React, { useState } from "react";
+import { Cpu, Plus, Sparkles, Trash2 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ResponsiveFormDialog } from "@/components/ResponsiveFormDialog";
 
 interface Power {
   id: string;
@@ -21,45 +22,11 @@ export function PowersSection({ powers, onChange, type = "normal" }: PowersSecti
   const [isOpen, setIsOpen] = useState(false);
   const [newPower, setNewPower] = useState({ name: "", description: "" });
   const isMaskPowers = type === "mask";
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
-  const dragStart = useRef({ mx: 0, my: 0, px: 0, py: 0 });
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (isOpen && panelRef.current) {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const pw = panelRef.current.offsetWidth || 480;
-      const ph = panelRef.current.offsetHeight || 360;
-      setPos({ x: Math.max(12, (vw - pw) / 2), y: Math.max(12, (vh - ph) / 2) });
-    }
-  }, [isOpen]);
-
-  const onMouseDown = (event: React.MouseEvent) => {
-    setDragging(true);
-    dragStart.current = { mx: event.clientX, my: event.clientY, px: pos.x, py: pos.y };
-  };
-
-  useEffect(() => {
-    if (!dragging) return;
-    const onMove = (event: MouseEvent) => {
-      const dx = event.clientX - dragStart.current.mx;
-      const dy = event.clientY - dragStart.current.my;
-      setPos({ x: dragStart.current.px + dx, y: dragStart.current.py + dy });
-    };
-    const onUp = () => setDragging(false);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [dragging]);
 
   const handleAdd = () => {
-    if (!newPower.name) return;
-    onChange([...powers, { id: nanoid(), ...newPower }]);
+    const name = newPower.name.trim();
+    if (!name) return;
+    onChange([...powers, { id: nanoid(), ...newPower, name }]);
     setNewPower({ name: "", description: "" });
     setIsOpen(false);
   };
@@ -86,58 +53,46 @@ export function PowersSection({ powers, onChange, type = "normal" }: PowersSecti
         </Button>
       </div>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-[90] pointer-events-none bg-black/20 backdrop-blur-[1px]">
-          <div
-            ref={panelRef}
-            className="pointer-events-auto absolute w-[480px] max-w-[calc(100vw-1.5rem)] tech-border hud-panel bg-background/95 border-primary shadow-2xl shadow-primary/20"
-            style={{ left: pos.x, top: pos.y, cursor: dragging ? "grabbing" : "default" }}
-          >
-            <div
-              className="flex items-center justify-between px-4 py-3 border-b border-primary/25 bg-gradient-to-r from-primary/10 to-transparent cursor-grab select-none"
-              onMouseDown={onMouseDown}
-            >
-              <div>
-                <p className="section-kicker">Entrada de sistema</p>
-                <span className="text-primary font-mono uppercase text-sm font-bold flex items-center gap-2">
-                  <GripHorizontal className="w-4 h-4 text-primary/55" />
-                  {isMaskPowers ? "Novo protocolo de ruptura" : "Nova capacidade"}
-                </span>
-              </div>
-              <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-primary transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-4 space-y-4">
-              <div className="space-y-2">
-                <label className="section-kicker">Identificação do protocolo</label>
-                <Input
-                  value={newPower.name}
-                  onChange={(event) => setNewPower({ ...newPower, name: event.target.value })}
-                  className="bg-background/65 border-primary/35 focus-visible:ring-primary text-primary font-bold"
-                  placeholder="Ex: Reflexos Defensivos"
-                  autoFocus
-                  onKeyDown={(event) => event.key === "Enter" && handleAdd()}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="section-kicker">Descrição técnica</label>
-                <Textarea
-                  value={newPower.description}
-                  onChange={(event) => setNewPower({ ...newPower, description: event.target.value })}
-                  className="bg-background/65 border-primary/35 focus-visible:ring-primary min-h-[110px]"
-                  placeholder="Efeito, custo em PD, acionamento e limitações..."
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsOpen(false)} className="border-primary/30 text-muted-foreground">Cancelar</Button>
-                <Button onClick={handleAdd} className="bg-primary text-primary-foreground hover:bg-primary/85 glow-box">Registrar protocolo</Button>
-              </div>
-            </div>
+      <ResponsiveFormDialog
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        kicker="Entrada de sistema"
+        title={isMaskPowers ? "Novo protocolo de ruptura" : "Nova capacidade"}
+        description="Preencha os dados abaixo. A janela permanece centralizada e o conteúdo pode ser rolado sem sair da ficha."
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsOpen(false)} className="border-primary/30 text-muted-foreground">
+              Cancelar
+            </Button>
+            <Button onClick={handleAdd} disabled={!newPower.name.trim()} className="bg-primary text-primary-foreground hover:bg-primary/85 glow-box">
+              Registrar protocolo
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <label className="section-kicker">Identificação do protocolo</label>
+            <Input
+              value={newPower.name}
+              onChange={(event) => setNewPower({ ...newPower, name: event.target.value })}
+              className="bg-background/65 border-primary/35 focus-visible:ring-primary text-primary font-bold"
+              placeholder="Ex: Reflexos Defensivos"
+              autoFocus
+              onKeyDown={(event) => event.key === "Enter" && handleAdd()}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="section-kicker">Descrição técnica</label>
+            <Textarea
+              value={newPower.description}
+              onChange={(event) => setNewPower({ ...newPower, description: event.target.value })}
+              className="bg-background/65 border-primary/35 focus-visible:ring-primary min-h-[180px] resize-y"
+              placeholder="Efeito, custo em PD, acionamento e limitações..."
+            />
           </div>
         </div>
-      )}
+      </ResponsiveFormDialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {powers.map((power, index) => (
