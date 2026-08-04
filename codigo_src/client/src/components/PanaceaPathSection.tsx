@@ -23,13 +23,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PanaceaPathSectionProps {
@@ -40,8 +33,6 @@ interface PanaceaPathSectionProps {
   onOriginChange: (originId: string) => void;
   onTrailChange: (trailId: string) => void;
 }
-
-const EMPTY_VALUE = "__none__";
 
 function classIsValid(value?: string | null): value is PanaceaClass {
   return value === "combatente" || value === "especialista" || value === "ocultista";
@@ -61,9 +52,10 @@ export function PanaceaPathSection({
   const classTrails = getPanaceaTrailsForClass(validClass);
   const selectedTrail = storedTrail?.class === validClass ? storedTrail : undefined;
   const incompatibleTrail = Boolean(storedTrail && storedTrail.class !== validClass);
-  const highestUnlocked = selectedTrail?.milestones
-    .filter((milestone) => nex >= milestone.nex)
-    .at(-1);
+  const unlockedMilestones = selectedTrail?.milestones.filter((milestone) => nex >= milestone.nex) ?? [];
+  const highestUnlocked = unlockedMilestones.length
+    ? unlockedMilestones[unlockedMilestones.length - 1]
+    : undefined;
 
   return (
     <div className="space-y-5">
@@ -97,21 +89,18 @@ export function PanaceaPathSection({
 
         <TabsContent value="origin" className="mt-4 space-y-4">
           <div>
-            <label className="section-kicker">Registro profissional anterior</label>
-            <Select
-              value={selectedOrigin?.id ?? EMPTY_VALUE}
-              onValueChange={(value) => onOriginChange(value === EMPTY_VALUE ? "" : value)}
+            <label className="section-kicker" htmlFor="panacea-origin-select">Registro profissional anterior</label>
+            <select
+              id="panacea-origin-select"
+              value={selectedOrigin?.id ?? ""}
+              onChange={(event) => onOriginChange(event.target.value)}
+              className="mt-1 h-11 w-full rounded-none border border-primary/35 bg-background/75 px-3 font-mono text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
             >
-              <SelectTrigger className="mt-1 h-11 rounded-none border-primary/35 bg-background/55 font-mono text-sm focus:ring-primary">
-                <SelectValue placeholder="Selecione uma origem" />
-              </SelectTrigger>
-              <SelectContent className="max-h-80 rounded-none border-primary/35 bg-popover/95">
-                <SelectItem value={EMPTY_VALUE}>Nenhuma origem selecionada</SelectItem>
-                {PANACEA_ORIGINS.map((origin) => (
-                  <SelectItem key={origin.id} value={origin.id}>{origin.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="">Nenhuma origem selecionada</option>
+              {PANACEA_ORIGINS.map((origin) => (
+                <option key={origin.id} value={origin.id}>{origin.name}</option>
+              ))}
+            </select>
           </div>
 
           {selectedOrigin ? (
@@ -175,21 +164,18 @@ export function PanaceaPathSection({
         <TabsContent value="trail" className="mt-4 space-y-4">
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
             <div>
-              <label className="section-kicker">Especialização de campo</label>
-              <Select
-                value={selectedTrail?.id ?? EMPTY_VALUE}
-                onValueChange={(value) => onTrailChange(value === EMPTY_VALUE ? "" : value)}
+              <label className="section-kicker" htmlFor="panacea-trail-select">Especialização de campo</label>
+              <select
+                id="panacea-trail-select"
+                value={selectedTrail?.id ?? ""}
+                onChange={(event) => onTrailChange(event.target.value)}
+                className="mt-1 h-11 w-full rounded-none border border-primary/35 bg-background/75 px-3 font-mono text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
               >
-                <SelectTrigger className="mt-1 h-11 rounded-none border-primary/35 bg-background/55 font-mono text-sm focus:ring-primary">
-                  <SelectValue placeholder="Selecione uma trilha" />
-                </SelectTrigger>
-                <SelectContent className="max-h-80 rounded-none border-primary/35 bg-popover/95">
-                  <SelectItem value={EMPTY_VALUE}>Nenhuma trilha selecionada</SelectItem>
-                  {classTrails.map((trail) => (
-                    <SelectItem key={trail.id} value={trail.id}>{trail.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Nenhuma trilha selecionada</option>
+                {classTrails.map((trail) => (
+                  <option key={trail.id} value={trail.id}>{trail.name}</option>
+                ))}
+              </select>
             </div>
             <div className="data-chip h-11 justify-center px-4">
               <FlaskConical className="h-3.5 w-3.5" /> {PANACEA_CLASS_LABELS[validClass]}
