@@ -7,10 +7,26 @@ export const PANACEA_OCULTISTA_TRAILS: PanaceaTrail[] = [
     "class": "ocultista",
     "description": "Você aprendeu a converter manifestações do Outro Lado em fórmulas farmacológicas. Seus componentes ritualísticos assumem a forma de ampolas, cápsulas, seringas e soluções que nunca deveriam entrar em contato com um organismo humano. Para você, um ritual não é uma súplica. É um princípio ativo.",
     "milestones": [
-      {"nex":10,"name":"Adjuvante esotérico","description":"Uma vez por rodada, quando conjura um ritual que tenha exatamente uma criatura como alvo, você pode gastar +1 PD para adicionar um dos adjuvantes abaixo.\n\nEstimulante neuromotor: o alvo recebe +3m de deslocamento até o início do seu próximo turno.\n\nComposto hemostático: se o alvo for voluntário, ele recebe 5 PV temporários até o fim da cena. PV temporários desta habilidade não se acumulam.\n\nInibidor muscular: se o alvo for hostil e falhar no teste de resistência do ritual, sofre –2 na Defesa até o início do seu próximo turno.\n\nUma criatura só pode estar sob efeito de um de seus adjuvantes por vez. Aplicar outro substitui o anterior."},
-      {"nex":40,"name":"Fórmula composta","description":"Ao utilizar Adjuvante Esotérico, você pode gastar +2 PD, em vez de +1 PD, para aplicar dois adjuvantes diferentes simultaneamente. Além disso, seus adjuvantes são aprimorados:\n\n• Estimulante: o bônus aumenta para +6m.\n• Hemostático: os PV temporários aumentam para 10.\n• Inibidor: a penalidade na Defesa aumenta para –5."},
-      {"nex":65,"name":"Overdose controlada","description":"Uma vez por rodada, você pode gastar uma reação e 3 PD para encerrar antecipadamente um adjuvante aplicado por você. Escolha o efeito conforme o alvo:\n\n• Paciente voluntário: ele recupera 2d8 + seu Intelecto em PV e pode repetir imediatamente um teste contra uma condição que permita novos testes.\n• Paciente hostil: ele faz um teste de Fortitude contra a DT de seus rituais. Se falhar, sofre 4d8 de dano de Sangue e fica enjoado por uma rodada. Se passar, sofre metade do dano e evita a condição."},
-      {"nex":99,"name":"Fórmula universal","description":"Uma vez por cena, com uma ação padrão e 8 PD, você injeta a Fórmula Universal em uma criatura voluntária adjacente. Até o fim da cena, essa criatura recebe simultaneamente os três adjuvantes em suas versões aprimoradas. No início de cada turno dela, você escolhe um dos efeitos:\n\n• ela recupera 10 PV;\n• encerra uma condição negativa;\n• recebe resistência 10 contra um tipo de dano à sua escolha por uma rodada.\n\nNa primeira vez que seria reduzida a 0 PV durante o efeito, permanece com 1 PV, mas a Fórmula Universal é encerrada. Quando o efeito termina, o alvo fica fatigado até o próximo interlúdio."}
+      {
+        "nex": 10,
+        "name": "Adjuvante esotérico",
+        "description": "Uma vez por rodada, quando conjura um ritual que tenha exatamente uma criatura como alvo, você pode gastar +1 PD para adicionar um dos adjuvantes abaixo.\n\nEstimulante neuromotor\nO alvo recebe +3m de deslocamento até o início do seu próximo turno.\n\nComposto hemostático\nSe o alvo for voluntário, ele recebe 5 PV temporários até o fim da cena.\n\nPV temporários desta habilidade não se acumulam.\n\nInibidor muscular\nSe o alvo for hostil e falhar no teste de resistência do ritual, sofre –2 na Defesa até o início do seu próximo turno.\n\nUma criatura só pode estar sob efeito de um de seus adjuvantes por vez. Aplicar outro substitui o anterior."
+      },
+      {
+        "nex": 40,
+        "name": "Fórmula composta",
+        "description": "Ao utilizar Adjuvante Esotérico, você pode gastar +2 PD, em vez de +1 PD, para aplicar dois adjuvantes diferentes simultaneamente.\n\nAlém disso, seus adjuvantes são aprimorados:\n\n• Estimulante: o bônus aumenta para +6m.\n• Hemostático: os PV temporários aumentam para 10.\n• Inibidor: a penalidade na Defesa aumenta para –5."
+      },
+      {
+        "nex": 65,
+        "name": "Overdose controlada",
+        "description": "Uma vez por rodada, você pode gastar uma reação e 3 PD para encerrar antecipadamente um adjuvante aplicado por você.\n\nEscolha o efeito conforme o alvo:\n\n• Paciente voluntário: ele recupera 2d8 + seu Intelecto em PV e pode repetir imediatamente um teste contra uma condição que permita novos testes.\n• Paciente hostil: ele faz um teste de Fortitude contra a DT de seus rituais. Se falhar, sofre 4d8 de dano de Sangue e fica enjoado por uma rodada. Se passar, sofre metade do dano e evita a condição."
+      },
+      {
+        "nex": 99,
+        "name": "Fórmula universal",
+        "description": "Uma vez por cena, com uma ação padrão e 8 PD, você injeta a Fórmula Universal em uma criatura voluntária adjacente.\n\nAté o fim da cena, essa criatura recebe simultaneamente os três adjuvantes em suas versões aprimoradas. No início de cada turno dela, você escolhe um dos efeitos:\n\n• ela recupera 10 PV;\n• encerra uma condição negativa;\n• recebe resistência 10 contra um tipo de dano à sua escolha por uma rodada.\n\nNa primeira vez que seria reduzida a 0 PV durante o efeito, permanece com 1 PV, mas a Fórmula Universal é encerrada.\n\nQuando o efeito termina, o alvo fica fatigado até o próximo interlúdio."
+      }
     ]
   },
   {
@@ -19,10 +35,26 @@ export const PANACEA_OCULTISTA_TRAILS: PanaceaTrail[] = [
     "class": "ocultista",
     "description": "Você trabalhou nos níveis inferiores de Hygieia, onde entidades impossíveis são mantidas atrás de vidros, símbolos e portas que não aparecem nas plantas da instalação. Você aprendeu uma verdade importante: não é necessário compreender uma entidade para aprisioná-la.",
     "milestones": [
-      {"nex":10,"name":"Etiqueta de quarentena","description":"Uma vez por rodada, quando uma criatura falha em um teste de resistência contra um de seus rituais, você pode gastar +1 PD para marcá-la até o início do seu próximo turno. Enquanto estiver marcada, a criatura:\n\n• sofre –3m de deslocamento;\n• não pode realizar reações;\n• não pode usar ações para se teleportar voluntariamente.\n\nVocê só pode manter uma criatura marcada por vez. Marcar outra encerra a marca anterior."},
-      {"nex":40,"name":"Câmara de contenção","description":"Sua Etiqueta de Quarentena passa a durar até o fim da cena. Além disso, com uma ação padrão e 4 PD, você cria uma área de contenção de 4,5m de raio em um ponto em alcance médio. A área permanece até o fim da cena e exige que você gaste 1 PD no início de cada turno para mantê-la.\n\nSe a criatura marcada tentar sair da área, deve fazer um teste de Vontade contra a DT de seus rituais. Se falhar, o movimento é interrompido na borda. Se passar, consegue sair, mas seu deslocamento é reduzido à metade naquele turno.\n\nA área é visível como uma parede translúcida repleta de números de série, sigilos e avisos corporativos."},
-      {"nex":65,"name":"Contramedida de fuga","description":"Quando a criatura marcada utiliza um ritual, poder paranormal, habilidade de criatura ou efeito de teletransporte, você pode gastar uma reação e 4 PD. Ela deve fazer um teste de Vontade contra a DT de seus rituais. Se falhar, a habilidade é anulada e a ação utilizada é perdida. Outros custos da habilidade também são gastos normalmente. Você só pode utilizar esta habilidade uma vez por rodada."},
-      {"nex":99,"name":"Cela sem portas","description":"Uma vez por cena, com uma ação padrão e 8 PD, você tenta isolar a criatura marcada em uma cela extradimensional. Ela faz um teste de Vontade contra a DT de seus rituais.\n\nSe falhar, desaparece da cena por até três rodadas. Enquanto estiver isolada, não pode agir, perceber o exterior ou ser afetada. No fim de cada turno dela, pode repetir o teste para retornar. Ao retornar, fica atordoada por uma rodada.\n\nSe passar no teste inicial, não desaparece, mas fica lenta e não pode realizar reações por uma rodada. Na superfície interna da cela existe apenas uma inscrição: PROPRIEDADE DAS INDÚSTRIAS PANACEA."}
+      {
+        "nex": 10,
+        "name": "Etiqueta de quarentena",
+        "description": "Uma vez por rodada, quando uma criatura falha em um teste de resistência contra um de seus rituais, você pode gastar +1 PD para marcá-la até o início do seu próximo turno.\n\nEnquanto estiver marcada, a criatura:\n\n• sofre –3m de deslocamento;\n• não pode realizar reações;\n• não pode usar ações para se teleportar voluntariamente.\n\nVocê só pode manter uma criatura marcada por vez. Marcar outra encerra a marca anterior."
+      },
+      {
+        "nex": 40,
+        "name": "Câmara de contenção",
+        "description": "Sua Etiqueta de Quarentena passa a durar até o fim da cena.\n\nAlém disso, com uma ação padrão e 4 PD, você cria uma área de contenção de 4,5m de raio em um ponto em alcance médio. A área permanece até o fim da cena e exige que você gaste 1 PD no início de cada turno para mantê-la.\n\nSe a criatura marcada tentar sair da área, deve fazer um teste de Vontade contra a DT de seus rituais.\n\nSe falhar, o movimento é interrompido na borda da área.\n\nSe passar, consegue sair, mas seu deslocamento é reduzido à metade naquele turno.\n\nA área é visível como uma parede translúcida repleta de números de série, sigilos e avisos corporativos."
+      },
+      {
+        "nex": 65,
+        "name": "Contramedida de fuga",
+        "description": "Quando a criatura marcada utiliza um ritual, poder paranormal, habilidade de criatura ou efeito de teletransporte, você pode gastar uma reação e 4 PD.\n\nEla deve fazer um teste de Vontade contra a DT de seus rituais.\n\nSe falhar, a habilidade é anulada e a ação utilizada é perdida. Outros custos da habilidade também são gastos normalmente.\n\nVocê só pode utilizar esta habilidade uma vez por rodada."
+      },
+      {
+        "nex": 99,
+        "name": "Cela sem portas",
+        "description": "Uma vez por cena, com uma ação padrão e 8 PD, você tenta isolar a criatura marcada em uma cela extradimensional.\n\nEla faz um teste de Vontade contra a DT de seus rituais.\n\nSe falhar, desaparece da cena por até três rodadas. Enquanto estiver isolada, não pode agir, perceber o exterior ou ser afetada. No fim de cada turno dela, pode repetir o teste para retornar.\n\nAo retornar, fica atordoada por uma rodada.\n\nSe passar no teste inicial, não desaparece, mas fica lenta e não pode realizar reações por uma rodada.\n\nNa superfície interna da cela existe apenas uma inscrição:\n\nPROPRIEDADE DAS INDÚSTRIAS PANACEA."
+      }
     ]
   },
   {
@@ -31,10 +63,26 @@ export const PANACEA_OCULTISTA_TRAILS: PanaceaTrail[] = [
     "class": "ocultista",
     "description": "Você utiliza espécies cultivadas nas estufas secretas de Sumé. São organismos que não deveriam sobreviver fora da Amazônia — e provavelmente também não deveriam sobreviver dentro dela. Suas plantas se alimentam de medo, sangue, eletricidade e lembranças.",
     "milestones": [
-      {"nex":10,"name":"Jardim portátil","description":"Com uma ação de movimento e 2 PD, você planta um espécime em um espaço desocupado adjacente. O espécime possui Defesa 10, 10 PV e dura até o fim da cena. Você só pode manter um espécime ativo por vez. Escolha uma variedade ao plantá-lo.\n\nCipó restritivo: a área em um raio de 3m ao redor do espécime é terreno difícil para criaturas hostis. A primeira criatura hostil que entrar ou começar seu turno na área a cada rodada deve fazer um teste de Reflexos contra a DT de seus rituais. Se falhar, fica agarrada pelo cipó até o fim do turno.\n\nLírio reparador: a primeira criatura aliada que entrar ou iniciar o turno em um raio de 3m recebe 5 PV temporários. Cada criatura só pode receber esses PV uma vez por cena.\n\nFungo sentinela: criaturas aliadas em um raio de 3m recebem +5 em Percepção. Além disso, criaturas escondidas dentro da área não recebem benefícios por estarem escondidas contra os aliados afetados."},
-      {"nex":40,"name":"Crescimento agressivo","description":"Você pode manter até dois espécimes ativos simultaneamente e plantá-los com uma ação livre, uma vez por rodada. Seus espécimes são aprimorados:\n\n• passam a possuir Defesa 15 e 30 PV;\n• o raio dos efeitos aumenta para 4,5m;\n• o Lírio Reparador concede 10 PV temporários;\n• uma criatura que falhe contra o Cipó fica agarrada até o início do próximo turno dela;\n• o Fungo Sentinela também permite perceber criaturas invisíveis dentro da área."},
-      {"nex":65,"name":"Enxerto ritualístico","description":"Quando conjura um ritual, você pode gastar +2 PD para fazer com que ele se origine de um de seus espécimes em alcance médio. O alcance e a área do ritual são medidos a partir do espécime, mas você continua sendo o conjurador.\n\nAlém disso, quando um espécime é destruído, você pode gastar 2 PD para provocar uma reação conforme sua variedade:\n\n• Cipó: criaturas hostis em 3m fazem Reflexos ou ficam agarradas por uma rodada.\n• Lírio: aliados em 3m recuperam 2d8 PV.\n• Fungo: inimigos em 3m ficam cegos por uma rodada; Fortitude evita."},
-      {"nex":99,"name":"Bioma impossível","description":"Uma vez por cena, com uma ação completa e 8 PD, você transforma uma área de alcance médio ao seu redor em um ecossistema anômalo até o fim da cena. Toda a área recebe simultaneamente os efeitos aprimorados dos três espécimes. Esses efeitos não dependem de plantas específicas e não podem ser destruídos convencionalmente.\n\nAlém disso, no início de cada um de seus turnos, escolha um efeito:\n\n• uma criatura aliada na área recupera 4d8 PV;\n• uma criatura hostil na área faz Reflexos ou fica agarrada por uma rodada;\n• você conjura um ritual a partir de qualquer ponto da área;\n• uma criatura escondida ou invisível na área é imediatamente revelada.\n\nAo fim da cena, toda a vegetação se transforma em uma massa negra e seca, com os códigos de identificação de Sumé gravados nas folhas."}
+      {
+        "nex": 10,
+        "name": "Jardim portátil",
+        "description": "Com uma ação de movimento e 2 PD, você planta um espécime em um espaço desocupado adjacente.\n\nO espécime possui Defesa 10, 10 PV e dura até o fim da cena. Você só pode manter um espécime ativo por vez.\n\nEscolha uma variedade ao plantá-lo.\n\nCipó restritivo\nA área em um raio de 3m ao redor do espécime é terreno difícil para criaturas hostis.\n\nA primeira criatura hostil que entrar ou começar seu turno na área a cada rodada deve fazer um teste de Reflexos contra a DT de seus rituais. Se falhar, fica agarrada pelo cipó até o fim do turno.\n\nLírio reparador\nA primeira criatura aliada que entrar ou iniciar o turno em um raio de 3m recebe 5 PV temporários.\n\nCada criatura só pode receber esses PV uma vez por cena.\n\nFungo sentinela\nCriaturas aliadas em um raio de 3m recebem +5 em Percepção.\n\nAlém disso, criaturas escondidas dentro da área não recebem benefícios por estarem escondidas contra os aliados afetados."
+      },
+      {
+        "nex": 40,
+        "name": "Crescimento agressivo",
+        "description": "Você pode manter até dois espécimes ativos simultaneamente e plantá-los com uma ação livre, uma vez por rodada.\n\nSeus espécimes são aprimorados:\n\n• passam a possuir Defesa 15 e 30 PV;\n• o raio dos efeitos aumenta para 4,5m;\n• o Lírio Reparador concede 10 PV temporários;\n• uma criatura que falhe contra o Cipó fica agarrada até o início do próximo turno dela;\n• o Fungo Sentinela também permite perceber criaturas invisíveis dentro da área."
+      },
+      {
+        "nex": 65,
+        "name": "Enxerto ritualístico",
+        "description": "Quando conjura um ritual, você pode gastar +2 PD para fazer com que ele se origine de um de seus espécimes em alcance médio.\n\nO alcance e a área do ritual são medidos a partir do espécime, mas você continua sendo o conjurador.\n\nAlém disso, quando um espécime é destruído, você pode gastar 2 PD para provocar uma reação conforme sua variedade:\n\n• Cipó: criaturas hostis em 3m fazem Reflexos ou ficam agarradas por uma rodada.\n• Lírio: aliados em 3m recuperam 2d8 PV.\n• Fungo: inimigos em 3m ficam cegos por uma rodada; Fortitude evita."
+      },
+      {
+        "nex": 99,
+        "name": "Bioma impossível",
+        "description": "Uma vez por cena, com uma ação completa e 8 PD, você transforma uma área de alcance médio ao seu redor em um ecossistema anômalo até o fim da cena.\n\nToda a área recebe simultaneamente os efeitos aprimorados dos três espécimes. Esses efeitos não dependem de plantas específicas e não podem ser destruídos convencionalmente.\n\nAlém disso, no início de cada um de seus turnos, escolha um efeito:\n\n• uma criatura aliada na área recupera 4d8 PV;\n• uma criatura hostil na área faz Reflexos ou fica agarrada por uma rodada;\n• você conjura um ritual a partir de qualquer ponto da área;\n• uma criatura escondida ou invisível na área é imediatamente revelada.\n\nAo fim da cena, toda a vegetação se transforma em uma massa negra e seca, com os códigos de identificação de Sumé gravados nas folhas."
+      }
     ]
   },
   {
@@ -43,10 +91,26 @@ export const PANACEA_OCULTISTA_TRAILS: PanaceaTrail[] = [
     "class": "ocultista",
     "description": "Você descobriu que os sigilos do Outro Lado podem existir como dados. Câmeras, celulares e computadores não apenas registram manifestações paranormais. Às vezes, eles também as transmitem.",
     "milestones": [
-      {"nex":10,"name":"Terminal mediúnico","description":"Uma vez por rodada, ao conjurar um ritual com alcance diferente de pessoal, você pode gastar +2 PD para fazê-lo se originar de um aparelho eletrônico funcionando em alcance médio. Você deve conhecer a localização do aparelho, conseguir perceber o alvo diretamente ou através de câmera, áudio ou transmissão do aparelho e respeitar o alcance normal do ritual, medido a partir do aparelho.\n\nApós a conjuração, o aparelho fica inutilizado até o fim do seu próximo turno. Telas apresentam sigilos, alto-falantes reproduzem sussurros e arquivos desconhecidos surgem na memória do dispositivo."},
-      {"nex":40,"name":"Rede fantasma","description":"Durante um interlúdio, você pode infectar um número de aparelhos eletrônicos igual ao seu Intelecto. Aparelhos infectados são considerados terminais até o próximo interlúdio. Você pode:\n\n• perceber o ambiente ao redor deles;\n• utilizar Terminal Mediúnico através deles em alcance longo;\n• reduzir o custo adicional de Terminal Mediúnico para +1 PD;\n• utilizá-los sem desativá-los após a conjuração.\n\nCom uma ação completa e 2 PD, você pode infectar temporariamente um aparelho em alcance curto até o fim da cena."},
-      {"nex":65,"name":"Falha de sistema","description":"Uma vez por rodada, quando uma criatura falha em um teste de resistência contra um ritual conjurado através de um terminal, escolha um efeito:\n\n• ela não pode realizar reações por uma rodada;\n• sofre –5 no próximo teste de ataque;\n• um aparelho eletrônico carregado por ela fica inutilizado por uma rodada;\n• você descobre sua localização exata enquanto ela permanecer em alcance longo de algum terminal infectado.\n\nEsse efeito representa uma interferência que ocorre simultaneamente no equipamento e no sistema nervoso do alvo."},
-      {"nex":99,"name":"Onipresença digital","description":"Uma vez por cena, você pode gastar 8 PD para transformar todos os aparelhos eletrônicos em alcance extremo em terminais até o fim da cena. Durante esse período, uma vez por rodada, quando conjura um ritual através de um terminal, pode pagar novamente o custo básico do ritual para replicá-lo através de outro terminal.\n\nA réplica deve possuir outro alvo ou área, não pode afetar uma mesma criatura duas vezes, não recebe aprimoramentos discente ou verdadeiro e ainda conta para seu limite de PD por turno.\n\nDurante o efeito, sua imagem aparece em todas as telas próximas, mesmo que você não esteja sendo filmado."}
+      {
+        "nex": 10,
+        "name": "Terminal mediúnico",
+        "description": "Uma vez por rodada, ao conjurar um ritual com alcance diferente de pessoal, você pode gastar +2 PD para fazê-lo se originar de um aparelho eletrônico funcionando em alcance médio.\n\nVocê deve:\n\n• conhecer a localização do aparelho;\n• conseguir perceber o alvo diretamente ou através de câmera, áudio ou transmissão do aparelho;\n• respeitar o alcance normal do ritual, medido a partir do aparelho.\n\nApós a conjuração, o aparelho fica inutilizado até o fim do seu próximo turno. Telas apresentam sigilos, alto-falantes reproduzem sussurros e arquivos desconhecidos surgem na memória do dispositivo."
+      },
+      {
+        "nex": 40,
+        "name": "Rede fantasma",
+        "description": "Durante um interlúdio, você pode infectar um número de aparelhos eletrônicos igual ao seu Intelecto.\n\nAparelhos infectados são considerados terminais até o próximo interlúdio. Você pode:\n\n• perceber o ambiente ao redor deles;\n• utilizar Terminal Mediúnico através deles em alcance longo;\n• reduzir o custo adicional de Terminal Mediúnico para +1 PD;\n• utilizá-los sem desativá-los após a conjuração.\n\nCom uma ação completa e 2 PD, você pode infectar temporariamente um aparelho em alcance curto até o fim da cena."
+      },
+      {
+        "nex": 65,
+        "name": "Falha de sistema",
+        "description": "Uma vez por rodada, quando uma criatura falha em um teste de resistência contra um ritual conjurado através de um terminal, escolha um efeito:\n\n• ela não pode realizar reações por uma rodada;\n• sofre –5 no próximo teste de ataque;\n• um aparelho eletrônico carregado por ela fica inutilizado por uma rodada;\n• você descobre sua localização exata enquanto ela permanecer em alcance longo de algum terminal infectado.\n\nEsse efeito representa uma interferência que ocorre simultaneamente no equipamento e no sistema nervoso do alvo."
+      },
+      {
+        "nex": 99,
+        "name": "Onipresença digital",
+        "description": "Uma vez por cena, você pode gastar 8 PD para transformar todos os aparelhos eletrônicos em alcance extremo em terminais até o fim da cena.\n\nDurante esse período, uma vez por rodada, quando conjura um ritual através de um terminal, pode pagar novamente o custo básico do ritual para replicá-lo através de outro terminal.\n\nA réplica:\n\n• deve possuir outro alvo ou área;\n• não pode afetar uma mesma criatura duas vezes;\n• não recebe aprimoramentos discente ou verdadeiro;\n• ainda conta para seu limite de PD por turno.\n\nDurante o efeito, sua imagem aparece em todas as telas próximas, mesmo que você não esteja sendo filmado."
+      }
     ]
   },
   {
@@ -55,10 +119,26 @@ export const PANACEA_OCULTISTA_TRAILS: PanaceaTrail[] = [
     "class": "ocultista",
     "description": "Você não conjura rituais sobre as pessoas. Você as infecta com eles. Seus sigilos se comportam como organismos microscópicos, adaptando-se à vítima e procurando novas formas de atravessar a Realidade.",
     "milestones": [
-      {"nex":10,"name":"Sintoma programado","description":"Uma vez por rodada, quando uma criatura falha em um teste de resistência contra um de seus rituais, você pode gastar +1 PD para aplicar um sintoma até o início do seu próximo turno. Escolha um:\n\nSintoma hemorrágico: a criatura sofre –2 em Fortitude.\n\nSintoma neurológico: a criatura sofre –2 em Reflexos.\n\nSintoma dissociativo: a criatura sofre –2 em Vontade.\n\nUma criatura só pode possuir um sintoma seu por vez. Aplicar outro substitui o anterior."},
-      {"nex":40,"name":"Contágio cruzado","description":"Seus sintomas passam a durar até o fim da cena. No fim de cada turno, a criatura afetada pode repetir o teste de resistência originalmente realizado para encerrar o sintoma.\n\nQuando uma criatura sintomática termina seu turno adjacente a outra criatura, você pode gastar uma reação e 2 PD. A segunda criatura faz um teste de Fortitude contra a DT de seus rituais. Se falhar, recebe o mesmo sintoma. Você pode provocar apenas um contágio por rodada."},
-      {"nex":65,"name":"Mutação dirigida","description":"Uma vez por rodada, quando uma criatura sintomática falha em um teste da resistência penalizada pelo sintoma, você pode intensificar a infecção:\n\n• Hemorrágico: a criatura fica fraca.\n• Neurológico: a criatura fica lenta.\n• Dissociativo: a criatura fica abalada.\n\nA condição permanece até o fim do próximo turno da criatura."},
-      {"nex":99,"name":"Paciente zero","description":"Uma vez por cena, com uma ação completa e 8 PD, escolha qualquer quantidade de criaturas hostis em alcance médio. Cada uma faz um teste de Fortitude contra a DT de seus rituais.\n\nSe falhar, recebe os três sintomas até o fim da cena. No fim de cada turno, pode fazer um teste de Fortitude, Reflexos ou Vontade para encerrar o sintoma correspondente. Se passar no teste inicial, recebe apenas um sintoma à sua escolha por uma rodada.\n\nEnquanto houver uma criatura com os três sintomas, você sempre sabe sua direção e distância aproximada. Caso ela morra, você pode transferir os três sintomas para outra criatura em alcance curto dela; a nova vítima pode fazer Fortitude para evitar."}
+      {
+        "nex": 10,
+        "name": "Sintoma programado",
+        "description": "Uma vez por rodada, quando uma criatura falha em um teste de resistência contra um de seus rituais, você pode gastar +1 PD para aplicar um sintoma até o início do seu próximo turno.\n\nEscolha um:\n\nSintoma hemorrágico\nA criatura sofre –2 em Fortitude.\n\nSintoma neurológico\nA criatura sofre –2 em Reflexos.\n\nSintoma dissociativo\nA criatura sofre –2 em Vontade.\n\nUma criatura só pode possuir um sintoma seu por vez. Aplicar outro substitui o anterior."
+      },
+      {
+        "nex": 40,
+        "name": "Contágio cruzado",
+        "description": "Seus sintomas passam a durar até o fim da cena. No fim de cada turno, a criatura afetada pode repetir o teste de resistência originalmente realizado para encerrar o sintoma.\n\nQuando uma criatura sintomática termina seu turno adjacente a outra criatura, você pode gastar uma reação e 2 PD. A segunda criatura faz um teste de Fortitude contra a DT de seus rituais.\n\nSe falhar, recebe o mesmo sintoma.\n\nVocê pode provocar apenas um contágio por rodada."
+      },
+      {
+        "nex": 65,
+        "name": "Mutação dirigida",
+        "description": "Uma vez por rodada, quando uma criatura sintomática falha em um teste da resistência penalizada pelo sintoma, você pode intensificar a infecção:\n\n• Hemorrágico: a criatura fica fraca.\n• Neurológico: a criatura fica lenta.\n• Dissociativo: a criatura fica abalada.\n\nA condição permanece até o fim do próximo turno da criatura."
+      },
+      {
+        "nex": 99,
+        "name": "Paciente zero",
+        "description": "Uma vez por cena, com uma ação completa e 8 PD, escolha qualquer quantidade de criaturas hostis em alcance médio.\n\nCada uma faz um teste de Fortitude contra a DT de seus rituais.\n\nSe falhar, recebe os três sintomas até o fim da cena. No fim de cada turno, pode fazer um teste de Fortitude, Reflexos ou Vontade para encerrar o sintoma correspondente.\n\nSe passar no teste inicial, recebe apenas um sintoma à sua escolha por uma rodada.\n\nEnquanto houver uma criatura com os três sintomas, você sempre sabe sua direção e distância aproximada. Caso ela morra, você pode transferir os três sintomas para outra criatura em alcance curto dela; a nova vítima pode fazer Fortitude para evitar."
+      }
     ]
   }
 ];
