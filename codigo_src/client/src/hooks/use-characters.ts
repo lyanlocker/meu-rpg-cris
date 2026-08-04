@@ -2,12 +2,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import type { Character, InsertCharacter, UpdateCharacterRequest } from "@shared/schema";
 
-const characterUpdateQueues = new Map<string, Promise<Character>>();
+const characterUpdateQueues = new Map<string, Promise<unknown>>();
 
 function enqueueCharacterUpdate(id: string, task: () => Promise<Character>): Promise<Character> {
-  const previous = characterUpdateQueues.get(id) ?? Promise.resolve(undefined as unknown as Character);
+  const previous = characterUpdateQueues.get(id) ?? Promise.resolve();
   const current = previous
-    .catch(() => undefined as unknown as Character)
+    .catch(() => undefined)
     .then(task);
 
   characterUpdateQueues.set(id, current);
