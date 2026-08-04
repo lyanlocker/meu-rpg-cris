@@ -1,7 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
-import { z } from "zod";
 import type { Character, InsertCharacter, UpdateCharacterRequest } from "@shared/schema";
+
+const characterUpdateQueues = new Map<string, Promise<Character>>();
+
+function enqueueCharacterUpdate(id: string, task: () => Promise<Character>): Promise<Character> {
+  const previous = characterUpdateQueues.get(id) ?? Promise.resolve(undefined as unknown as Character);
+  const current = previous
+    .catch(() => undefined as unknown as Character)
+    .then(task);
+
+  characterUpdateQueues.set(id, current);
+  void current.finally(() => {
+    if (characterUpdateQueues.get(id) === current) {
+      characterUpdateQueues.delete(id);
+    }
+  }).catch(() => undefined);
+
+  return current;
+}
 
 export function useCharacters() {
   return useQuery({
@@ -53,20 +70,21 @@ export function useCreateCharacter() {
 export function useUpdateCharacter() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: UpdateCharacterRequest }) => {
-      const url = buildUrl(api.characters.update.path, { id });
-      const res = await fetch(url, {
-        method: api.characters.update.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to update character");
-      const data = await res.json();
-      return api.characters.update.responses[200].parse(data);
-    },
+    mutationFn: ({ id, updates }: { id: string; updates: UpdateCharacterRequest }) =>
+      enqueueCharacterUpdate(id, async () => {
+        const url = buildUrl(api.characters.update.path, { id });
+        const res = await fetch(url, {
+          method: api.characters.update.method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Failed to update character");
+        const data = await res.json();
+        return api.characters.update.responses[200].parse(data);
+      }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [api.characters.get.path, data.id] });
+      queryClient.setQueryData([api.characters.get.path, data.id], data);
       queryClient.invalidateQueries({ queryKey: [api.characters.list.path] });
     },
   });
