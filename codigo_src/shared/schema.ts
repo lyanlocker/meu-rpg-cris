@@ -18,6 +18,8 @@ export const characters = pgTable("characters", {
   defense: integer("defense").notNull().default(0),
   nex: integer("nex").notNull().default(5),
   characterClass: text("character_class").notNull().default("combatente"),
+  originId: text("origin_id").notNull().default(""),
+  trailId: text("trail_id").notNull().default(""),
   appearance: text("appearance").notNull().default(""),
 
   // Atributos
