@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { DebouncedInput } from "./ui/debounced-input";
 
 const SKILL_NAMES = [
@@ -17,9 +17,26 @@ interface SkillListProps {
 }
 
 export function SkillList({ skills, onChange, isMaskActive }: SkillListProps) {
+  // Mantém a versão mais recente em memória. Assim, duas perícias cujo debounce
+  // termina quase ao mesmo tempo são combinadas, em vez de uma apagar a outra.
+  const latestSkillsRef = useRef<Record<string, number>>({ ...skills });
+
+  useEffect(() => {
+    latestSkillsRef.current = {
+      ...latestSkillsRef.current,
+      ...skills,
+    };
+  }, [skills]);
+
   const handleSkillChange = (name: string, value: string) => {
     const numValue = parseInt(value) || 0;
-    onChange({ ...skills, [name]: numValue });
+    const nextSkills = {
+      ...latestSkillsRef.current,
+      [name]: numValue,
+    };
+
+    latestSkillsRef.current = nextSkills;
+    onChange(nextSkills);
   };
 
   return (
