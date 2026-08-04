@@ -9,11 +9,11 @@ import {
   RadioTower,
   ScanLine,
   ShieldCheck,
-  Sparkles,
   TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCharacter } from "@/hooks/use-characters";
+import { PanaceaCareerPanel } from "@/components/PanaceaCareerPanel";
+import { useCharacter, useUpdateCharacter } from "@/hooks/use-characters";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@shared/routes";
 import {
@@ -45,6 +45,7 @@ interface AdvancementResponse {
 
 export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressionPanelProps) {
   const { data: character } = useCharacter(characterId);
+  const updateCharacter = useUpdateCharacter();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(true);
@@ -162,106 +163,117 @@ export function NexProgressionPanel({ characterId, isPlayerMode }: NexProgressio
   };
 
   return (
-    <section className="tech-border hud-panel overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setExpanded((value) => !value)}
-        className="w-full px-5 py-4 flex items-center justify-between border-b border-primary/25 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent text-left"
-      >
-        <span>
-          <span className="section-kicker block mb-1">MOD-NEX // Telemetria anômala</span>
-          <span className="flex items-center gap-2 text-primary font-mono font-bold uppercase tracking-[0.1em]">
-            <Orbit className="w-4 h-4" /> Índice de exposição
+    <>
+      <section className="tech-border hud-panel overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          className="w-full px-5 py-4 flex items-center justify-between border-b border-primary/25 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent text-left"
+        >
+          <span>
+            <span className="section-kicker block mb-1">MOD-NEX // Telemetria anômala</span>
+            <span className="flex items-center gap-2 text-primary font-mono font-bold uppercase tracking-[0.1em]">
+              <Orbit className="w-4 h-4" /> Índice de exposição
+            </span>
           </span>
-        </span>
-        {expanded ? <ChevronUp className="w-4 h-4 text-primary" /> : <ChevronDown className="w-4 h-4 text-primary" />}
-      </button>
+          {expanded ? <ChevronUp className="w-4 h-4 text-primary" /> : <ChevronDown className="w-4 h-4 text-primary" />}
+        </button>
 
-      {expanded && (
-        <div className="p-5 space-y-4">
-          <div className="grid grid-cols-3 gap-2 text-center font-mono">
-            <div className="module-card p-3">
-              <div className="text-[9px] text-muted-foreground uppercase tracking-wider">NEX</div>
-              <div className="text-2xl font-bold text-primary glow-text mt-1">{character.nex}%</div>
-            </div>
-            <div className="module-card p-3">
-              <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Nível</div>
-              <div className="text-2xl font-bold text-primary mt-1">{level}</div>
-            </div>
-            <div className="module-card p-3 border-cyan-400/25">
-              <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Limite PD</div>
-              <div className="text-2xl font-bold text-cyan-300 mt-1">{character.peLimit}</div>
-            </div>
-          </div>
-
-          <div className="module-card p-3">
-            <div className="flex justify-between text-[9px] font-mono text-muted-foreground uppercase tracking-wider mb-2">
-              <span className="flex items-center gap-1.5"><ScanLine className="w-3 h-3 text-primary" /> Saturação paranormal</span>
-              <span>{character.nex}/99</span>
-            </div>
-            <div className="resource-track h-2">
-              <div
-                className="h-full bg-gradient-to-r from-cyan-800 via-primary to-violet-400 shadow-[0_0_12px_hsl(var(--primary)/.45)] transition-all duration-700"
-                style={{ width: `${Math.min(100, (character.nex / 99) * 100)}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="section-kicker">Função operacional</label>
-            {isPlayerMode ? (
-              <div className="module-card px-3 py-2.5 font-mono text-sm text-foreground flex items-center justify-between">
-                <span>{classInfo.label}</span>
-                <LockKeyhole className="w-3.5 h-3.5 text-muted-foreground" />
+        {expanded && (
+          <div className="p-5 space-y-4">
+            <div className="grid grid-cols-3 gap-2 text-center font-mono">
+              <div className="module-card p-3">
+                <div className="text-[9px] text-muted-foreground uppercase tracking-wider">NEX</div>
+                <div className="text-2xl font-bold text-primary glow-text mt-1">{character.nex}%</div>
               </div>
-            ) : (
-              <select
-                value={characterClass}
-                disabled={isChangingClass}
-                onChange={(event) => handleClassChange(event.target.value as CharacterClass)}
-                className="w-full bg-background/75 border border-primary/35 px-3 py-2.5 font-mono text-sm text-foreground focus:outline-none focus:border-primary"
+              <div className="module-card p-3">
+                <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Nível</div>
+                <div className="text-2xl font-bold text-primary mt-1">{level}</div>
+              </div>
+              <div className="module-card p-3 border-cyan-400/25">
+                <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Limite PD</div>
+                <div className="text-2xl font-bold text-cyan-300 mt-1">{character.peLimit}</div>
+              </div>
+            </div>
+
+            <div className="module-card p-3">
+              <div className="flex justify-between text-[9px] font-mono text-muted-foreground uppercase tracking-wider mb-2">
+                <span className="flex items-center gap-1.5"><ScanLine className="w-3 h-3 text-primary" /> Saturação paranormal</span>
+                <span>{character.nex}/99</span>
+              </div>
+              <div className="resource-track h-2">
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-800 via-primary to-violet-400 shadow-[0_0_12px_hsl(var(--primary)/.45)] transition-all duration-700"
+                  style={{ width: `${Math.min(100, (character.nex / 99) * 100)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="section-kicker">Função operacional</label>
+              {isPlayerMode ? (
+                <div className="module-card px-3 py-2.5 font-mono text-sm text-foreground flex items-center justify-between">
+                  <span>{classInfo.label}</span>
+                  <LockKeyhole className="w-3.5 h-3.5 text-muted-foreground" />
+                </div>
+              ) : (
+                <select
+                  value={characterClass}
+                  disabled={isChangingClass}
+                  onChange={(event) => handleClassChange(event.target.value as CharacterClass)}
+                  className="w-full bg-background/75 border border-primary/35 px-3 py-2.5 font-mono text-sm text-foreground focus:outline-none focus:border-primary"
+                >
+                  {CHARACTER_CLASSES.map((value) => (
+                    <option key={value} value={value}>{CLASS_PROGRESSIONS[value].label}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div className="module-card p-3 text-xs leading-relaxed text-cyan-100/70 flex gap-2">
+              <RadioTower className="w-4 h-4 text-cyan-300 shrink-0 mt-0.5" />
+              <span>PD reúne esforço e estabilidade mental. Custos de habilidades e dano mental utilizam a mesma reserva operacional.</span>
+            </div>
+
+            <div className="module-card p-3 space-y-2">
+              <div className="flex items-center gap-2 text-[9px] uppercase font-mono tracking-wider text-muted-foreground">
+                <Brain className="w-3.5 h-3.5 text-violet-300" /> Protocolos liberados neste NEX
+              </div>
+              <div className="text-sm text-foreground/80 leading-relaxed">
+                {currentAbilities.length ? currentAbilities.join(" • ") : "Nenhum protocolo específico registrado neste marco."}
+              </div>
+            </div>
+
+            {!isPlayerMode && (
+              <Button
+                type="button"
+                onClick={handleAdvanceNex}
+                disabled={isAdvancing || nextNex === null}
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-mono font-bold uppercase tracking-[0.1em] glow-box"
               >
-                {CHARACTER_CLASSES.map((value) => (
-                  <option key={value} value={value}>{CLASS_PROGRESSIONS[value].label}</option>
-                ))}
-              </select>
+                <TrendingUp className="w-4 h-4 mr-2" />
+                {nextNex === null ? "Exposição máxima registrada" : isAdvancing ? "Sincronizando exposição..." : `Autorizar NEX ${nextNex}%`}
+              </Button>
+            )}
+
+            {isPlayerMode && (
+              <p className="text-[9px] leading-relaxed font-mono text-muted-foreground uppercase tracking-wider flex items-start gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" />
+                Progressão bloqueada no terminal do operador. Somente o controle de missão pode alterar função ou NEX.
+              </p>
             )}
           </div>
+        )}
+      </section>
 
-          <div className="module-card p-3 text-xs leading-relaxed text-cyan-100/70 flex gap-2">
-            <RadioTower className="w-4 h-4 text-cyan-300 shrink-0 mt-0.5" />
-            <span>PD reúne esforço e estabilidade mental. Custos de habilidades e dano mental utilizam a mesma reserva operacional.</span>
-          </div>
-
-          <div className="module-card p-3 space-y-2">
-            <div className="flex items-center gap-2 text-[9px] uppercase font-mono tracking-wider text-muted-foreground">
-              <Brain className="w-3.5 h-3.5 text-violet-300" /> Protocolos liberados neste NEX
-            </div>
-            <div className="text-sm text-foreground/80 leading-relaxed">
-              {currentAbilities.length ? currentAbilities.join(" • ") : "Nenhum protocolo específico registrado neste marco."}
-            </div>
-          </div>
-
-          {!isPlayerMode && (
-            <Button
-              type="button"
-              onClick={handleAdvanceNex}
-              disabled={isAdvancing || nextNex === null}
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-mono font-bold uppercase tracking-[0.1em] glow-box"
-            >
-              <TrendingUp className="w-4 h-4 mr-2" />
-              {nextNex === null ? "Exposição máxima registrada" : isAdvancing ? "Sincronizando exposição..." : `Autorizar NEX ${nextNex}%`}
-            </Button>
-          )}
-
-          {isPlayerMode && (
-            <p className="text-[9px] leading-relaxed font-mono text-muted-foreground uppercase tracking-wider flex items-start gap-2">
-              <ShieldCheck className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" />
-              Progressão bloqueada no terminal do operador. Somente o controle de missão pode alterar função ou NEX.
-            </p>
-          )}
-        </div>
-      )}
-    </section>
+      <PanaceaCareerPanel
+        originId={character.originId}
+        trailId={character.trailId}
+        characterClass={characterClass}
+        nex={character.nex}
+        onOriginChange={(originId) => updateCharacter.mutate({ id: character.id, updates: { originId } })}
+        onTrailChange={(trailId) => updateCharacter.mutate({ id: character.id, updates: { trailId } })}
+      />
+    </>
   );
 }
