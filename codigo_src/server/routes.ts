@@ -22,6 +22,42 @@ const classUpdateSchema = z.object({
   recalculateInitial: z.boolean().optional().default(false),
 });
 
+function applyAttributeDerivedStats(
+  current: NonNullable<Awaited<ReturnType<typeof storage.getCharacter>>>,
+  input: UpdateCharacterRequest,
+  rawBody: unknown,
+): UpdateCharacterRequest {
+  const updates: UpdateCharacterRequest = { ...input };
+  const body = rawBody && typeof rawBody === "object" ? rawBody as Record<string, unknown> : {};
+  const levelMultiplier = Math.max(1, getNexLevel(current.nex));
+
+  if (typeof input.attVig === "number" && input.attVig !== current.attVig) {
+    const pvDelta = (input.attVig - current.attVig) * levelMultiplier;
+    const nextPvMax = Math.max(0, current.pvMax + pvDelta);
+
+    if (!Object.prototype.hasOwnProperty.call(body, "pvMax")) {
+      updates.pvMax = nextPvMax;
+    }
+    if (!Object.prototype.hasOwnProperty.call(body, "pvActual")) {
+      updates.pvActual = Math.min(nextPvMax, Math.max(0, current.pvActual + pvDelta));
+    }
+  }
+
+  if (typeof input.attPre === "number" && input.attPre !== current.attPre) {
+    const pdDelta = (input.attPre - current.attPre) * levelMultiplier;
+    const nextPdMax = Math.max(0, current.pdMax + pdDelta);
+
+    if (!Object.prototype.hasOwnProperty.call(body, "pdMax")) {
+      updates.pdMax = nextPdMax;
+    }
+    if (!Object.prototype.hasOwnProperty.call(body, "pdActual")) {
+      updates.pdActual = Math.min(nextPdMax, Math.max(0, current.pdActual + pdDelta));
+    }
+  }
+
+  return updates;
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -81,10 +117,13 @@ export async function registerRoutes(
       }
 
       const input = api.characters.update.input.parse(req.body);
-      const char = await storage.updateCharacter(req.params.id, input);
-      if (!char) {
+      const current = await storage.getCharacter(req.params.id);
+      if (!current) {
         return res.status(404).json({ message: "Character not found" });
       }
+
+      const updates = applyAttributeDerivedStats(current, input, req.body);
+      const char = await storage.updateCharacter(req.params.id, updates);
       res.json(char);
     } catch (err) {
       if (err instanceof z.ZodError) {
