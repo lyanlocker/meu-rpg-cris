@@ -2,13 +2,23 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import type { Character, InsertCharacter, UpdateCharacterRequest } from "@shared/schema";
 
-const characterUpdateQueues = new Map<string, Promise<unknown>>();
+interface QueuedCharacterUpdate {
+  character: Character;
+  revision: number;
+}
 
-function enqueueCharacterUpdate(id: string, task: () => Promise<Character>): Promise<Character> {
+const characterUpdateQueues = new Map<string, Promise<unknown>>();
+const characterUpdateRevisions = new Map<string, number>();
+
+function enqueueCharacterUpdate(id: string, task: () => Promise<Character>): Promise<QueuedCharacterUpdate> {
+  const revision = (characterUpdateRevisions.get(id) ?? 0) + 1;
+  characterUpdateRevisions.set(id, revision);
+
   const previous = characterUpdateQueues.get(id) ?? Promise.resolve();
   const current = previous
     .catch(() => undefined)
-    .then(task);
+    .then(task)
+    .then((character) => ({ character, revision }));
 
   characterUpdateQueues.set(id, current);
   void current.finally(() => {
@@ -83,8 +93,15 @@ export function useUpdateCharacter() {
         const data = await res.json();
         return api.characters.update.responses[200].parse(data);
       }),
-    onSuccess: (data) => {
-      queryClient.setQueryData([api.characters.get.path, data.id], data);
+    onSuccess: ({ character, revision }, variables) => {
+      const isLatestRevision = characterUpdateRevisions.get(variables.id) === revision;
+      if (!isLatestRevision) return;
+
+      queryClient.setQueryData([api.characters.get.path, character.id], character);
+      queryClient.invalidateQueries({ queryKey: [api.characters.list.path] });
+    },
+    onError: (_error, variables) => {
+      queryClient.invalidateQueries({ queryKey: [api.characters.get.path, variables.id] });
       queryClient.invalidateQueries({ queryKey: [api.characters.list.path] });
     },
   });
