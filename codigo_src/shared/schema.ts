@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, jsonb, timestamp, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, jsonb, timestamp, serial, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { CHARACTER_CLASSES } from "./nex";
@@ -43,6 +43,26 @@ export const characters = pgTable("characters", {
   element: text("element").notNull().default(""), // "sangue" | "morte" | "conhecimento" | "energia" | ""
 });
 
+export const characterImages = pgTable(
+  "character_images",
+  {
+    id: serial("id").primaryKey(),
+    characterId: text("character_id")
+      .notNull()
+      .references(() => characters.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // "normal" | "mask"
+    mimeType: text("mime_type").notNull(),
+    dataBase64: text("data_base64").notNull(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    characterKindUnique: uniqueIndex("character_images_character_kind_unique").on(
+      table.characterId,
+      table.kind,
+    ),
+  }),
+);
+
 export const insertCharacterSchema = createInsertSchema(characters, {
   characterClass: z.enum(CHARACTER_CLASSES).optional(),
 }).omit({ id: true });
@@ -50,6 +70,7 @@ export const insertCharacterSchema = createInsertSchema(characters, {
 export type InsertCharacter = z.infer<typeof insertCharacterSchema>;
 export type Character = typeof characters.$inferSelect;
 export type UpdateCharacterRequest = Partial<InsertCharacter>;
+export type CharacterImage = typeof characterImages.$inferSelect;
 
 // Dice rolls log (for Master Shield monitoring)
 export const diceRolls = pgTable("dice_rolls", {
