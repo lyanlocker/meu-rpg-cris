@@ -21,6 +21,12 @@ const classUpdateSchema = z.object({
   characterClass: z.enum(CHARACTER_CLASSES),
   recalculateInitial: z.boolean().optional().default(false),
 });
+const imageKindSchema = z.enum(["normal", "mask"]);
+const imageUploadSchema = z.object({
+  dataUrl: z.string().min(1).max(2_500_000),
+});
+const IMAGE_DATA_URL = /^data:(image\/(?:webp|png|jpeg));base64,([A-Za-z0-9+/=]+)$/;
+const MAX_STORED_IMAGE_BYTES = 1_500_000;
 
 function applyAttributeDerivedStats(
   current: NonNullable<Awaited<ReturnType<typeof storage.getCharacter>>>,
@@ -58,12 +64,16 @@ function applyAttributeDerivedStats(
   return updates;
 }
 
+function getImageField(kind: "normal" | "mask"): "imageUrl" | "maskImageUrl" {
+  return kind === "mask" ? "maskImageUrl" : "imageUrl";
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
 
-  app.get(api.characters.list.path, async (req, res) => {
+  app.get(api.characters.list.path, async (_req, res) => {
     const chars = await storage.getCharacters();
     res.json(chars);
   });
@@ -98,7 +108,7 @@ export async function registerRoutes(
       if (err instanceof z.ZodError) {
         return res.status(400).json({
           message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
+          field: err.errors[0].path.join("."),
         });
       }
       throw err;
@@ -129,8 +139,93 @@ export async function registerRoutes(
       if (err instanceof z.ZodError) {
         return res.status(400).json({
           message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
+          field: err.errors[0].path.join("."),
         });
+      }
+      throw err;
+    }
+  });
+
+  app.get("/api/characters/:id/image/:kind", async (req, res) => {
+    const kindResult = imageKindSchema.safeParse(req.params.kind);
+    if (!kindResult.success) {
+      return res.status(400).json({ message: "Tipo de retrato inválido." });
+    }
+
+    const image = await storage.getCharacterImage(req.params.id, kindResult.data);
+    if (!image) {
+      return res.status(404).json({ message: "Retrato não encontrado." });
+    }
+
+    const data = Buffer.from(image.dataBase64, "base64");
+    res.set({
+      "Content-Type": image.mimeType,
+      "Content-Length": data.length.toString(),
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Last-Modified": image.updatedAt.toUTCString(),
+      "X-Content-Type-Options": "nosniff",
+    });
+    return res.send(data);
+  });
+
+  app.post("/api/characters/:id/image/:kind", async (req, res) => {
+    try {
+      const kind = imageKindSchema.parse(req.params.kind);
+      const { dataUrl } = imageUploadSchema.parse(req.body);
+      const character = await storage.getCharacter(req.params.id);
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      const match = IMAGE_DATA_URL.exec(dataUrl);
+      if (!match) {
+        return res.status(400).json({ message: "Formato de imagem inválido. Use PNG, JPG ou WebP." });
+      }
+
+      const [, mimeType, dataBase64] = match;
+      const decodedSize = Buffer.from(dataBase64, "base64").length;
+      if (decodedSize <= 0 || decodedSize > MAX_STORED_IMAGE_BYTES) {
+        return res.status(400).json({
+          message: "A imagem compactada deve possuir no máximo 1,5 MB.",
+        });
+      }
+
+      const image = await storage.upsertCharacterImage({
+        characterId: character.id,
+        kind,
+        mimeType,
+        dataBase64,
+      });
+      const internalUrl = `/api/characters/${character.id}/image/${kind}?v=${image.updatedAt.getTime()}`;
+      const updated = await storage.updateCharacter(character.id, {
+        [getImageField(kind)]: internalUrl,
+      });
+
+      return res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Upload inválido." });
+      }
+      throw err;
+    }
+  });
+
+  app.delete("/api/characters/:id/image/:kind", async (req, res) => {
+    try {
+      const kind = imageKindSchema.parse(req.params.kind);
+      const character = await storage.getCharacter(req.params.id);
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      await storage.deleteCharacterImage(character.id, kind);
+      const updated = await storage.updateCharacter(character.id, {
+        [getImageField(kind)]: "",
+      });
+      return res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: "Tipo de retrato inválido." });
       }
       throw err;
     }
@@ -217,7 +312,7 @@ export async function registerRoutes(
   });
 
   // Dice rolls monitoring
-  app.get("/api/dice-rolls", async (req, res) => {
+  app.get("/api/dice-rolls", async (_req, res) => {
     const rolls = await storage.getDiceRolls(50);
     res.json(rolls);
   });
