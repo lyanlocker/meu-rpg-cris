@@ -1,14 +1,16 @@
 import { db } from "./db";
 import {
   characters,
+  characterImages,
   diceRolls,
   type Character,
+  type CharacterImage,
   type InsertCharacter,
   type UpdateCharacterRequest,
   type InsertDiceRoll,
   type DiceRollRecord,
 } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
 export interface IStorage {
@@ -17,6 +19,14 @@ export interface IStorage {
   createCharacter(character: InsertCharacter): Promise<Character>;
   updateCharacter(id: string, updates: UpdateCharacterRequest): Promise<Character | undefined>;
   deleteCharacter(id: string): Promise<void>;
+  getCharacterImage(characterId: string, kind: string): Promise<CharacterImage | undefined>;
+  upsertCharacterImage(input: {
+    characterId: string;
+    kind: string;
+    mimeType: string;
+    dataBase64: string;
+  }): Promise<CharacterImage>;
+  deleteCharacterImage(characterId: string, kind: string): Promise<void>;
   logDiceRoll(roll: InsertDiceRoll): Promise<DiceRollRecord>;
   getDiceRolls(limit?: number): Promise<DiceRollRecord[]>;
 }
@@ -32,7 +42,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCharacter(character: InsertCharacter): Promise<Character> {
-    const id = randomBytes(4).toString('hex');
+    const id = randomBytes(4).toString("hex");
     const [created] = await db.insert(characters).values({ ...character, id }).returning();
     return created;
   }
@@ -47,6 +57,41 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCharacter(id: string): Promise<void> {
     await db.delete(characters).where(eq(characters.id, id));
+  }
+
+  async getCharacterImage(characterId: string, kind: string): Promise<CharacterImage | undefined> {
+    const [image] = await db
+      .select()
+      .from(characterImages)
+      .where(and(eq(characterImages.characterId, characterId), eq(characterImages.kind, kind)));
+    return image;
+  }
+
+  async upsertCharacterImage(input: {
+    characterId: string;
+    kind: string;
+    mimeType: string;
+    dataBase64: string;
+  }): Promise<CharacterImage> {
+    const [image] = await db
+      .insert(characterImages)
+      .values(input)
+      .onConflictDoUpdate({
+        target: [characterImages.characterId, characterImages.kind],
+        set: {
+          mimeType: input.mimeType,
+          dataBase64: input.dataBase64,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return image;
+  }
+
+  async deleteCharacterImage(characterId: string, kind: string): Promise<void> {
+    await db
+      .delete(characterImages)
+      .where(and(eq(characterImages.characterId, characterId), eq(characterImages.kind, kind)));
   }
 
   async logDiceRoll(roll: InsertDiceRoll): Promise<DiceRollRecord> {
