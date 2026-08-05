@@ -91,31 +91,33 @@ export function DeleteCharacterDialog({
           </div>
         </div>
 
-        <AlertDialogFooter className="grid shrink-0 grid-cols-1 gap-3 border-t border-red-500/20 bg-background/90 px-5 py-4 sm:grid-cols-2 sm:px-6">
-          <AlertDialogCancel
-            disabled={deleteMutation.isPending}
-            autoFocus
-            className="m-0 h-12 w-full rounded-none border-emerald-400/40 bg-background/70 font-mono font-bold uppercase tracking-wider text-emerald-300 hover:bg-emerald-400/10 hover:text-emerald-200"
-          >
-            Não, manter ficha
-          </AlertDialogCancel>
-          <Button
-            type="button"
-            onClick={handleDelete}
-            disabled={deleteMutation.isPending}
-            className="h-12 w-full rounded-none bg-red-600 font-mono font-bold uppercase tracking-wider text-white hover:bg-red-500"
-            aria-label={`Excluir permanentemente a ficha de ${characterName}`}
-          >
-            {deleteMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Excluindo...
-              </>
-            ) : (
-              <>
-                <Trash2 className="mr-2 h-4 w-4" /> Sim, excluir ficha
-              </>
-            )}
-          </Button>
+        <AlertDialogFooter className="shrink-0 border-t border-red-500/20 bg-background/90 px-5 py-4 sm:px-6">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+            <AlertDialogCancel
+              disabled={deleteMutation.isPending}
+              autoFocus
+              className="m-0 h-12 w-full rounded-none border-emerald-400/40 bg-background/70 font-mono font-bold uppercase tracking-wider text-emerald-300 hover:bg-emerald-400/10 hover:text-emerald-200"
+            >
+              Não, manter ficha
+            </AlertDialogCancel>
+            <Button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="h-12 w-full rounded-none bg-red-600 font-mono font-bold uppercase tracking-wider text-white hover:bg-red-500"
+              aria-label={`Excluir permanentemente a ficha de ${characterName}`}
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" /> Sim, excluir ficha
+                </>
+              )}
+            </Button>
+          </div>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
