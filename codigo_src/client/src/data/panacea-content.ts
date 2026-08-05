@@ -2,6 +2,7 @@ import { PANACEA_ORIGINS } from "./panacea-origins";
 import { PANACEA_COMBATENTE_TRAILS } from "./panacea-trails-combatente";
 import { PANACEA_ESPECIALISTA_TRAILS } from "./panacea-trails-especialista";
 import { PANACEA_OCULTISTA_TRAILS } from "./panacea-trails-ocultista";
+import { PANACEA_EXTRA_TRAILS } from "./panacea-trails-extra";
 import type { PanaceaClass, PanaceaOrigin, PanaceaTrail } from "./panacea-types";
 
 export type { PanaceaClass, PanaceaOrigin, PanaceaTrail, PanaceaTrailMilestone } from "./panacea-types";
@@ -9,6 +10,7 @@ export { PANACEA_ORIGINS } from "./panacea-origins";
 
 export const PANACEA_TRAILS: PanaceaTrail[] = [
   ...PANACEA_COMBATENTE_TRAILS,
+  ...PANACEA_EXTRA_TRAILS,
   ...PANACEA_ESPECIALISTA_TRAILS,
   ...PANACEA_OCULTISTA_TRAILS,
 ];
