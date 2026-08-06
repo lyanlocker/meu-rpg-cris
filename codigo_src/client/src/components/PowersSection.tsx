@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Cpu, Plus, Sparkles, Trash2 } from "lucide-react";
+import { Cpu, LockKeyhole, Plus, Sparkles, Trash2 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +20,13 @@ export function PowersSection({ powers, onChange, type = "normal" }: PowersSecti
   const [isOpen, setIsOpen] = useState(false);
   const [newPower, setNewPower] = useState({ name: "", description: "" });
   const isMaskPowers = type === "mask";
+  const canEdit = typeof window === "undefined"
+    || new URLSearchParams(window.location.search).get("mode") !== "player";
   const customPowers = powers.filter((power) => power.source !== "panacea-nex15");
 
   const handleAdd = () => {
     const name = newPower.name.trim();
-    if (!name) return;
+    if (!canEdit || !name) return;
 
     onChange([
       ...powers,
@@ -40,6 +42,7 @@ export function PowersSection({ powers, onChange, type = "normal" }: PowersSecti
   };
 
   const handleRemove = (id: string) => {
+    if (!canEdit) return;
     onChange(powers.filter((power) => power.id !== id));
   };
 
@@ -55,17 +58,25 @@ export function PowersSection({ powers, onChange, type = "normal" }: PowersSecti
             {isMaskPowers ? "Protocolos de ruptura" : "Habilidades e protocolos"}
           </h2>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setIsOpen(true)}
-          className="border-primary/40 bg-background/45 font-mono text-xs uppercase text-primary hover:bg-primary hover:text-primary-foreground"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Registrar personalizado
-        </Button>
+        {canEdit ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsOpen(true)}
+            className="border-primary/40 bg-background/45 font-mono text-xs uppercase text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Registrar personalizado
+          </Button>
+        ) : (
+          <span className="data-chip"><LockKeyhole className="h-3.5 w-3.5" /> Somente leitura</span>
+        )}
       </div>
 
-      {!isMaskPowers && <AbilityCatalog powers={powers} onChange={onChange} />}
+      {!isMaskPowers && (
+        <div className={canEdit ? "" : "[&_button]:hidden"} aria-readonly={!canEdit}>
+          <AbilityCatalog powers={powers} onChange={canEdit ? onChange : () => undefined} />
+        </div>
+      )}
 
       <section className={`space-y-3 ${isMaskPowers ? "" : "border-t border-primary/15 pt-5"}`}>
         <div className="flex items-center justify-between gap-3">
@@ -90,14 +101,17 @@ export function PowersSection({ powers, onChange, type = "normal" }: PowersSecti
                   </p>
                   <h3 className="mt-1 break-words text-lg font-bold text-primary">{power.name}</h3>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemove(power.id)}
-                  className="shrink-0 text-muted-foreground opacity-40 transition-colors hover:text-destructive group-hover:opacity-100"
-                  title="Remover protocolo"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(power.id)}
+                    className="grid h-10 w-10 shrink-0 place-items-center border border-destructive/20 text-muted-foreground opacity-45 transition-colors hover:border-destructive/55 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                    title="Remover protocolo"
+                    aria-label={`Remover habilidade ${power.name}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
               <p className="whitespace-pre-wrap border-t border-primary/10 pt-3 text-sm leading-relaxed text-foreground/72">
                 {power.description}
@@ -118,7 +132,7 @@ export function PowersSection({ powers, onChange, type = "normal" }: PowersSecti
         onOpenChange={setIsOpen}
         kicker="Entrada de sistema"
         title={isMaskPowers ? "Novo protocolo de ruptura" : "Nova habilidade personalizada"}
-        description="Use este formulário para capacidades que não fazem parte automaticamente da classe, origem, trilha ou catálogo Panacea."
+        description="Somente o mestre pode registrar capacidades que não fazem parte automaticamente da classe, origem, trilha ou catálogo Panacea."
         footer={
           <>
             <Button variant="outline" onClick={() => setIsOpen(false)} className="border-primary/30 text-muted-foreground">
