@@ -10,6 +10,13 @@ interface QueuedCharacterUpdate {
 const characterUpdateQueues = new Map<string, Promise<unknown>>();
 const characterUpdateRevisions = new Map<string, number>();
 
+function getCrisAccessMode(): "master" | "player" {
+  if (typeof window === "undefined") return "master";
+  return new URLSearchParams(window.location.search).get("mode") === "player"
+    ? "player"
+    : "master";
+}
+
 function enqueueCharacterUpdate(id: string, task: () => Promise<Character>): Promise<QueuedCharacterUpdate> {
   const revision = (characterUpdateRevisions.get(id) ?? 0) + 1;
   characterUpdateRevisions.set(id, revision);
@@ -85,11 +92,17 @@ export function useUpdateCharacter() {
         const url = buildUrl(api.characters.update.path, { id });
         const res = await fetch(url, {
           method: api.characters.update.method,
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-CRIS-Mode": getCrisAccessMode(),
+          },
           body: JSON.stringify(updates),
           credentials: "include",
         });
-        if (!res.ok) throw new Error("Failed to update character");
+        if (!res.ok) {
+          const payload = await res.json().catch(() => null);
+          throw new Error(payload?.message || "Failed to update character");
+        }
         const data = await res.json();
         return api.characters.update.responses[200].parse(data);
       }),
