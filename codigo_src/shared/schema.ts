@@ -4,7 +4,7 @@ import { z } from "zod";
 import { CHARACTER_CLASSES } from "./nex";
 
 export const characters = pgTable("characters", {
-  id: text("id").primaryKey(), // We will use a unique string (e.g. nanoid) for shareable links
+  id: text("id").primaryKey(),
   name: text("name").notNull().default("Agente Desconhecido"),
   imageUrl: text("image_url").notNull().default(""),
   maskImageUrl: text("mask_image_url").notNull().default(""),
@@ -22,7 +22,6 @@ export const characters = pgTable("characters", {
   trailId: text("trail_id").notNull().default(""),
   appearance: text("appearance").notNull().default(""),
 
-  // Atributos
   attAgi: integer("att_agi").notNull().default(1),
   attFor: integer("att_for").notNull().default(1),
   attInt: integer("att_int").notNull().default(1),
@@ -31,16 +30,16 @@ export const characters = pgTable("characters", {
 
   resistances: text("resistances").notNull().default(""),
 
-  // JSONB for flexible skills and powers
-  skills: jsonb("skills").notNull().default({}), // Record<string, number>
-  powers: jsonb("powers").notNull().default([]), // Array of { id: string, name: string, description: string } - Normal powers
-  maskPowers: jsonb("mask_powers").notNull().default([]), // Array of { id: string, name: string, description: string } - Mask mode powers
-  attacks: jsonb("attacks").notNull().default([]), // Array of { id, name, test, attackDice, damageDice } - Normal attacks
-  maskAttacks: jsonb("mask_attacks").notNull().default([]), // Array of { id, name, test, attackDice, damageDice } - Mask attacks
-  inventory: jsonb("inventory").notNull().default([]), // Array of { id, name, description, quantity }
+  skills: jsonb("skills").notNull().default({}),
+  powers: jsonb("powers").notNull().default([]),
+  maskPowers: jsonb("mask_powers").notNull().default([]),
+  attacks: jsonb("attacks").notNull().default([]),
+  maskAttacks: jsonb("mask_attacks").notNull().default([]),
+  rituals: jsonb("rituals").notNull().default([]),
+  inventory: jsonb("inventory").notNull().default([]),
 
   isMaskActive: boolean("is_mask_active").notNull().default(false),
-  element: text("element").notNull().default(""), // "sangue" | "morte" | "conhecimento" | "energia" | ""
+  element: text("element").notNull().default(""),
 });
 
 export const characterImages = pgTable(
@@ -50,7 +49,7 @@ export const characterImages = pgTable(
     characterId: text("character_id")
       .notNull()
       .references(() => characters.id, { onDelete: "cascade" }),
-    kind: text("kind").notNull(), // "normal" | "mask"
+    kind: text("kind").notNull(),
     mimeType: text("mime_type").notNull(),
     dataBase64: text("data_base64").notNull(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -72,13 +71,12 @@ export type Character = typeof characters.$inferSelect;
 export type UpdateCharacterRequest = Partial<InsertCharacter>;
 export type CharacterImage = typeof characterImages.$inferSelect;
 
-// Dice rolls log (for Master Shield monitoring)
 export const diceRolls = pgTable("dice_rolls", {
   id: serial("id").primaryKey(),
   characterId: text("character_id").notNull(),
   characterName: text("character_name").notNull(),
   expression: text("expression").notNull(),
-  results: jsonb("results").notNull().default([]), // number[]
+  results: jsonb("results").notNull().default([]),
   total: integer("total").notNull(),
   rolledAt: timestamp("rolled_at").notNull().defaultNow(),
 });

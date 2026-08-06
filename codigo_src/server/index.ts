@@ -6,6 +6,15 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
+const PLAYER_READ_ONLY_FIELDS = new Set([
+  "skills",
+  "powers",
+  "maskPowers",
+  "attacks",
+  "maskAttacks",
+  "rituals",
+]);
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -22,6 +31,28 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false, limit: "3mb" }));
+
+app.use((req, res, next) => {
+  const isPlayerUpdate = req.method === "PATCH"
+    && /^\/api\/characters\/[^/]+$/.test(req.path)
+    && req.header("x-cris-mode") === "player";
+
+  if (isPlayerUpdate) {
+    const body = req.body && typeof req.body === "object"
+      ? req.body as Record<string, unknown>
+      : {};
+    const blockedField = Object.keys(body).find((field) => PLAYER_READ_ONLY_FIELDS.has(field));
+
+    if (blockedField) {
+      return res.status(403).json({
+        message: "Perícias, habilidades, ataques e rituais só podem ser alterados pelo mestre.",
+        field: blockedField,
+      });
+    }
+  }
+
+  next();
+});
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -76,9 +107,6 @@ app.use((req, res, next) => {
     return res.status(status).json({ message });
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
@@ -86,9 +114,6 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
   const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(
     {
