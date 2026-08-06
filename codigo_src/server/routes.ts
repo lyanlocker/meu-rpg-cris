@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
@@ -25,8 +25,17 @@ const imageKindSchema = z.enum(["normal", "mask"]);
 const imageUploadSchema = z.object({
   dataUrl: z.string().min(1).max(2_500_000),
 });
+const paranormalItemIdSchema = z.string().min(1).max(64).regex(/^[A-Za-z0-9_-]+$/);
 const IMAGE_DATA_URL = /^data:(image\/(?:webp|png|jpeg));base64,([A-Za-z0-9+/=]+)$/;
 const MAX_STORED_IMAGE_BYTES = 1_500_000;
+
+interface ParanormalItemRecord {
+  id: string;
+  name: string;
+  element: string;
+  description: string;
+  imageUrl?: string;
+}
 
 function applyAttributeDerivedStats(
   current: NonNullable<Awaited<ReturnType<typeof storage.getCharacter>>>,
@@ -66,6 +75,52 @@ function applyAttributeDerivedStats(
 
 function getImageField(kind: "normal" | "mask"): "imageUrl" | "maskImageUrl" {
   return kind === "mask" ? "maskImageUrl" : "imageUrl";
+}
+
+function getParanormalItems(value: unknown): ParanormalItemRecord[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is ParanormalItemRecord => (
+    Boolean(item)
+    && typeof item === "object"
+    && typeof (item as ParanormalItemRecord).id === "string"
+  ));
+}
+
+function getParanormalItemImageKind(itemId: string): string {
+  return `paranormal-item:${itemId}`;
+}
+
+function rejectPlayerWrite(req: Request, res: Response): boolean {
+  if (req.header("x-cris-mode") !== "player") return false;
+  res.status(403).json({ message: "Itens paranormais só podem ser alterados pelo mestre." });
+  return true;
+}
+
+function sendStoredImage(res: Response, image: NonNullable<Awaited<ReturnType<typeof storage.getCharacterImage>>>) {
+  const data = Buffer.from(image.dataBase64, "base64");
+  res.set({
+    "Content-Type": image.mimeType,
+    "Content-Length": data.length.toString(),
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "Last-Modified": image.updatedAt.toUTCString(),
+    "X-Content-Type-Options": "nosniff",
+  });
+  return res.send(data);
+}
+
+function parseStoredImage(dataUrl: string): { mimeType: string; dataBase64: string } {
+  const match = IMAGE_DATA_URL.exec(dataUrl);
+  if (!match) {
+    throw new Error("Formato de imagem inválido. Use PNG, JPG ou WebP.");
+  }
+
+  const [, mimeType, dataBase64] = match;
+  const decodedSize = Buffer.from(dataBase64, "base64").length;
+  if (decodedSize <= 0 || decodedSize > MAX_STORED_IMAGE_BYTES) {
+    throw new Error("A imagem compactada deve possuir no máximo 1,5 MB.");
+  }
+
+  return { mimeType, dataBase64 };
 }
 
 export async function registerRoutes(
@@ -157,15 +212,7 @@ export async function registerRoutes(
       return res.status(404).json({ message: "Retrato não encontrado." });
     }
 
-    const data = Buffer.from(image.dataBase64, "base64");
-    res.set({
-      "Content-Type": image.mimeType,
-      "Content-Length": data.length.toString(),
-      "Cache-Control": "public, max-age=31536000, immutable",
-      "Last-Modified": image.updatedAt.toUTCString(),
-      "X-Content-Type-Options": "nosniff",
-    });
-    return res.send(data);
+    return sendStoredImage(res, image);
   });
 
   app.post("/api/characters/:id/image/:kind", async (req, res) => {
@@ -177,19 +224,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Character not found" });
       }
 
-      const match = IMAGE_DATA_URL.exec(dataUrl);
-      if (!match) {
-        return res.status(400).json({ message: "Formato de imagem inválido. Use PNG, JPG ou WebP." });
-      }
-
-      const [, mimeType, dataBase64] = match;
-      const decodedSize = Buffer.from(dataBase64, "base64").length;
-      if (decodedSize <= 0 || decodedSize > MAX_STORED_IMAGE_BYTES) {
-        return res.status(400).json({
-          message: "A imagem compactada deve possuir no máximo 1,5 MB.",
-        });
-      }
-
+      const { mimeType, dataBase64 } = parseStoredImage(dataUrl);
       const image = await storage.upsertCharacterImage({
         characterId: character.id,
         kind,
@@ -205,6 +240,9 @@ export async function registerRoutes(
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0]?.message ?? "Upload inválido." });
+      }
+      if (err instanceof Error) {
+        return res.status(400).json({ message: err.message });
       }
       throw err;
     }
@@ -226,6 +264,90 @@ export async function registerRoutes(
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: "Tipo de retrato inválido." });
+      }
+      throw err;
+    }
+  });
+
+  app.get("/api/characters/:id/paranormal-items/:itemId/image", async (req, res) => {
+    const itemIdResult = paranormalItemIdSchema.safeParse(req.params.itemId);
+    if (!itemIdResult.success) {
+      return res.status(400).json({ message: "Identificador de item inválido." });
+    }
+
+    const image = await storage.getCharacterImage(
+      req.params.id,
+      getParanormalItemImageKind(itemIdResult.data),
+    );
+    if (!image) {
+      return res.status(404).json({ message: "Imagem do item não encontrada." });
+    }
+
+    return sendStoredImage(res, image);
+  });
+
+  app.post("/api/characters/:id/paranormal-items/:itemId/image", async (req, res) => {
+    if (rejectPlayerWrite(req, res)) return;
+
+    try {
+      const itemId = paranormalItemIdSchema.parse(req.params.itemId);
+      const { dataUrl } = imageUploadSchema.parse(req.body);
+      const character = await storage.getCharacter(req.params.id);
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      const items = getParanormalItems(character.paranormalItems);
+      if (!items.some((item) => item.id === itemId)) {
+        return res.status(404).json({ message: "Item paranormal não encontrado na ficha." });
+      }
+
+      const { mimeType, dataBase64 } = parseStoredImage(dataUrl);
+      const image = await storage.upsertCharacterImage({
+        characterId: character.id,
+        kind: getParanormalItemImageKind(itemId),
+        mimeType,
+        dataBase64,
+      });
+      const internalUrl = `/api/characters/${character.id}/paranormal-items/${itemId}/image?v=${image.updatedAt.getTime()}`;
+      const nextItems = items.map((item) => item.id === itemId ? { ...item, imageUrl: internalUrl } : item);
+      const updated = await storage.updateCharacter(character.id, { paranormalItems: nextItems });
+
+      return res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Upload inválido." });
+      }
+      if (err instanceof Error) {
+        return res.status(400).json({ message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete("/api/characters/:id/paranormal-items/:itemId", async (req, res) => {
+    if (rejectPlayerWrite(req, res)) return;
+
+    try {
+      const itemId = paranormalItemIdSchema.parse(req.params.itemId);
+      const character = await storage.getCharacter(req.params.id);
+      if (!character) {
+        return res.status(404).json({ message: "Character not found" });
+      }
+
+      const items = getParanormalItems(character.paranormalItems);
+      if (!items.some((item) => item.id === itemId)) {
+        return res.status(404).json({ message: "Item paranormal não encontrado na ficha." });
+      }
+
+      await storage.deleteCharacterImage(character.id, getParanormalItemImageKind(itemId));
+      const updated = await storage.updateCharacter(character.id, {
+        paranormalItems: items.filter((item) => item.id !== itemId),
+      });
+      return res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: "Identificador de item inválido." });
       }
       throw err;
     }
@@ -311,7 +433,6 @@ export async function registerRoutes(
     res.status(204).end();
   });
 
-  // Dice rolls monitoring
   app.get("/api/dice-rolls", async (_req, res) => {
     const rolls = await storage.getDiceRolls(50);
     res.json(rolls);
