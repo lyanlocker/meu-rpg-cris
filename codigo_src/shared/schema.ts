@@ -36,6 +36,8 @@ export const characters = pgTable("characters", {
   attacks: jsonb("attacks").notNull().default([]),
   maskAttacks: jsonb("mask_attacks").notNull().default([]),
   rituals: jsonb("rituals").notNull().default([]),
+  paranormalItemsEnabled: boolean("paranormal_items_enabled").notNull().default(false),
+  paranormalItems: jsonb("paranormal_items").notNull().default([]),
   inventory: jsonb("inventory").notNull().default([]),
 
   isMaskActive: boolean("is_mask_active").notNull().default(false),
