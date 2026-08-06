@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Crosshair, Plus, Sparkles, Trash2, WandSparkles } from "lucide-react";
+import { Crosshair, Plus, Sparkles, Trash2 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -128,7 +128,7 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
           <p className="section-kicker">MOD-04 // {isOccultist ? "Conjuração e combate" : "Combate e contenção"}</p>
           <h2 className="section-title mt-1 flex items-center gap-2">
             {isOccultist
-              ? <WandSparkles className={`h-5 w-5 ${isMaskAttacks ? "text-red-300" : "text-violet-300"}`} />
+              ? <Sparkles className={`h-5 w-5 ${isMaskAttacks ? "text-red-300" : "text-violet-300"}`} />
               : <Crosshair className={`h-5 w-5 ${isMaskAttacks ? "text-red-300" : ""}`} />}
             {isOccultist
               ? isMaskAttacks ? "Protocolos ritualísticos de ruptura" : "Protocolos ritualísticos"
@@ -142,7 +142,7 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
         <Tabs defaultValue="rituais" className="w-full">
           <TabsList className="grid h-auto w-full grid-cols-2 rounded-none border border-primary/20 bg-background/40 p-1">
             <TabsTrigger value="rituais" className="rounded-none py-3 font-mono text-[10px] uppercase tracking-[0.14em] data-[state=active]:bg-violet-400/10 data-[state=active]:text-violet-200">
-              <WandSparkles className="mr-2 h-4 w-4" /> Rituais
+              <Sparkles className="mr-2 h-4 w-4" /> Rituais
             </TabsTrigger>
             <TabsTrigger value="armas" className="rounded-none py-3 font-mono text-[10px] uppercase tracking-[0.14em] data-[state=active]:bg-primary/15 data-[state=active]:text-primary">
               <Crosshair className="mr-2 h-4 w-4" /> Armas e ataques
