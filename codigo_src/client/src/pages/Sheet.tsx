@@ -26,6 +26,7 @@ import { ElementEffect } from "@/components/ElementEffect";
 import { SkillList } from "@/components/SkillList";
 import { PowersSection } from "@/components/PowersSection";
 import { AttacksSection } from "@/components/AttacksSection";
+import { ParanormalItemsSection, type ParanormalItem } from "@/components/ParanormalItemsSection";
 import { InventorySection } from "@/components/InventorySection";
 import { DiceRoller } from "@/components/DiceRoller";
 import { MasterShield } from "@/components/MasterShield";
@@ -364,6 +365,19 @@ export default function Sheet() {
               type={isMaskActive ? "mask" : "normal"}
             />
           </section>
+
+          {(isMaster || localChar.paranormalItemsEnabled) && (
+            <section className="tech-border hud-panel p-5 md:p-6">
+              <ParanormalItemsSection
+                characterId={localChar.id}
+                enabled={Boolean(localChar.paranormalItemsEnabled)}
+                items={((localChar.paranormalItems as ParanormalItem[]) || [])}
+                isPlayerMode={isPlayerMode}
+                onToggle={(enabled) => update("paranormalItemsEnabled", enabled)}
+                onChange={(items) => update("paranormalItems", items)}
+              />
+            </section>
+          )}
 
           <section className="tech-border hud-panel p-5 md:p-6">
             <InventorySection inventory={(localChar.inventory as any) || []} onChange={(value) => update("inventory", value)} />
