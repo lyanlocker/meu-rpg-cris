@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResponsiveFormDialog } from "@/components/ResponsiveFormDialog";
 import { RitualsSection, type CharacterRitual } from "@/components/RitualsSection";
+import { WeaponCatalogButton } from "@/components/EquipmentCatalogDialogs";
+import type { WeaponCatalogEntry } from "@/data/equipmentCatalog";
 import { useCharacter, useUpdateCharacter } from "@/hooks/use-characters";
 
 interface Attack {
@@ -17,6 +19,13 @@ interface Attack {
   attackDice: string;
   damageDice: string;
   description: string;
+  category?: string;
+  spaces?: string;
+  critical?: string;
+  range?: string;
+  damageType?: string;
+  source?: string;
+  catalogId?: string;
 }
 
 interface AttacksSectionProps {
@@ -44,32 +53,54 @@ function AttackList({
 
   return (
     <div className="grid grid-cols-1 gap-3">
-      {attacks.map((attack, index) => (
-        <article key={attack.id} className="module-card group p-4">
-          <div className="mb-3 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-primary/40">OFS-{String(index + 1).padStart(2, "0")}</p>
-              <h3 className="mt-1 break-words text-lg font-bold text-primary">{attack.name}</h3>
+      {attacks.map((attack, index) => {
+        const hasSourceStats = Boolean(attack.category || attack.spaces || attack.critical || attack.range || attack.damageType || attack.source);
+        return (
+          <article key={attack.id} className="module-card group p-4">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-primary/40">OFS-{String(index + 1).padStart(2, "0")}</p>
+                <h3 className="mt-1 break-words text-lg font-bold text-primary">{attack.name}</h3>
+                {attack.source && <p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground/60">Fonte // {attack.source}</p>}
+              </div>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => onRemove(attack.id)}
+                  className="grid h-10 w-10 shrink-0 place-items-center border border-destructive/20 text-muted-foreground opacity-50 transition-colors hover:border-destructive/55 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                  aria-label={`Remover ataque ${attack.name}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
             </div>
-            {canEdit && (
-              <button
-                type="button"
-                onClick={() => onRemove(attack.id)}
-                className="grid h-10 w-10 shrink-0 place-items-center border border-destructive/20 text-muted-foreground opacity-50 transition-colors hover:border-destructive/55 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-                aria-label={`Remover ataque ${attack.name}`}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+
+            {hasSourceStats && (
+              <div className="mb-3 grid grid-cols-3 gap-1.5 font-mono text-[9px] uppercase tracking-wider sm:grid-cols-6">
+                {[
+                  ["Categoria", attack.category || "—"],
+                  ["Espaço", attack.spaces || "—"],
+                  ["Dano", attack.damageDice || "—"],
+                  ["Crítico", attack.critical || "—"],
+                  ["Alcance", attack.range || "—"],
+                  ["Tipo", attack.damageType || "—"],
+                ].map(([label, value]) => (
+                  <div key={label} className="border border-primary/12 bg-background/35 px-2 py-2 text-muted-foreground">
+                    {label}<span className="mt-1 block text-xs font-bold normal-case text-foreground">{value}</span>
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
-          <div className="mb-3 grid grid-cols-1 gap-2 font-mono text-[10px] uppercase tracking-wider sm:grid-cols-3">
-            <div className="border border-primary/12 bg-background/35 px-2.5 py-2 text-muted-foreground">Teste <span className="mt-1 block text-xs normal-case text-foreground">{attack.test || "—"}</span></div>
-            <div className="border border-amber-400/15 bg-amber-400/[0.025] px-2.5 py-2 text-muted-foreground">Ataque <span className="mt-1 block text-xs font-bold normal-case text-amber-300">{attack.attackDice || "—"}</span></div>
-            <div className="border border-red-400/15 bg-red-400/[0.025] px-2.5 py-2 text-muted-foreground">Dano <span className="mt-1 block text-xs font-bold normal-case text-red-300">{attack.damageDice || "—"}</span></div>
-          </div>
-          {attack.description && <p className="whitespace-pre-wrap border-t border-primary/10 pt-3 text-sm leading-relaxed text-foreground/65">{attack.description}</p>}
-        </article>
-      ))}
+
+            <div className="mb-3 grid grid-cols-1 gap-2 font-mono text-[10px] uppercase tracking-wider sm:grid-cols-3">
+              <div className="border border-primary/12 bg-background/35 px-2.5 py-2 text-muted-foreground">Teste <span className="mt-1 block text-xs normal-case text-foreground">{attack.test || "—"}</span></div>
+              <div className="border border-amber-400/15 bg-amber-400/[0.025] px-2.5 py-2 text-muted-foreground">Ataque <span className="mt-1 block text-xs font-bold normal-case text-amber-300">{attack.attackDice || "Definido pelo operador"}</span></div>
+              <div className="border border-red-400/15 bg-red-400/[0.025] px-2.5 py-2 text-muted-foreground">Dano <span className="mt-1 block text-xs font-bold normal-case text-red-300">{attack.damageDice || "—"}</span></div>
+            </div>
+            {attack.description && <p className="whitespace-pre-wrap border-t border-primary/10 pt-3 text-sm leading-relaxed text-foreground/65">{attack.description}</p>}
+          </article>
+        );
+      })}
     </div>
   );
 }
@@ -84,15 +115,39 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
   const isOccultist = character?.characterClass === "ocultista";
   const rituals = ((character?.rituals as CharacterRitual[] | undefined) ?? []);
 
+  const emptyDraft = { name: "", test: "", attackDice: "", damageDice: "", description: "", category: "", spaces: "", critical: "", range: "", damageType: "" };
   const [isOpen, setIsOpen] = useState(false);
-  const [newAtk, setNewAtk] = useState({ name: "", test: "", attackDice: "", damageDice: "", description: "" });
+  const [newAtk, setNewAtk] = useState(emptyDraft);
 
   const handleAdd = () => {
     const name = newAtk.name.trim();
     if (!canEdit || !name) return;
-    onChange([...attacks, { id: nanoid(), ...newAtk, name }]);
-    setNewAtk({ name: "", test: "", attackDice: "", damageDice: "", description: "" });
+    onChange([...attacks, { id: nanoid(), ...newAtk, name, source: "Personalizado" }]);
+    setNewAtk(emptyDraft);
     setIsOpen(false);
+  };
+
+  const handleCatalogAdd = (entry: WeaponCatalogEntry) => {
+    if (!canEdit) return;
+    const suggestedTest = entry.group.toLowerCase().includes("corpo a corpo") ? "Luta" : "Pontaria";
+    onChange([
+      ...attacks,
+      {
+        id: nanoid(),
+        name: entry.name,
+        test: suggestedTest,
+        attackDice: "",
+        damageDice: entry.damage,
+        description: entry.summary,
+        category: entry.category,
+        spaces: entry.spaces,
+        critical: entry.critical,
+        range: entry.range,
+        damageType: entry.damageType,
+        source: entry.source,
+        catalogId: entry.id,
+      },
+    ]);
   };
 
   const handleRemove = (attackId: string) => {
@@ -109,14 +164,17 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
   };
 
   const attackControls = canEdit ? (
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={() => setIsOpen(true)}
-      className="border-primary/40 bg-background/45 font-mono text-xs uppercase text-primary hover:bg-primary hover:text-primary-foreground"
-    >
-      <Plus className="mr-2 h-4 w-4" /> Registrar arma ou ataque
-    </Button>
+    <div className="flex flex-col gap-2 sm:flex-row">
+      <WeaponCatalogButton onSelect={handleCatalogAdd} />
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => setIsOpen(true)}
+        className="border-primary/40 bg-background/45 font-mono text-xs uppercase text-primary hover:bg-primary hover:text-primary-foreground"
+      >
+        <Plus className="mr-2 h-4 w-4" /> Registrar manualmente
+      </Button>
+    </div>
   ) : (
     <span className="data-chip">Somente leitura</span>
   );
@@ -150,12 +208,7 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
           </TabsList>
 
           <TabsContent value="rituais" className="mt-5">
-            <RitualsSection
-              rituals={rituals}
-              onChange={updateRituals}
-              canEdit={canEdit}
-              nex={character?.nex ?? 5}
-            />
+            <RitualsSection rituals={rituals} onChange={updateRituals} canEdit={canEdit} nex={character?.nex ?? 5} />
           </TabsContent>
 
           <TabsContent value="armas" className="mt-5 space-y-4">
@@ -180,16 +233,12 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
         onOpenChange={setIsOpen}
         kicker="Entrada de armamento"
         title={isMaskAttacks ? "Novo protocolo de ruptura" : "Nova arma ou ataque"}
-        description="Somente o mestre pode registrar ou remover armamentos e ataques."
+        description="Use o catálogo para equipamentos das fontes ou este formulário para criações próprias."
         maxWidthClassName="max-w-2xl"
         footer={
           <>
-            <Button variant="outline" onClick={() => setIsOpen(false)} className="border-primary/30 text-muted-foreground">
-              Cancelar
-            </Button>
-            <Button onClick={handleAdd} disabled={!newAtk.name.trim()} className="bg-primary text-primary-foreground hover:bg-primary/85 glow-box">
-              Registrar protocolo
-            </Button>
+            <Button variant="outline" onClick={() => setIsOpen(false)} className="border-primary/30 text-muted-foreground">Cancelar</Button>
+            <Button onClick={handleAdd} disabled={!newAtk.name.trim()} className="bg-primary text-primary-foreground hover:bg-primary/85 glow-box">Registrar protocolo</Button>
           </>
         }
       >
@@ -200,22 +249,23 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
           </div>
           <div className="space-y-1.5">
             <label className="section-kicker">Teste operacional</label>
-            <Input value={newAtk.test} onChange={(event) => setNewAtk({ ...newAtk, test: event.target.value })} className="border-primary/35 bg-background/65 focus-visible:ring-primary" placeholder="Ex: Luta, Pontaria, AGI..." />
+            <Input value={newAtk.test} onChange={(event) => setNewAtk({ ...newAtk, test: event.target.value })} className="border-primary/35 bg-background/65 focus-visible:ring-primary" placeholder="Ex: Luta ou Pontaria" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {[
+              ["Categoria", "category", "I"], ["Espaço", "spaces", "1"], ["Crítico", "critical", "19/x3"], ["Alcance", "range", "Médio"], ["Tipo", "damageType", "Balístico"],
+            ].map(([label, field, placeholder]) => (
+              <div key={field} className="space-y-1.5">
+                <label className="section-kicker">{label}</label>
+                <Input value={(newAtk as any)[field]} onChange={(event) => setNewAtk({ ...newAtk, [field]: event.target.value })} className="border-primary/35 bg-background/65 font-mono text-xs" placeholder={placeholder} />
+              </div>
+            ))}
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label className="section-kicker">Dados de ataque</label>
-              <Input value={newAtk.attackDice} onChange={(event) => setNewAtk({ ...newAtk, attackDice: event.target.value })} className="border-primary/35 bg-background/65 font-mono focus-visible:ring-primary" placeholder="Ex: 1d20+5" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="section-kicker">Dados de dano</label>
-              <Input value={newAtk.damageDice} onChange={(event) => setNewAtk({ ...newAtk, damageDice: event.target.value })} className="border-primary/35 bg-background/65 font-mono focus-visible:ring-primary" placeholder="Ex: 2d6+3" />
-            </div>
+            <div className="space-y-1.5"><label className="section-kicker">Dados de ataque</label><Input value={newAtk.attackDice} onChange={(event) => setNewAtk({ ...newAtk, attackDice: event.target.value })} className="border-primary/35 bg-background/65 font-mono" placeholder="Ex: 1d20+5" /></div>
+            <div className="space-y-1.5"><label className="section-kicker">Dados de dano</label><Input value={newAtk.damageDice} onChange={(event) => setNewAtk({ ...newAtk, damageDice: event.target.value })} className="border-primary/35 bg-background/65 font-mono" placeholder="Ex: 2d6+3" /></div>
           </div>
-          <div className="space-y-1.5">
-            <label className="section-kicker">Parâmetros adicionais</label>
-            <Textarea value={newAtk.description} onChange={(event) => setNewAtk({ ...newAtk, description: event.target.value })} className="min-h-[160px] resize-y border-primary/35 bg-background/65 focus-visible:ring-primary" placeholder="Efeito, alcance, condições especiais..." />
-          </div>
+          <div className="space-y-1.5"><label className="section-kicker">Parâmetros adicionais</label><Textarea value={newAtk.description} onChange={(event) => setNewAtk({ ...newAtk, description: event.target.value })} className="min-h-[160px] resize-y border-primary/35 bg-background/65" placeholder="Efeito, condições especiais, modificações..." /></div>
         </div>
       </ResponsiveFormDialog>
     </div>
