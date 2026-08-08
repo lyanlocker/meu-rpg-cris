@@ -4,7 +4,9 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "NODE_ENV=development tsx server/index.ts",
+    "dev": "node script/start-environment.mjs",
+    "dev:local": "NODE_ENV=development tsx server/index.ts",
+    "postinstall": "node script/render-postinstall.mjs",
     "prebuild": "npm run db:push",
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
