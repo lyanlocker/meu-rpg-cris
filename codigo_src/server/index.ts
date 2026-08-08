@@ -10,8 +10,6 @@ const PLAYER_READ_ONLY_FIELDS = new Set([
   "skills",
   "powers",
   "maskPowers",
-  "attacks",
-  "maskAttacks",
   "rituals",
   "paranormalItemsEnabled",
   "paranormalItems",
@@ -47,7 +45,7 @@ app.use((req, res, next) => {
 
     if (blockedField) {
       return res.status(403).json({
-        message: "Perícias, habilidades, ataques, rituais e itens paranormais só podem ser alterados pelo mestre.",
+        message: "Perícias, habilidades, rituais e itens paranormais só podem ser alterados pelo mestre.",
         field: blockedField,
       });
     }

@@ -110,8 +110,10 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
   const { data: character } = useCharacter(id || "");
   const updateMutation = useUpdateCharacter();
   const isMaskAttacks = type === "mask";
-  const canEdit = typeof window === "undefined"
-    || new URLSearchParams(window.location.search).get("mode") !== "player";
+  const isPlayerMode = typeof window !== "undefined"
+    && new URLSearchParams(window.location.search).get("mode") === "player";
+  const canEditWeapons = true;
+  const canEditRituals = !isPlayerMode;
   const isOccultist = character?.characterClass === "ocultista";
   const rituals = ((character?.rituals as CharacterRitual[] | undefined) ?? []);
 
@@ -121,14 +123,14 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
 
   const handleAdd = () => {
     const name = newAtk.name.trim();
-    if (!canEdit || !name) return;
+    if (!canEditWeapons || !name) return;
     onChange([...attacks, { id: nanoid(), ...newAtk, name, source: "Personalizado" }]);
     setNewAtk(emptyDraft);
     setIsOpen(false);
   };
 
   const handleCatalogAdd = (entry: WeaponCatalogEntry) => {
-    if (!canEdit) return;
+    if (!canEditWeapons) return;
     const suggestedTest = entry.group.toLowerCase().includes("corpo a corpo") ? "Luta" : "Pontaria";
     onChange([
       ...attacks,
@@ -151,19 +153,19 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
   };
 
   const handleRemove = (attackId: string) => {
-    if (!canEdit) return;
+    if (!canEditWeapons) return;
     onChange(attacks.filter((attack) => attack.id !== attackId));
   };
 
   const updateRituals = (nextRituals: CharacterRitual[]) => {
-    if (!canEdit || !character) return;
+    if (!canEditRituals || !character) return;
     updateMutation.mutate({
       id: character.id,
       updates: { rituals: nextRituals } as any,
     });
   };
 
-  const attackControls = canEdit ? (
+  const attackControls = canEditWeapons ? (
     <div className="flex flex-col gap-2 sm:flex-row">
       <WeaponCatalogButton onSelect={handleCatalogAdd} />
       <Button
@@ -208,7 +210,7 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
           </TabsList>
 
           <TabsContent value="rituais" className="mt-5">
-            <RitualsSection rituals={rituals} onChange={updateRituals} canEdit={canEdit} nex={character?.nex ?? 5} />
+            <RitualsSection rituals={rituals} onChange={updateRituals} canEdit={canEditRituals} nex={character?.nex ?? 5} />
           </TabsContent>
 
           <TabsContent value="armas" className="mt-5 space-y-4">
@@ -221,11 +223,11 @@ export function AttacksSection({ attacks, onChange, type = "normal" }: AttacksSe
               </div>
               {attackControls}
             </div>
-            <AttackList attacks={attacks} canEdit={canEdit} onRemove={handleRemove} />
+            <AttackList attacks={attacks} canEdit={canEditWeapons} onRemove={handleRemove} />
           </TabsContent>
         </Tabs>
       ) : (
-        <AttackList attacks={attacks} canEdit={canEdit} onRemove={handleRemove} />
+        <AttackList attacks={attacks} canEdit={canEditWeapons} onRemove={handleRemove} />
       )}
 
       <ResponsiveFormDialog
