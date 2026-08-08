@@ -17,11 +17,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ResponsiveFormDialog } from "@/components/ResponsiveFormDialog";
+import { ParanormalCatalogButton } from "@/components/EquipmentCatalogDialogs";
+import type { ParanormalCatalogEntry } from "@/data/equipmentCatalog";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@shared/routes";
 import type { Character } from "@shared/schema";
 
-export type ParanormalItemElement = "sangue" | "morte" | "conhecimento" | "energia" | "medo";
+export type ParanormalItemElement = "sangue" | "morte" | "conhecimento" | "energia" | "medo" | "neutro";
 
 export interface ParanormalItem {
   id: string;
@@ -29,7 +31,13 @@ export interface ParanormalItem {
   element: ParanormalItemElement;
   description: string;
   imageUrl?: string;
+  category?: string;
+  spaces?: string;
+  source?: string;
+  catalogId?: string;
 }
+
+type ParanormalItemDraft = Pick<ParanormalItem, "name" | "element" | "description" | "category" | "spaces">;
 
 interface ParanormalItemsSectionProps {
   characterId: string;
@@ -46,6 +54,7 @@ const ELEMENT_OPTIONS: Array<{ id: ParanormalItemElement; label: string }> = [
   { id: "conhecimento", label: "Conhecimento" },
   { id: "energia", label: "Energia" },
   { id: "medo", label: "Medo" },
+  { id: "neutro", label: "Neutro / elemento variável" },
 ];
 
 const ELEMENT_TONES: Record<ParanormalItemElement, string> = {
@@ -54,6 +63,16 @@ const ELEMENT_TONES: Record<ParanormalItemElement, string> = {
   conhecimento: "border-violet-400/35 bg-violet-400/[0.055] text-violet-300",
   energia: "border-fuchsia-400/35 bg-fuchsia-400/[0.055] text-fuchsia-300",
   medo: "border-slate-200/35 bg-slate-200/[0.055] text-slate-100",
+  neutro: "border-cyan-200/25 bg-cyan-200/[0.035] text-cyan-100",
+};
+
+const ELEMENT_LABELS: Record<ParanormalItemElement, string> = {
+  sangue: "Sangue",
+  morte: "Morte",
+  conhecimento: "Conhecimento",
+  energia: "Energia",
+  medo: "Medo",
+  neutro: "Neutro / variável",
 };
 
 const MAX_SOURCE_BYTES = 15 * 1024 * 1024;
@@ -165,10 +184,12 @@ export function ParanormalItemsSection({
   const [editingItem, setEditingItem] = useState<ParanormalItem | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ParanormalItem | null>(null);
   const [busyItemId, setBusyItemId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Omit<ParanormalItem, "id" | "imageUrl">>({
+  const [draft, setDraft] = useState<ParanormalItemDraft>({
     name: "",
     element: "conhecimento",
     description: "",
+    category: "",
+    spaces: "",
   });
 
   if (!enabled && isPlayerMode) return null;
@@ -181,27 +202,66 @@ export function ParanormalItemsSection({
   const openCreate = () => {
     if (!isMaster) return;
     setEditingItem(null);
-    setDraft({ name: "", element: "conhecimento", description: "" });
+    setDraft({ name: "", element: "conhecimento", description: "", category: "", spaces: "" });
     setFormOpen(true);
   };
 
   const openEdit = (item: ParanormalItem) => {
     if (!isMaster) return;
     setEditingItem(item);
-    setDraft({ name: item.name, element: item.element, description: item.description });
+    setDraft({
+      name: item.name,
+      element: item.element,
+      description: item.description,
+      category: item.category ?? "",
+      spaces: item.spaces ?? "",
+    });
     setFormOpen(true);
   };
 
   const saveItem = () => {
     if (!isMaster || !draft.name.trim()) return;
-    const normalized = { ...draft, name: draft.name.trim(), description: draft.description.trim() };
+    const normalized = {
+      ...draft,
+      name: draft.name.trim(),
+      description: draft.description.trim(),
+      category: draft.category?.trim() ?? "",
+      spaces: draft.spaces?.trim() ?? "",
+    };
     if (editingItem) {
       onChange(items.map((item) => item.id === editingItem.id ? { ...item, ...normalized } : item));
     } else {
-      onChange([...items, { id: nanoid(), ...normalized, imageUrl: "" }]);
+      onChange([...items, { id: nanoid(), ...normalized, imageUrl: "", source: "Personalizado" }]);
     }
     setFormOpen(false);
     setEditingItem(null);
+  };
+
+  const addFromCatalog = (entry: ParanormalCatalogEntry) => {
+    if (!isMaster) return;
+    const existing = items.find((item) => item.catalogId === entry.id);
+    if (existing) {
+      toast({
+        title: "ITEM JÁ AUTORIZADO",
+        description: `${entry.name} já está no acervo paranormal deste operador.`,
+      });
+      return;
+    }
+
+    onChange([
+      ...items,
+      {
+        id: nanoid(),
+        name: entry.name,
+        element: entry.element,
+        description: entry.summary,
+        imageUrl: "",
+        category: entry.category,
+        spaces: entry.spaces,
+        source: entry.source,
+        catalogId: entry.id,
+      },
+    ]);
   };
 
   const uploadImage = async (item: ParanormalItem, file?: File) => {
@@ -278,7 +338,7 @@ export function ParanormalItemsSection({
         </div>
 
         {isMaster && (
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
             <Button
               type="button"
               size="sm"
@@ -292,9 +352,12 @@ export function ParanormalItemsSection({
               {enabled ? "Ocultar do jogador" : "Ativar protocolo"}
             </Button>
             {enabled && (
-              <Button type="button" size="sm" onClick={openCreate} className="min-h-10 bg-violet-500 text-white hover:bg-violet-400">
-                <Plus className="mr-2 h-4 w-4" /> Adicionar item
-              </Button>
+              <>
+                <ParanormalCatalogButton onSelect={addFromCatalog} />
+                <Button type="button" size="sm" onClick={openCreate} className="min-h-10 bg-violet-500 text-white hover:bg-violet-400">
+                  <Plus className="mr-2 h-4 w-4" /> Item próprio
+                </Button>
+              </>
             )}
           </div>
         )}
@@ -317,6 +380,7 @@ export function ParanormalItemsSection({
           {items.map((item, index) => {
             const busy = busyItemId === item.id;
             const inputId = `paranormal-item-image-${characterId}-${item.id}`;
+            const element = ELEMENT_TONES[item.element] ? item.element : "neutro";
             return (
               <article key={item.id} className="module-card group overflow-hidden border border-violet-400/20">
                 <ItemImage src={item.imageUrl} name={item.name} />
@@ -328,10 +392,18 @@ export function ParanormalItemsSection({
                       </p>
                       <h3 className="mt-1 break-words text-lg font-bold text-primary">{item.name}</h3>
                     </div>
-                    <span className={`shrink-0 border px-2 py-1 font-mono text-[9px] uppercase tracking-wider ${ELEMENT_TONES[item.element]}`}>
-                      {item.element}
+                    <span className={`shrink-0 border px-2 py-1 font-mono text-[9px] uppercase tracking-wider ${ELEMENT_TONES[element]}`}>
+                      {ELEMENT_LABELS[element]}
                     </span>
                   </div>
+
+                  {(item.category || item.spaces || item.source) && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {item.category && <span className="data-chip">Cat. {item.category}</span>}
+                      {item.spaces && <span className="data-chip">{item.spaces} esp.</span>}
+                      {item.source && <span className="data-chip">{item.source}</span>}
+                    </div>
+                  )}
 
                   <p className="whitespace-pre-wrap border-t border-primary/10 pt-3 text-sm leading-relaxed text-foreground/75">
                     {item.description || "Nenhuma descrição operacional registrada."}
@@ -377,7 +449,7 @@ export function ParanormalItemsSection({
         onOpenChange={setFormOpen}
         kicker="ITP-MESTRE // Registro paranormal"
         title={editingItem ? "Editar item paranormal" : "Novo item paranormal"}
-        description="Somente o mestre pode alterar este acervo. A imagem poderá ser enviada após o registro do item."
+        description="Somente o mestre pode alterar este acervo. Itens trazidos do catálogo podem ser ajustados sem alterar a fonte original."
         maxWidthClassName="max-w-2xl"
         footer={
           <>
@@ -391,32 +463,21 @@ export function ParanormalItemsSection({
         <div className="space-y-5">
           <div className="space-y-2">
             <label className="section-kicker">Nome do equipamento</label>
-            <Input
-              value={draft.name}
-              onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-              className="border-violet-400/35 bg-background/65 font-bold text-primary focus-visible:ring-violet-400"
-              placeholder="Ex: Ampola de Sangue Reverberante"
-              autoFocus
-            />
+            <Input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} className="border-violet-400/35 bg-background/65 font-bold text-primary" placeholder="Ex: Ampola de Sangue Reverberante" autoFocus />
           </div>
-          <div className="space-y-2">
-            <label className="section-kicker">Elemento paranormal</label>
-            <select
-              value={draft.element}
-              onChange={(event) => setDraft({ ...draft, element: event.target.value as ParanormalItemElement })}
-              className="h-10 w-full border border-violet-400/35 bg-background/80 px-3 font-mono text-sm text-foreground outline-none focus:border-violet-300"
-            >
-              {ELEMENT_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
-            </select>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_8rem_8rem]">
+            <div className="space-y-2">
+              <label className="section-kicker">Elemento paranormal</label>
+              <select value={draft.element} onChange={(event) => setDraft({ ...draft, element: event.target.value as ParanormalItemElement })} className="h-10 w-full border border-violet-400/35 bg-background/80 px-3 font-mono text-sm text-foreground outline-none focus:border-violet-300">
+                {ELEMENT_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2"><label className="section-kicker">Categoria</label><Input value={draft.category ?? ""} onChange={(event) => setDraft({ ...draft, category: event.target.value })} className="border-violet-400/35 bg-background/65 font-mono" placeholder="II" /></div>
+            <div className="space-y-2"><label className="section-kicker">Espaços</label><Input value={draft.spaces ?? ""} onChange={(event) => setDraft({ ...draft, spaces: event.target.value })} className="border-violet-400/35 bg-background/65 font-mono" placeholder="1" /></div>
           </div>
           <div className="space-y-2">
             <label className="section-kicker">Descrição, efeitos e restrições</label>
-            <Textarea
-              value={draft.description}
-              onChange={(event) => setDraft({ ...draft, description: event.target.value })}
-              className="min-h-[220px] resize-y border-violet-400/35 bg-background/65 focus-visible:ring-violet-400"
-              placeholder="Aparência, funcionamento, bônus, custo, maldição, condições de uso e demais observações..."
-            />
+            <Textarea value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} className="min-h-[220px] resize-y border-violet-400/35 bg-background/65" placeholder="Aparência, funcionamento, bônus, custo, maldição, condições de uso e demais observações..." />
           </div>
         </div>
       </ResponsiveFormDialog>
@@ -429,12 +490,9 @@ export function ParanormalItemsSection({
         description="O registro e a imagem armazenada no Neon serão apagados. Esta ação não pode ser desfeita."
         footer={
           <>
-            <Button variant="outline" onClick={() => setPendingDelete(null)} className="min-h-11 border-emerald-400/45 text-emerald-200 hover:bg-emerald-400/10">
-              Não, manter item
-            </Button>
+            <Button variant="outline" onClick={() => setPendingDelete(null)} className="min-h-11 border-emerald-400/45 text-emerald-200 hover:bg-emerald-400/10">Não, manter item</Button>
             <Button onClick={() => void removeItem()} disabled={busyItemId !== null} className="min-h-11 bg-destructive text-destructive-foreground hover:bg-destructive/85">
-              {busyItemId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-              Sim, remover item
+              {busyItemId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />} Sim, remover item
             </Button>
           </>
         }
