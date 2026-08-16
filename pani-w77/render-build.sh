@@ -9,11 +9,10 @@ python3 - <<'PY'
 from pathlib import Path
 import re
 
-index_path = Path('public/index.html')
-index = index_path.read_text(encoding='utf-8')
-for name in ('style.css', 'core.js', 'views.js', 'runtime.js'):
-    index = re.sub(rf'https://cdn\.jsdelivr\.net/gh/lyanlocker/meu-rpg-cris@[^/]+/pani-w77/{re.escape(name)}',f'./{name}',index)
-index = re.sub(r''' onerror="this\.onerror=null;this\.(?:href|src)='[^']+'"''', '', index)
+index_path=Path('public/index.html');index=index_path.read_text(encoding='utf-8')
+for name in ('style.css','core.js','views.js','runtime.js'):
+ index=re.sub(rf'https://cdn\.jsdelivr\.net/gh/lyanlocker/meu-rpg-cris@[^/]+/pani-w77/{re.escape(name)}',f'./{name}',index)
+index=re.sub(r''' onerror="this\.onerror=null;this\.(?:href|src)='[^']+'"''','',index)
 if './files.css' not in index:index=index.replace('</head>','<link rel="stylesheet" href="./files.css"></head>',1)
 if './files.js' not in index:index=index.replace('<script src="./runtime.js"></script>','<script src="./files.js"></script><script src="./runtime.js"></script>',1)
 if 'name="pani-host"' not in index:index=index.replace('</head>','<meta name="pani-host" content="render-static-v4-archive"></head>',1)
@@ -47,7 +46,6 @@ files=files.replace("mime_type:file.type||'text/plain'","mime_type:pfMime(file)"
 files=files.replace("let fd=new FormData();fd.append('cacheControl','3600');fd.append('',file,file.name);","let mime=pfMime(file),uploadFile=file.type===mime?file:new File([file],file.name,{type:mime});let fd=new FormData();fd.append('cacheControl','3600');fd.append('',uploadFile,file.name);")
 files=files.replace("payload.mime_type=file.type;","payload.mime_type=pfMime(file);")
 
-# Per-file decryption key workflow. The correct key never enters player metadata.
 old_mode="let can=f.can_open,submit=['corrupted','fragmented','decoding','encrypted'].includes(f.status);"
 new_mode="let can=f.can_open,submit=['corrupted','fragmented','decoding'].includes(f.status),unlock=!can&&f.locked_reason==='CHAVE DE DECODIFICAÇÃO NECESSÁRIA';";assert old_mode in files;files=files.replace(old_mode,new_mode)
 old_safe="${submit&&!can?`<button class=\"btn\" onclick=\"paniDecodeOpen('${f.id}')\">ENVIAR MATERIAL À PANI</button>`:''}"
@@ -74,3 +72,22 @@ node --check public/core.js
 node --check public/views.js
 node --check public/files.js
 node --check public/runtime.js
+
+# End-to-end private Storage QA. The master PIN is supplied by Render environment,
+# never written to the repository or public frontend.
+if [[ -n "${PANI_MASTER_PIN:-}" ]]; then
+  export PANI_STORAGE_QA
+  PANI_STORAGE_QA="$(curl --fail --silent --show-error --max-time 20 \
+    -H 'Content-Type: application/json' \
+    --data "{\"action\":\"self_test\",\"pin\":\"${PANI_MASTER_PIN}\"}" \
+    'https://nvwzcnfonhpilnxmopgi.supabase.co/functions/v1/pani-files')"
+  python3 - <<'PY'
+import json, os
+r=json.loads(os.environ['PANI_STORAGE_QA'])
+assert r.get('ok') is True, r
+assert r.get('put_status') in (200,201), r
+assert r.get('read_status') == 200, r
+assert r.get('content_ok') is True, r
+print('PANI private Storage QA OK')
+PY
+fi
