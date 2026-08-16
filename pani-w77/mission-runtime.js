@@ -22,6 +22,22 @@ function missionEnsureNav(){
   navRender();
 }
 
-setInterval(missionEnsureNav,500);
+function missionProtectMasterReset(){
+  if(!MASTER)return;
+  let b=$('#reset');
+  if(!b||b.dataset.missionProtected==='1')return;
+  b.dataset.missionProtected='1';
+  b.onclick=()=>confirmBox('Resetar sessão?','Progresso dos seis jogadores e estado da nave serão restaurados. Relatórios permanecem arquivados e documentos exclusivos voltam a ser selados.',async()=>{
+    try{
+      await pfEdge({action:'reseal_credentials',pin});
+      await ma('reset_session');
+      await mrefresh();
+      await missionMasterCodesRefresh();
+      toast('Sessão resetada. Credenciais exclusivas foram seladas.');
+    }catch(e){console.error(e);toast('Falha ao resetar a sessão.',true)}
+  });
+}
+
+setInterval(()=>{missionEnsureNav();missionProtectMasterReset()},500);
 setInterval(()=>{if(!MASTER&&me&&!document.hidden){if(view==='report')missionCrewReportsRefresh(false);if(view==='cred')missionCrewCredentialRefresh(false)}},7000);
-missionEnsureNav();
+missionEnsureNav();missionProtectMasterReset();
