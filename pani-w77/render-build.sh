@@ -3,7 +3,7 @@ set -euo pipefail
 
 rm -rf public
 mkdir -p public
-cp pani-w77/style.css pani-w77/files.css pani-w77/core.js pani-w77/views.js pani-w77/files.js pani-w77/runtime.js pani-w77/index.html public/
+cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/core.js pani-w77/views.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/index.html public/
 
 python3 - <<'PY'
 from pathlib import Path
@@ -14,9 +14,12 @@ for name in ('style.css','core.js','views.js','runtime.js'):
  index=re.sub(rf'https://cdn\.jsdelivr\.net/gh/lyanlocker/meu-rpg-cris@[^/]+/pani-w77/{re.escape(name)}',f'./{name}',index)
 index=re.sub(r''' onerror="this\.onerror=null;this\.(?:href|src)='[^']+'"''','',index)
 if './files.css' not in index:index=index.replace('</head>','<link rel="stylesheet" href="./files.css"></head>',1)
+if './mission.css' not in index:index=index.replace('</head>','<link rel="stylesheet" href="./mission.css"></head>',1)
 if './files.js' not in index:index=index.replace('<script src="./runtime.js"></script>','<script src="./files.js"></script><script src="./runtime.js"></script>',1)
-if 'name="pani-host"' not in index:index=index.replace('</head>','<meta name="pani-host" content="render-static-v4-archive"></head>',1)
-for asset in ('./style.css','./files.css','./core.js','./views.js','./files.js','./runtime.js'):assert asset in index,asset
+if './mission.js' not in index:index=index.replace('<script src="./runtime.js"></script>','<script src="./runtime.js"></script><script src="./mission.js"></script><script src="./mission-runtime.js"></script>',1)
+if 'name="pani-host"' not in index:index=index.replace('</head>','<meta name="pani-host" content="render-static-v5-mission"></head>',1)
+for asset in ('./style.css','./files.css','./mission.css','./core.js','./views.js','./files.js','./runtime.js','./mission.js','./mission-runtime.js'):assert asset in index,asset
+assert index.index('./runtime.js') < index.index('./mission.js') < index.index('./mission-runtime.js')
 assert 'cdn.jsdelivr.net' not in index and 'fastly.jsdelivr.net' not in index
 index_path.write_text(index,encoding='utf-8')
 
@@ -62,16 +65,22 @@ assert "f.is_new&&f.can_open" in files and "paniDecodeOpen('${f.id}')" in files 
 assert "pani_unlock_file" in files and "INSERIR CHAVE" in files and "pfUnlockInject" in files
 files_path.write_text(files,encoding='utf-8')
 
-for required in ('pani_crew_files','pani_master_file_upsert','pani-files','pfViewerOpen','pani_unlock_file'):assert required in files
-for filename in ('index.html','style.css','files.css','core.js','views.js','files.js','runtime.js'):
+mission=Path('public/mission.js').read_text(encoding='utf-8')
+mission_runtime=Path('public/mission-runtime.js').read_text(encoding='utf-8')
+for required in ('pani_submit_report','pani_crew_redeem_credential','pani_master_access_code_upsert','missionTransmissionGlitch','RELATÓRIO DO DIA'):assert required in mission,required
+assert "data-v=\"report\"" in mission_runtime
+assert "view!=='cred'&&view!=='report'" in mission_runtime
+for filename in ('index.html','style.css','files.css','mission.css','core.js','views.js','files.js','runtime.js','mission.js','mission-runtime.js'):
  p=Path('public')/filename;assert p.exists() and p.stat().st_size>100
-print('PANI build audit OK // ARCHIVE MODULE v4')
+print('PANI build audit OK // MISSION REPORTS + CREDENTIAL TRANSMISSION v5')
 PY
 
 node --check public/core.js
 node --check public/views.js
 node --check public/files.js
 node --check public/runtime.js
+node --check public/mission.js
+node --check public/mission-runtime.js
 
 # End-to-end private Storage QA. The master PIN is supplied by Render environment,
 # never written to the repository or public frontend.
