@@ -23,7 +23,7 @@ if './files.css' not in index:
 if './files.js' not in index:
     index = index.replace('<script src="./runtime.js"></script>', '<script src="./files.js"></script><script src="./runtime.js"></script>', 1)
 if 'name="pani-host"' not in index:
-    index = index.replace('</head>', '<meta name="pani-host" content="render-static-v2-archive"></head>', 1)
+    index = index.replace('</head>', '<meta name="pani-host" content="render-static-v3-archive"></head>', 1)
 for asset in ('./style.css','./files.css','./core.js','./views.js','./files.js','./runtime.js'):
     assert asset in index, asset
 assert 'cdn.jsdelivr.net' not in index
@@ -51,7 +51,39 @@ assert new_inputs in runtime
 assert new_login in runtime
 runtime_path.write_text(runtime, encoding='utf-8')
 
-files = Path('public/files.js').read_text(encoding='utf-8')
+files_path = Path('public/files.js')
+files = files_path.read_text(encoding='utf-8')
+
+# Notify only when a newly listed file actually becomes readable.
+old_new = "let ids=new Set((d.files||[]).filter(f=>f.is_new).map(f=>f.id));"
+new_new = "let ids=new Set((d.files||[]).filter(f=>f.is_new&&f.can_open).map(f=>f.id));"
+assert old_new in files
+files = files.replace(old_new, new_new)
+
+# Avoid embedding the display name inside inline JavaScript; names may contain apostrophes.
+old_button = "${submit&&!can?`<button class=\"btn\" onclick=\"paniDecodeOpen('${f.id}','${esc(f.display_name).replace(/'/g,'&#39;')}')\">ENVIAR MATERIAL À PANI</button>`:''}"
+new_button = "${submit&&!can?`<button class=\"btn\" onclick=\"paniDecodeOpen('${f.id}')\">ENVIAR MATERIAL À PANI</button>`:''}"
+assert old_button in files
+files = files.replace(old_button, new_button)
+old_decode = "function paniDecodeOpen(id,name){$('#pfdecodeid').value=id;$('#pfdecodename').textContent=name;$('#pfdecodetext').value='';$('#pfdecode').classList.remove('hidden')}"
+new_decode = "function paniDecodeOpen(id){let f=pfCrewData?.files?.find(x=>x.id===id);$('#pfdecodeid').value=id;$('#pfdecodename').textContent=f?.display_name||'ARQUIVO';$('#pfdecodetext').value='';$('#pfdecode').classList.remove('hidden')}"
+assert old_decode in files
+files = files.replace(old_decode, new_decode)
+
+# Browsers sometimes leave File.type empty; infer a safe MIME from the extension.
+mime_helper = "function pfMime(file){let t=(file?.type||'').toLowerCase();if(t)return t;let n=(file?.name||'').toLowerCase();return n.endsWith('.pdf')?'application/pdf':n.endsWith('.png')?'image/png':n.endsWith('.jpg')||n.endsWith('.jpeg')?'image/jpeg':n.endsWith('.webp')?'image/webp':'text/plain'}\n"
+anchor = "function pfMasterFileChosen(i){let f=i.files?.[0];if(f&&!$('#pfname').value)$('#pfname').value=f.name}\n"
+assert anchor in files
+files = files.replace(anchor, anchor + mime_helper)
+files = files.replace("mime_type:file.type||'text/plain'", "mime_type:pfMime(file)")
+files = files.replace("let fd=new FormData();fd.append('cacheControl','3600');fd.append('',file,file.name);", "let mime=pfMime(file),uploadFile=file.type===mime?file:new File([file],file.name,{type:mime});let fd=new FormData();fd.append('cacheControl','3600');fd.append('',uploadFile,file.name);")
+files = files.replace("payload.mime_type=file.type;", "payload.mime_type=pfMime(file);")
+assert "f.is_new&&f.can_open" in files
+assert "paniDecodeOpen('${f.id}')" in files
+assert "function pfMime(file)" in files
+assert "new File([file],file.name,{type:mime})" in files
+files_path.write_text(files, encoding='utf-8')
+
 assert 'pani_crew_files' in files
 assert 'pani_master_file_upsert' in files
 assert 'pani-files' in files
@@ -60,7 +92,7 @@ assert 'pfViewerOpen' in files
 for filename in ('index.html','style.css','files.css','core.js','views.js','files.js','runtime.js'):
     p = Path('public') / filename
     assert p.exists() and p.stat().st_size > 100
-print('PANI build audit OK // ARCHIVE MODULE')
+print('PANI build audit OK // ARCHIVE MODULE v3')
 PY
 
 node --check public/core.js
