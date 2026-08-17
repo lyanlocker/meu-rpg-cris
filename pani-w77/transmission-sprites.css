@@ -5,3 +5,12 @@
 .tx-player-only-glyph{width:min(56vmin,520px)!important;height:min(56vmin,520px)!important;background:#37ff78!important;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;filter:drop-shadow(0 0 10px rgba(45,255,111,.95)) drop-shadow(0 0 38px rgba(45,255,111,.58))}
 .tx-symbol{display:flex;flex-direction:column;justify-content:flex-end}
 .tx-symbol .tx-glyph{margin-bottom:auto}
+
+/* v11 // A-Z / 0-9: viewport real de imagem. Não usa mask/background sprite. */
+.tx-alpha-viewport{position:relative!important;overflow:hidden!important;background:transparent!important;-webkit-mask:none!important;mask:none!important;filter:none!important;display:block!important}
+.tx-alpha-atlas{position:absolute!important;max-width:none!important;max-height:none!important;object-fit:fill!important;pointer-events:none!important;user-select:none!important;filter:brightness(0) saturate(100%) invert(83%) sepia(88%) saturate(1190%) hue-rotate(79deg) brightness(105%) contrast(103%) drop-shadow(0 0 8px rgba(45,255,111,.72))!important}
+.tx-glyph.tx-alpha-viewport{width:78px!important;height:78px!important}
+.tx-preview.tx-alpha-viewport{width:142px!important;height:142px!important}
+.tx-active-mini.tx-alpha-viewport{width:38px!important;height:38px!important}
+.tx-player-only-glyph.tx-alpha-viewport{width:min(56vmin,520px)!important;height:min(56vmin,520px)!important}
+.tx-alpha-card-img,.tx-alpha-preview-img,.tx-alpha-mini-img,.tx-alpha-player-img{display:block!important}
