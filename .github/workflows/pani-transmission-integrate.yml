@@ -1,0 +1,35 @@
+name: Integrate PANI Transmission Build
+
+on:
+  push:
+    paths:
+      - 'pani-w77/transmission.js'
+      - 'pani-w77/transmission.css'
+      - 'pani-w77/render-transmission.sh'
+      - '.github/workflows/pani-transmission-integrate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Attach transmission post-build
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x pani-w77/render-transmission.sh
+          if ! grep -q 'bash pani-w77/render-transmission.sh' pani-w77/render-build.sh; then
+            printf '\n# PANI Transmission v7\nbash pani-w77/render-transmission.sh\n' >> pani-w77/render-build.sh
+          fi
+      - name: Commit build integration
+        shell: bash
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'pani-build-bot'
+          git config user.email 'pani-build-bot@users.noreply.github.com'
+          git add pani-w77/render-build.sh pani-w77/render-transmission.sh
+          git commit -m 'Integrate PANI transmission console into Render build'
+          git push
