@@ -1,0 +1,43 @@
+name: Repair PANI Build Assertions
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-pani-build.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove brittle runtime source rewriting
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('pani-w77/render-build.sh')
+          s=p.read_text(encoding='utf-8')
+          start=s.index("runtime_path=Path('public/runtime.js')")
+          end=s.index("\n\nfiles_path=Path('public/files.js')", start)
+          replacement="""runtime_path=Path('public/runtime.js');runtime=runtime_path.read_text(encoding='utf-8')
+          assert 'backendHealth' in runtime
+          assert \"toast('PIN inválido.'\" in runtime
+          assert 'MASTER // BACKEND INDISPONÍVEL' in runtime
+          assert 'PIN inválido ou backend indisponível.' not in runtime
+          assert \"if(document.activeElement!==$('#energy'))\" in runtime
+          """
+          s=s[:start]+replacement+s[end:]
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit repaired build
+        shell: bash
+        run: |
+          git config user.name 'pani-build-bot'
+          git config user.email 'pani-build-bot@users.noreply.github.com'
+          git add pani-w77/render-build.sh
+          git diff --cached --quiet && exit 0
+          git commit -m 'Remove brittle runtime rewriting from PANI build'
+          git push
