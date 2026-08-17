@@ -107,3 +107,6 @@ assert r.get('content_ok') is True, r
 print('PANI private Storage QA OK')
 PY
 fi
+
+# PANI Transmission v7
+bash pani-w77/render-transmission.sh
