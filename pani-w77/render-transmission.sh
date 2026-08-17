@@ -31,7 +31,7 @@ if './transmission-sprites.js' not in s:
         s=s.replace('</body>','<script src="./transmission-sprites.js"></script></body>',1)
 
 # Cada deploy recebe URLs únicas para impedir que Chrome reutilize JS/CSS de builds anteriores.
-version=(os.environ.get('RENDER_GIT_COMMIT') or 'pani-v9')[:12]
+version=(os.environ.get('RENDER_GIT_COMMIT') or 'pani-v10')[:12]
 s=re.sub(r'(["\'])(\./[^"\']+\.(?:js|css))(?:\?v=[^"\']*)?(["\'])',lambda m:f'{m.group(1)}{m.group(2)}?v={version}{m.group(3)}',s)
 if 'http-equiv="Cache-Control"' not in s:
     s=s.replace('<head>','<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">',1)
@@ -46,7 +46,7 @@ js=Path('public/transmission.js').read_text(encoding='utf-8')
 for needle in ('pani_master_transmission_catalog','pani_master_transmission_dispatch','pani_master_transmission_stop','pani_master_transmission_active','pani_crew_transmission_feed','TRANSMITIR SÍMBOLO'):
     assert needle in js,needle
 fix=Path('public/transmission-sprites.js').read_text(encoding='utf-8')
-for needle in ('txSpriteMeta','txMaskStyle=function','txShowPlayerSignal=function','txRenderSelected=function'):
+for needle in ('txSpriteMeta','txMaskStyle=function','txShowPlayerSignal=function','txRenderSelected=function','alpha-direct-v10','background-image','TX_ALPHA_FILTER'):
     assert needle in fix,needle
 
 for asset in ('public/tx-alphabet-sprite.webp','public/tx-concept-sprite.webp'):
@@ -60,7 +60,7 @@ assert 'backendHealth' in core
 assert "toast('PIN inválido.'" in runtime
 assert 'PIN inválido ou backend indisponível.' not in runtime
 assert 'MASTER // BACKEND INDISPONÍVEL' in runtime
-print(f'PANI final production audit OK // CACHE-BUST v9 // {version}')
+print(f'PANI final production audit OK // ALPHABET-DIRECT v10 // {version}')
 PY
 
 node --check public/core.js
