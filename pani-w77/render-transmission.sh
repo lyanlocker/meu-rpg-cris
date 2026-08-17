@@ -10,6 +10,7 @@ base64 --decode pani-w77/tx-concept-sprite.b64 > public/tx-concept-sprite.webp
 
 python3 - <<'PY'
 from pathlib import Path
+import os,re
 p=Path('public/index.html')
 s=p.read_text(encoding='utf-8')
 
@@ -29,36 +30,45 @@ if './transmission-sprites.js' not in s:
     else:
         s=s.replace('</body>','<script src="./transmission-sprites.js"></script></body>',1)
 
-assert './transmission.css' in s
-assert './transmission-sprites.css' in s
-assert './transmission.js' in s
-assert './transmission-sprites.js' in s
+# Cada deploy recebe URLs únicas para impedir que Chrome reutilize JS/CSS de builds anteriores.
+version=(os.environ.get('RENDER_GIT_COMMIT') or 'pani-v9')[:12]
+s=re.sub(r'(["\'])(\./[^"\']+\.(?:js|css))(?:\?v=[^"\']*)?(["\'])',lambda m:f'{m.group(1)}{m.group(2)}?v={version}{m.group(3)}',s)
+if 'http-equiv="Cache-Control"' not in s:
+    s=s.replace('<head>','<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">',1)
+
+for asset in ('transmission.css','transmission-sprites.css','transmission.js','transmission-sprites.js','runtime.js','core.js'):
+    assert f'./{asset}?v={version}' in s, asset
 assert s.index('./transmission.js') > s.index('./runtime.js')
 assert s.index('./transmission-sprites.js') > s.index('./transmission.js')
 p.write_text(s,encoding='utf-8')
 
 js=Path('public/transmission.js').read_text(encoding='utf-8')
-for needle in (
-    'pani_master_transmission_catalog',
-    'pani_master_transmission_dispatch',
-    'pani_master_transmission_stop',
-    'pani_master_transmission_active',
-    'pani_crew_transmission_feed',
-    'TRANSMITIR SÍMBOLO',
-):
-    assert needle in js, needle
-
+for needle in ('pani_master_transmission_catalog','pani_master_transmission_dispatch','pani_master_transmission_stop','pani_master_transmission_active','pani_crew_transmission_feed','TRANSMITIR SÍMBOLO'):
+    assert needle in js,needle
 fix=Path('public/transmission-sprites.js').read_text(encoding='utf-8')
 for needle in ('txSpriteMeta','txMaskStyle=function','txShowPlayerSignal=function','txRenderSelected=function'):
-    assert needle in fix, needle
+    assert needle in fix,needle
 
 for asset in ('public/tx-alphabet-sprite.webp','public/tx-concept-sprite.webp'):
-    b=Path(asset).read_bytes()
-    assert b[:4] == b'RIFF' and b[8:12] == b'WEBP', asset
-    assert len(b) > 5000, asset
+    b=Path(asset).read_bytes();assert b[:4]==b'RIFF' and b[8:12]==b'WEBP',asset;assert len(b)>5000,asset
 
-print('PANI transmission build audit OK // CANONICAL GLYPH SPRITES v8')
+core=Path('public/core.js').read_text(encoding='utf-8')
+runtime=Path('public/runtime.js').read_text(encoding='utf-8')
+assert 'eyJpc3MiOiJzdXBhYmFzZS' in core
+assert 'eyJpc3MiOiJIUzI1Ni' not in core
+assert 'backendHealth' in core
+assert "toast('PIN inválido.'" in runtime
+assert 'PIN inválido ou backend indisponível.' not in runtime
+assert 'MASTER // BACKEND INDISPONÍVEL' in runtime
+print(f'PANI final production audit OK // CACHE-BUST v9 // {version}')
 PY
 
+node --check public/core.js
+node --check public/views.js
+node --check public/files.js
+node --check public/runtime.js
+node --check public/mission.js
+node --check public/mission-runtime.js
+node --check public/assistance.js
 node --check public/transmission.js
 node --check public/transmission-sprites.js
