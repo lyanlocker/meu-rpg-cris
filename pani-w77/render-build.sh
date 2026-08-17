@@ -31,12 +31,12 @@ good_key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6I
 core=core.replace(bad_key,good_key);assert good_key in core and bad_key not in core;core_path.write_text(core,encoding='utf-8')
 
 runtime_path=Path('public/runtime.js');runtime=runtime_path.read_text(encoding='utf-8')
-old_inputs="$('#energy').value=state.energy_capacity;$('#occupancy').value=state.occupancy;"
-new_inputs="if(document.activeElement!==$('#energy'))$('#energy').value=state.energy_capacity;if(document.activeElement!==$('#occupancy'))$('#occupancy').value=state.occupancy;"
-runtime=runtime.replace(old_inputs,new_inputs)
-old_login="}catch{toast('PIN inválido ou backend indisponível.',true);conn('MASTER // ACESSO NEGADO',false)}finally"
-new_login="}catch(e){let em=String(e?.message||'');let badPin=em.includes('unauthorized');toast(badPin?'PIN inválido.':'Falha ao conectar com o backend.',true);conn(badPin?'MASTER // ACESSO NEGADO':'MASTER // BACKEND INDISPONÍVEL',false)}finally"
-runtime=runtime.replace(old_login,new_login);assert new_inputs in runtime and new_login in runtime;runtime_path.write_text(runtime,encoding='utf-8')
+assert 'backendHealth' in runtime
+assert "toast('PIN inválido.'" in runtime
+assert 'MASTER // BACKEND INDISPONÍVEL' in runtime
+assert 'PIN inválido ou backend indisponível.' not in runtime
+assert "if(document.activeElement!==$('#energy'))" in runtime
+
 
 files_path=Path('public/files.js');files=files_path.read_text(encoding='utf-8')
 old_new="let ids=new Set((d.files||[]).filter(f=>f.is_new).map(f=>f.id));";new_new="let ids=new Set((d.files||[]).filter(f=>f.is_new&&f.can_open).map(f=>f.id));";assert old_new in files;files=files.replace(old_new,new_new)
