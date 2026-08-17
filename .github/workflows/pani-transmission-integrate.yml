@@ -5,6 +5,10 @@ on:
     paths:
       - 'pani-w77/transmission.js'
       - 'pani-w77/transmission.css'
+      - 'pani-w77/transmission-sprites.js'
+      - 'pani-w77/transmission-sprites.css'
+      - 'pani-w77/tx-alphabet-sprite.b64'
+      - 'pani-w77/tx-concept-sprite.b64'
       - 'pani-w77/render-transmission.sh'
       - '.github/workflows/pani-transmission-integrate.yml'
 
@@ -22,8 +26,24 @@ jobs:
           set -euo pipefail
           chmod +x pani-w77/render-transmission.sh
           if ! grep -q 'bash pani-w77/render-transmission.sh' pani-w77/render-build.sh; then
-            printf '\n# PANI Transmission v7\nbash pani-w77/render-transmission.sh\n' >> pani-w77/render-build.sh
+            printf '\n# PANI Transmission v8\nbash pani-w77/render-transmission.sh\n' >> pani-w77/render-build.sh
           fi
+      - name: Validate canonical glyph payloads
+        shell: bash
+        run: |
+          test -s pani-w77/tx-alphabet-sprite.b64
+          test -s pani-w77/tx-concept-sprite.b64
+          base64 --decode pani-w77/tx-alphabet-sprite.b64 >/tmp/tx-alpha.webp
+          base64 --decode pani-w77/tx-concept-sprite.b64 >/tmp/tx-concept.webp
+          python3 - <<'PY'
+          from pathlib import Path
+          for p in (Path('/tmp/tx-alpha.webp'),Path('/tmp/tx-concept.webp')):
+              b=p.read_bytes()
+              assert b[:4]==b'RIFF' and b[8:12]==b'WEBP'
+              assert len(b)>5000
+          print('canonical glyph payloads OK')
+          PY
+          node --check pani-w77/transmission-sprites.js
       - name: Commit build integration
         shell: bash
         run: |
