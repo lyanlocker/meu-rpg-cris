@@ -20,14 +20,19 @@ assert len(items)==36, f'expected 36 glyphs, found {len(items)}'
 for i in range(1,37):
     key=f'a{i:02d}'
     assert key in items,key
-    blob=base64.b64decode(items[key],validate=True)
+    # A geração v15 deixou '=' em excesso em alguns Data URLs. Navegadores
+    # exibiram imagem quebrada. Removemos todo padding antigo e recalculamos
+    # o padding Base64 correto antes de decodificar.
+    raw=items[key].rstrip('=')
+    raw += '='*((4-len(raw)%4)%4)
+    blob=base64.b64decode(raw,validate=True)
     assert len(blob)>250, (key,len(blob))
     assert blob[:4]==b'RIFF' and blob[8:12]==b'WEBP',key
     declared=struct.unpack('<I',blob[4:8])[0]+8
     assert declared==len(blob),(key,declared,len(blob))
     assert blob[12:16] in (b'VP8 ',b'VP8L',b'VP8X'),(key,blob[12:16])
     (out/f'{key}.webp').write_bytes(blob)
-print('PANI glyph extraction OK // 36 same-origin WebP files')
+print('PANI glyph extraction OK // 36 normalized same-origin WebP files')
 PY
 
 python3 - <<'PY'
