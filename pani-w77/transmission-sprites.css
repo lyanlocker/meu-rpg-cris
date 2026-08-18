@@ -1,4 +1,4 @@
-/* PANI W77 // GLIFOS CANÔNICOS EMPACOTADOS v12 */
+/* PANI W77 // GLIFOS CANÔNICOS EMPACOTADOS v13 */
 .tx-glyph{width:78px!important;height:78px!important;margin:0 auto;background:#4dff91!important;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;filter:drop-shadow(0 0 7px rgba(61,255,134,.45))}
 .tx-preview{width:142px!important;height:142px!important;background:#4dff91!important;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;filter:drop-shadow(0 0 14px rgba(72,255,142,.52))}
 .tx-active-mini{width:38px!important;height:38px!important;background:#48f88a!important;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
@@ -6,12 +6,13 @@
 .tx-symbol{display:flex;flex-direction:column;justify-content:flex-end}
 .tx-symbol .tx-glyph{margin-bottom:auto}
 
-/* v12 // A-Z / 0-9: SVG real com viewBox por célula do atlas. */
+/* v13 // A-Z / 0-9: SVG imediato + PNG independente gerado em memória. */
 .tx-alpha-viewport{position:relative!important;overflow:visible!important;background:transparent!important;-webkit-mask:none!important;mask:none!important;filter:none!important;display:grid!important;place-items:center!important}
-.tx-alpha-svg{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;overflow:visible!important;pointer-events:none!important;user-select:none!important}
+.tx-alpha-svg,.tx-alpha-independent{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;overflow:visible!important;pointer-events:none!important;user-select:none!important;object-fit:contain!important}
 .tx-alpha-svg-image{filter:brightness(0) saturate(100%) invert(83%) sepia(88%) saturate(1190%) hue-rotate(79deg) brightness(105%) contrast(103%) drop-shadow(0 0 8px rgba(45,255,111,.72))!important;pointer-events:none!important}
+.tx-alpha-independent{filter:brightness(0) saturate(100%) invert(83%) sepia(88%) saturate(1190%) hue-rotate(79deg) brightness(105%) contrast(103%) drop-shadow(0 0 8px rgba(45,255,111,.72))!important}
 .tx-glyph.tx-alpha-viewport{width:78px!important;height:78px!important}
 .tx-preview.tx-alpha-viewport{width:142px!important;height:142px!important}
 .tx-active-mini.tx-alpha-viewport{width:38px!important;height:38px!important}
 .tx-player-only-glyph.tx-alpha-viewport{width:min(56vmin,520px)!important;height:min(56vmin,520px)!important}
-.tx-alpha-player-svg .tx-alpha-svg-image{filter:brightness(0) saturate(100%) invert(83%) sepia(88%) saturate(1190%) hue-rotate(79deg) brightness(105%) contrast(103%) drop-shadow(0 0 12px rgba(45,255,111,.95)) drop-shadow(0 0 42px rgba(45,255,111,.58))!important}
+.tx-alpha-player-svg .tx-alpha-svg-image,.tx-alpha-player-img{filter:brightness(0) saturate(100%) invert(83%) sepia(88%) saturate(1190%) hue-rotate(79deg) brightness(105%) contrast(103%) drop-shadow(0 0 12px rgba(45,255,111,.95)) drop-shadow(0 0 42px rgba(45,255,111,.58))!important}
