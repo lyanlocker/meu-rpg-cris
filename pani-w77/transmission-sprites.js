@@ -1,14 +1,19 @@
 'use strict';
-/* PANI W77 // ALFABETO PARANORMAL v15
+/* PANI W77 // ALFABETO PARANORMAL v16
    CORREÇÃO EXCLUSIVA A-Z / 0-9.
 
-   Cada letra/número usa uma imagem independente presente em
-   window.PANI_ALPHA_GLYPHS[a01..a36]. Não há atlas, Canvas,
-   máscara, sprite, recorte, SVG ou cálculo de posição para o alfabeto.
+   DIAGNÓSTICO v15: o navegador mostrou ícone de imagem quebrada em todos os
+   glifos. Isso confirma que catálogo/transmissão estavam corretos e a falha
+   estava na fonte da imagem. A v16 NÃO usa data: URI no <img>.
 
-   Os 30 CONCEITOS continuam no renderer de máscara que já funciona. */
+   Cada letra/número é publicado pelo build como arquivo físico same-origin:
+     ./glyphs/a01.webp ... ./glyphs/a36.webp
+
+   Sem atlas em runtime, sem Canvas, sem mask, sem SVG e sem Base64 no DOM.
+   Os conceitos continuam no pipeline de máscara já estável. */
 
 const TX_CONCEPT_ATLAS='./tx-concept-sprite.webp?v=concept-v8';
+const TX_ALPHA_VERSION='v16';
 
 function txAssetMeta(asset){
   const m=/^([ac])(\d{2})$/.exec(String(asset||''));
@@ -30,17 +35,17 @@ function txConceptStyle(asset){
 
 txMaskStyle=function(asset){return txConceptStyle(asset)};
 
-/* ===================== ALFABETO: 36 IMAGENS INDEPENDENTES ===================== */
+/* ===================== ALFABETO: 36 ARQUIVOS SAME-ORIGIN ===================== */
 function txAlphaSrc(asset){
   const m=txAssetMeta(asset);
   if(!m?.alphabet)return '';
-  return window.PANI_ALPHA_GLYPHS?.[asset]||'';
+  return `./glyphs/${asset}.webp?v=${TX_ALPHA_VERSION}`;
 }
 
 function txAlphaMarkup(asset,kind='card'){
   const src=txAlphaSrc(asset);if(!src)return '';
   const cls=kind==='player'?'tx-alpha-img tx-alpha-player-img':kind==='preview'?'tx-alpha-img tx-alpha-preview-img':kind==='mini'?'tx-alpha-img tx-alpha-mini-img':'tx-alpha-img tx-alpha-card-img';
-  return `<img class="${cls}" src="${src}" alt="" aria-hidden="true" draggable="false">`;
+  return `<img class="${cls}" src="${src}" alt="" aria-hidden="true" draggable="false" decoding="async" onerror="this.dataset.failed='1';console.error('PANI GLYPH LOAD FAILED','${asset}',this.currentSrc||this.src)">`;
 }
 
 function txClearGlyph(el){
@@ -98,12 +103,15 @@ txShowPlayerSignal=function(asset,remainingMs){
   o.classList.add('show','glitch');clearTimeout(txOverlayTimer);txOverlayTimer=setTimeout(()=>txHidePlayerSignal(),Math.max(0,Number(remainingMs)||0));
 };
 
-/* Diagnóstico simples: 36 assets precisam existir antes de renderizar. */
+/* Preflight real via HTTP: testa três arquivos representativos no mesmo origin. */
 (function txAlphabetPreflight(){
-  const map=window.PANI_ALPHA_GLYPHS||{};
-  const missing=[];for(let i=1;i<=36;i++){const k=`a${String(i).padStart(2,'0')}`;if(typeof map[k]!=='string'||!map[k].startsWith('data:image/webp;base64,'))missing.push(k)}
-  if(missing.length)console.error('PANI TX ALPHABET v15 // missing direct glyphs',missing);
-  else console.info('PANI TX ALPHABET v15 // 36 DIRECT GLYPHS READY');
+  const probes=['a01','a20','a36'];let ok=0;
+  probes.forEach(asset=>{
+    const img=new Image();
+    img.onload=()=>{ok++;if(ok===probes.length)console.info('PANI TX ALPHABET v16 // SAME-ORIGIN GLYPHS READY')};
+    img.onerror=()=>console.error('PANI TX ALPHABET v16 // HTTP GLYPH FAILED',asset,txAlphaSrc(asset));
+    img.src=txAlphaSrc(asset);
+  });
 })();
 
-setTimeout(()=>{try{if(typeof MASTER!=='undefined'&&MASTER){txRenderCatalog();txRenderSelected();txRenderActive()}}catch(e){console.error('PANI alphabet renderer v15',e)}},25);
+setTimeout(()=>{try{if(typeof MASTER!=='undefined'&&MASTER){txRenderCatalog();txRenderSelected();txRenderActive()}}catch(e){console.error('PANI alphabet renderer v16',e)}},25);
