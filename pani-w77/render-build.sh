@@ -22,11 +22,16 @@ for needle in ('STATION_ID','W77-01','PORTAS SETORIAIS RESTAURADAS','LEGACY_SECT
 core_path.write_text(core,encoding='utf-8')
 
 runtime_path=Path('public/runtime.js');runtime=runtime_path.read_text(encoding='utf-8')
-for needle in ('backendHealth','sepMasterRefresh','PORTAS ENTERRADAS',"toast('PIN inválido.'",'MASTER // BACKEND INDISPONÍVEL'):assert needle in runtime,needle
+for needle in ('backendHealth','sepMasterRefresh','CONTRAPROVA',"toast('PIN inválido.'",'MASTER // BACKEND INDISPONÍVEL','sepMasterToggleAutoHint','sepMasterToggleMatrix','sepMasterToggleSequence'):assert needle in runtime,needle
 for forbidden in ('DISPARAR IMPACTO DO SATÉLITE','impact_active','pani_power_manifest'):assert forbidden not in runtime,forbidden
 
 sep=Path('public/sepulcro.js').read_text(encoding='utf-8')
-for needle in ('O RETORNO QUE NÃO EXISTE','SEPULTURA-INV','pani_sepulcro_attempt','pani_sepulcro_hint','sepMasterArm','RECIPROCIDADE ESTABELECIDA','tx-concept-sprite.webp','a05'):assert needle in sep,needle
+for needle in ('DEPENDÊNCIA FANTASMA','A COLUNA AUSENTE','pani_contraprova_attempt','pani_contraprova_hint','INFORMATION / RELATION','GLYPH SEMANTICS','NOT ATTEMPTED','sepMasterToggleSequence'):assert needle in sep,needle
+for forbidden in ('VALOR ATRIBUÍDO: E','RECIPROCIDADE ESTABELECIDA','ENTENDIMENTO REGISTRADO','SEPULTURA-INV','tx-concept-sprite.webp'):assert forbidden not in sep,forbidden
+
+migration=Path('pani-w77/contraprova-v1.sql').read_text(encoding='utf-8')
+for needle in ('pani_contraprova_crew_state','pani_contraprova_attempt','pani_contraprova_hint','pani_contraprova_master_state','pani_contraprova_master_action','information_relation','NOT_ATTEMPTED','disarm_event'):assert needle in migration,needle
+for forbidden in ("first_glyph_value = 'E'","reciprocity_established = true"):assert forbidden not in migration,forbidden
 
 files_path=Path('public/files.js');files=files_path.read_text(encoding='utf-8')
 old_new="let ids=new Set((d.files||[]).filter(f=>f.is_new).map(f=>f.id));";new_new="let ids=new Set((d.files||[]).filter(f=>f.is_new&&f.can_open).map(f=>f.id));";assert old_new in files;files=files.replace(old_new,new_new)
@@ -66,7 +71,7 @@ for required in ('pani_assistance_submit','pani_assistance_reply','pani_crew_ass
 
 for filename in ('index.html','style.css','files.css','mission.css','assistance.css','sepulcro.css','core.js','views.js','sepulcro.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js'):
  p=Path('public')/filename;assert p.exists() and p.stat().st_size>100
-print('PANI build audit OK // W77-01 PROTOCOLO SEPULCRO v1')
+print('PANI build audit OK // W77-01 PROTOCOLO CONTRAPROVA v1')
 PY
 
 node --check public/core.js
