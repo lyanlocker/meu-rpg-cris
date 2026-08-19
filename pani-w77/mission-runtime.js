@@ -27,7 +27,7 @@ function missionProtectMasterReset(){
   let b=$('#reset');
   if(!b||b.dataset.missionProtected==='1')return;
   b.dataset.missionProtected='1';
-  b.onclick=()=>confirmBox('Resetar sessão?','Progresso dos seis jogadores e estado da nave serão restaurados. Relatórios permanecem arquivados e documentos exclusivos voltam a ser selados.',async()=>{
+  b.onclick=()=>confirmBox('Resetar sessão?','Progresso dos seis jogadores e estado da estação serão restaurados. Relatórios permanecem arquivados e documentos exclusivos voltam a ser selados.',async()=>{
     try{
       await pfEdge({action:'reseal_credentials',pin});
       await ma('reset_session');
