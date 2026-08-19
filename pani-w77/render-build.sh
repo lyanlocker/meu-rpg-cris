@@ -3,40 +3,32 @@ set -euo pipefail
 
 rm -rf public
 mkdir -p public
-cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/core.js pani-w77/views.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/index.html public/
+cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/sepulcro.css pani-w77/core.js pani-w77/views.js pani-w77/sepulcro.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/index.html public/
 
 python3 - <<'PY'
 from pathlib import Path
 import re
 
 index_path=Path('public/index.html');index=index_path.read_text(encoding='utf-8')
-for name in ('style.css','core.js','views.js','runtime.js'):
- index=re.sub(rf'https://cdn\.jsdelivr\.net/gh/lyanlocker/meu-rpg-cris@[^/]+/pani-w77/{re.escape(name)}',f'./{name}',index)
-index=re.sub(r''' onerror="this\.onerror=null;this\.(?:href|src)='[^']+'"''','',index)
-if './files.css' not in index:index=index.replace('</head>','<link rel="stylesheet" href="./files.css"></head>',1)
-if './mission.css' not in index:index=index.replace('</head>','<link rel="stylesheet" href="./mission.css"></head>',1)
-if './assistance.css' not in index:index=index.replace('</head>','<link rel="stylesheet" href="./assistance.css"></head>',1)
-if './files.js' not in index:index=index.replace('<script src="./runtime.js"></script>','<script src="./files.js"></script><script src="./runtime.js"></script>',1)
-if './mission.js' not in index:index=index.replace('<script src="./runtime.js"></script>','<script src="./runtime.js"></script><script src="./mission.js"></script><script src="./mission-runtime.js"></script>',1)
-if './assistance.js' not in index:index=index.replace('<script src="./mission-runtime.js"></script>','<script src="./mission-runtime.js"></script><script src="./assistance.js"></script>',1)
-if 'name="pani-host"' not in index:index=index.replace('</head>','<meta name="pani-host" content="render-static-v6-private-assistance"></head>',1)
-for asset in ('./style.css','./files.css','./mission.css','./assistance.css','./core.js','./views.js','./files.js','./runtime.js','./mission.js','./mission-runtime.js','./assistance.js'):assert asset in index,asset
-assert index.index('./runtime.js') < index.index('./mission.js') < index.index('./mission-runtime.js') < index.index('./assistance.js')
-assert 'cdn.jsdelivr.net' not in index and 'fastly.jsdelivr.net' not in index
+for asset in ('./style.css','./files.css','./mission.css','./assistance.css','./sepulcro.css','./core.js','./views.js','./sepulcro.js','./files.js','./runtime.js','./mission.js','./mission-runtime.js','./assistance.js'):
+    assert asset in index,asset
+assert index.index('./sepulcro.js') < index.index('./runtime.js') < index.index('./mission.js') < index.index('./mission-runtime.js') < index.index('./assistance.js')
+assert 'SATÉLITE' not in index.upper() and 'ESTADO DA NAVE' not in index.upper()
 index_path.write_text(index,encoding='utf-8')
 
 core_path=Path('public/core.js');core=core_path.read_text(encoding='utf-8')
 bad_key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im52d3pjbmZvbmhwaWxueG1vcGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTI3NTcsImV4cCI6MjEwMjMyODc1N30.5FBDbk8J1uN8JLLpKMk_Hubw6K7kbQQiulIamwm9Vso'
 good_key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d3pjbmZvbmhwaWxueG1vcGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTI3NTcsImV4cCI6MjEwMjMyODc1N30.5FBDbk8J1uN8JLLpKMk_Hubw6K7kbQQiulIamwm9Vso'
-core=core.replace(bad_key,good_key);assert good_key in core and bad_key not in core;core_path.write_text(core,encoding='utf-8')
+core=core.replace(bad_key,good_key);assert good_key in core and bad_key not in core
+for needle in ('STATION_ID','W77-01','PORTAS SETORIAIS RESTAURADAS','LEGACY_SECTOR'):assert needle in core,needle
+core_path.write_text(core,encoding='utf-8')
 
 runtime_path=Path('public/runtime.js');runtime=runtime_path.read_text(encoding='utf-8')
-assert 'backendHealth' in runtime
-assert "toast('PIN inválido.'" in runtime
-assert 'MASTER // BACKEND INDISPONÍVEL' in runtime
-assert 'PIN inválido ou backend indisponível.' not in runtime
-assert "if(document.activeElement!==$('#energy'))" in runtime
+for needle in ('backendHealth','pani_sepulcro_master_state','PORTAS ENTERRADAS',"toast('PIN inválido.'",'MASTER // BACKEND INDISPONÍVEL'):assert needle in runtime,needle
+for forbidden in ('DISPARAR IMPACTO DO SATÉLITE','impact_active','pani_power_manifest'):assert forbidden not in runtime,forbidden
 
+sep=Path('public/sepulcro.js').read_text(encoding='utf-8')
+for needle in ('SEPULTURA-OPS','SEPULTURA-INV','pani_sepulcro_attempt','pani_sepulcro_hint','ARM EVENT','RECIPROCIDADE ESTABELECIDA','tx-concept-sprite.webp','a05'):assert needle in sep,needle
 
 files_path=Path('public/files.js');files=files_path.read_text(encoding='utf-8')
 old_new="let ids=new Set((d.files||[]).filter(f=>f.is_new).map(f=>f.id));";new_new="let ids=new Set((d.files||[]).filter(f=>f.is_new&&f.can_open).map(f=>f.id));";assert old_new in files;files=files.replace(old_new,new_new)
@@ -62,7 +54,6 @@ function pfUnlockInject(){if($('#pfunlock'))return;document.body.insertAdjacentH
 """
 unlock_anchor="function paniDecodeClose(){$('#pfdecode').classList.add('hidden')}\n";assert unlock_anchor in files;files=files.replace(unlock_anchor,unlock_anchor+unlock_functions)
 old_boot="pfInject();pfMasterInject();";new_boot="pfInject();pfUnlockInject();pfMasterInject();";assert old_boot in files;files=files.replace(old_boot,new_boot)
-
 assert "f.is_new&&f.can_open" in files and "paniDecodeOpen('${f.id}')" in files and "function pfMime(file)" in files and "new File([file],file.name,{type:mime})" in files
 assert "pani_unlock_file" in files and "INSERIR CHAVE" in files and "pfUnlockInject" in files
 files_path.write_text(files,encoding='utf-8')
@@ -70,27 +61,25 @@ files_path.write_text(files,encoding='utf-8')
 mission=Path('public/mission.js').read_text(encoding='utf-8')
 mission_runtime=Path('public/mission-runtime.js').read_text(encoding='utf-8')
 for required in ('pani_submit_report','pani_crew_redeem_credential','pani_master_access_code_upsert','missionTransmissionGlitch','RELATÓRIO DO DIA'):assert required in mission,required
-assert "data-v=\"report\"" in mission_runtime
+assert 'data-v="report"' in mission_runtime
 assert "view!=='cred'&&view!=='report'" in mission_runtime
-
 assist=Path('public/assistance.js').read_text(encoding='utf-8')
 for required in ('pani_assistance_submit','pani_assistance_reply','pani_crew_assistance','pani_master_assistance','pani_master_assistance_reply','CANAL DE SUPORTE','CAIXA DE SOLICITAÇÕES'):assert required in assist,required
 
-for filename in ('index.html','style.css','files.css','mission.css','assistance.css','core.js','views.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js'):
+for filename in ('index.html','style.css','files.css','mission.css','assistance.css','sepulcro.css','core.js','views.js','sepulcro.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js'):
  p=Path('public')/filename;assert p.exists() and p.stat().st_size>100
-print('PANI build audit OK // PRIVATE ASSISTANCE v6')
+print('PANI build audit OK // W77-01 PROTOCOLO SEPULCRO v1')
 PY
 
 node --check public/core.js
 node --check public/views.js
+node --check public/sepulcro.js
 node --check public/files.js
 node --check public/runtime.js
 node --check public/mission.js
 node --check public/mission-runtime.js
 node --check public/assistance.js
 
-# End-to-end private Storage QA. The master PIN is supplied by Render environment,
-# never written to the repository or public frontend.
 if [[ -n "${PANI_MASTER_PIN:-}" ]]; then
   export PANI_STORAGE_QA
   PANI_STORAGE_QA="$(curl --fail --silent --show-error --max-time 20 \
@@ -108,5 +97,4 @@ print('PANI private Storage QA OK')
 PY
 fi
 
-# PANI Transmission v7
 bash pani-w77/render-transmission.sh
