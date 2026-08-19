@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="pani-host" content="render-static-v8-sepulcro-gate">
+  <meta name="pani-host" content="render-static-v9-contraprova">
   <title>PANI // W77-01</title>
   <style>html,body{margin:0;min-height:100%;background:#050b0e;color:#e9f4f4;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.hidden{display:none!important}</style>
   <link rel="stylesheet" href="./style.css">
@@ -22,9 +22,9 @@
   <section id="mapp" class="hidden">
     <div class="mastergrid">
       <div class="card"><h3>ESTADO DA ESTAÇÃO</h3><div class="pills"><span id="mmode" class="pill">—</span><span id="msep" class="pill">—</span><span id="msync" class="pill">—</span></div><p id="msepstate" class="mut">—</p><label>Ocupantes detectados<input id="occupancy" type="number" min="0" max="99"></label><button id="save" class="btn a">ATUALIZAR</button></div>
-      <div class="card"><h3>PROTOCOLO SEPULCRO</h3><p class="mut">O protocolo permanece invisível nos terminais dos jogadores até a liberação manual. Ocultar novamente preserva o progresso já obtido.</p><div class="actions"><button id="seprelease" class="btn a">LIBERAR PARA JOGADORES</button><button id="separm" class="btn r">ARM EVENT // ALHEIOS</button><button id="sepreset" class="btn r">RESET SEPULCRO</button><button id="trans" class="btn x">TRANSMISSION CONNECTED</button><button id="clear" class="btn">LIMPAR MENSAGEM</button></div></div>
+      <div class="card"><h3>PROTOCOLO CONTRAPROVA</h3><p class="mut">Cinco módulos publicam assinaturas forenses; INV correlaciona a coluna ausente. O protocolo não traduz Sinais nem aciona eventos narrativos automaticamente.</p><div class="actions"><button id="seprelease" class="btn a">LIBERAR PARA JOGADORES</button><button id="sepautohint" class="btn">AUTO-HINT: ATIVO</button><button id="sepmatrix" class="btn">MATRIZ: RESTRITA</button><button id="sepsequence" class="btn">SEQ-08: OCULTA</button><button id="separm" class="btn r">EVENTO INDEPENDENTE // ALHEIOS</button><button id="sepreset" class="btn r">RESET CONTRAPROVA</button><button id="trans" class="btn x">TRANSMISSION CONNECTED</button><button id="clear" class="btn">LIMPAR MENSAGEM</button></div></div>
       <div class="card"><h3>MENSAGEM PANI</h3><textarea id="msg" placeholder="Mensagem global..."></textarea><select id="sev"><option value="info">Informação</option><option value="warning">Aviso</option><option value="critical">Crítico</option><option value="transmission">Transmissão</option></select><button id="send" class="btn a">TRANSMITIR</button></div>
-      <div class="card"><h3>PORTAS ENTERRADAS</h3><div id="progress"></div></div>
+      <div class="card"><h3>MATRIZ DE CONTRAPROVA</h3><div id="progress"></div></div>
     </div>
     <div class="card" style="margin-top:14px"><h3>LOG DE SESSÃO</h3><div id="logs" class="term">Carregando...</div></div>
   </section>
