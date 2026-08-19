@@ -28,7 +28,7 @@ for needle in ('backendHealth','pani_sepulcro_master_state','PORTAS ENTERRADAS',
 for forbidden in ('DISPARAR IMPACTO DO SATÉLITE','impact_active','pani_power_manifest'):assert forbidden not in runtime,forbidden
 
 sep=Path('public/sepulcro.js').read_text(encoding='utf-8')
-for needle in ('SEPULTURA-OPS','SEPULTURA-INV','pani_sepulcro_attempt','pani_sepulcro_hint','ARM EVENT','RECIPROCIDADE ESTABELECIDA','tx-concept-sprite.webp','a05'):assert needle in sep,needle
+for needle in ('SEPULTURA-OPS','SEPULTURA-INV','pani_sepulcro_attempt','pani_sepulcro_hint','sepMasterArm','RECIPROCIDADE ESTABELECIDA','tx-concept-sprite.webp','a05'):assert needle in sep,needle
 
 files_path=Path('public/files.js');files=files_path.read_text(encoding='utf-8')
 old_new="let ids=new Set((d.files||[]).filter(f=>f.is_new).map(f=>f.id));";new_new="let ids=new Set((d.files||[]).filter(f=>f.is_new&&f.can_open).map(f=>f.id));";assert old_new in files;files=files.replace(old_new,new_new)
