@@ -7,14 +7,12 @@ cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistanc
 
 python3 - <<'PY'
 from pathlib import Path
-import re
 
 index_path=Path('public/index.html');index=index_path.read_text(encoding='utf-8')
 for asset in ('./style.css','./files.css','./mission.css','./assistance.css','./sepulcro.css','./core.js','./views.js','./sepulcro.js','./files.js','./runtime.js','./mission.js','./mission-runtime.js','./assistance.js'):
     assert asset in index,asset
 assert index.index('./sepulcro.js') < index.index('./runtime.js') < index.index('./mission.js') < index.index('./mission-runtime.js') < index.index('./assistance.js')
 assert 'SATÉLITE' not in index.upper() and 'ESTADO DA NAVE' not in index.upper()
-index_path.write_text(index,encoding='utf-8')
 
 core_path=Path('public/core.js');core=core_path.read_text(encoding='utf-8')
 bad_key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im52d3pjbmZvbmhwaWxueG1vcGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTI3NTcsImV4cCI6MjEwMjMyODc1N30.5FBDbk8J1uN8JLLpKMk_Hubw6K7kbQQiulIamwm9Vso'
@@ -24,11 +22,11 @@ for needle in ('STATION_ID','W77-01','PORTAS SETORIAIS RESTAURADAS','LEGACY_SECT
 core_path.write_text(core,encoding='utf-8')
 
 runtime_path=Path('public/runtime.js');runtime=runtime_path.read_text(encoding='utf-8')
-for needle in ('backendHealth','pani_sepulcro_master_state','PORTAS ENTERRADAS',"toast('PIN inválido.'",'MASTER // BACKEND INDISPONÍVEL'):assert needle in runtime,needle
+for needle in ('backendHealth','sepMasterRefresh','PORTAS ENTERRADAS',"toast('PIN inválido.'",'MASTER // BACKEND INDISPONÍVEL'):assert needle in runtime,needle
 for forbidden in ('DISPARAR IMPACTO DO SATÉLITE','impact_active','pani_power_manifest'):assert forbidden not in runtime,forbidden
 
 sep=Path('public/sepulcro.js').read_text(encoding='utf-8')
-for needle in ('SEPULTURA-OPS','SEPULTURA-INV','pani_sepulcro_attempt','pani_sepulcro_hint','sepMasterArm','RECIPROCIDADE ESTABELECIDA','tx-concept-sprite.webp','a05'):assert needle in sep,needle
+for needle in ('O RETORNO QUE NÃO EXISTE','SEPULTURA-INV','pani_sepulcro_attempt','pani_sepulcro_hint','sepMasterArm','RECIPROCIDADE ESTABELECIDA','tx-concept-sprite.webp','a05'):assert needle in sep,needle
 
 files_path=Path('public/files.js');files=files_path.read_text(encoding='utf-8')
 old_new="let ids=new Set((d.files||[]).filter(f=>f.is_new).map(f=>f.id));";new_new="let ids=new Set((d.files||[]).filter(f=>f.is_new&&f.can_open).map(f=>f.id));";assert old_new in files;files=files.replace(old_new,new_new)
