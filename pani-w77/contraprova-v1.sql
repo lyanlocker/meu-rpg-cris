@@ -317,28 +317,37 @@ begin
     bins := coalesce(p_payload->'bins', '{}'::jsonb);
     route := coalesce(p_payload->'route', '[]'::jsonb);
     if jsonb_typeof(bins->'installed') <> 'array'
-       or jsonb_array_length(coalesce(bins->'installed', '[]'::jsonb)) <> 2
+       or jsonb_array_length(case when jsonb_typeof(bins->'installed') = 'array'
+            then bins->'installed' else '[]'::jsonb end) <> 2
        or not coalesce(bins->'installed', '[]'::jsonb) @> '["prop_main","prop_aux"]'::jsonb then
       fb := 'Os recursos locais precisam separar manobra de retorno autônomo.';
-    elsif jsonb_array_length(coalesce(bins->'absent', '[]'::jsonb)) <> 2
+    elsif jsonb_typeof(bins->'absent') <> 'array'
+       or jsonb_array_length(case when jsonb_typeof(bins->'absent') = 'array'
+            then bins->'absent' else '[]'::jsonb end) <> 2
        or not coalesce(bins->'absent', '[]'::jsonb) @> '["rp02","local_plan"]'::jsonb then
       fb := 'NOT INSTALLED e NO LOCAL FLIGHT PLAN são ausências, não avarias.';
-    elsif jsonb_array_length(coalesce(bins->'external', '[]'::jsonb)) <> 2
+    elsif jsonb_typeof(bins->'external') <> 'array'
+       or jsonb_array_length(case when jsonb_typeof(bins->'external') = 'array'
+            then bins->'external' else '[]'::jsonb end) <> 2
        or not coalesce(bins->'external', '[]'::jsonb) @> '["recovery","authority"]'::jsonb then
       fb := 'Recuperação e autoridade pertencem a uma cadeia externa de controle.';
-    elsif jsonb_array_length(route) <> 3
+    elsif jsonb_typeof(route) <> 'array'
+       or jsonb_array_length(case when jsonb_typeof(route) = 'array'
+            then route else '[]'::jsonb end) <> 3
        or not route @> '["prop_main","prop_aux","recovery"]'::jsonb
        or route @> '["rp02"]'::jsonb then
       fb := 'O grafo ainda usa uma capacidade inexistente ou omite a dependência externa.';
     else good := true;
     end if;
   elsif cs.sector = 'gen' then
-    if jsonb_array_length(coalesce(p_payload->'stable', '[]'::jsonb)) <> 3
+    if jsonb_typeof(coalesce(p_payload->'stable', '[]'::jsonb)) <> 'array'
+       or jsonb_array_length(case when jsonb_typeof(coalesce(p_payload->'stable', '[]'::jsonb)) = 'array'
+            then coalesce(p_payload->'stable', '[]'::jsonb) else '[]'::jsonb end) <> 3
        or not coalesce(p_payload->'stable', '[]'::jsonb) @> '["sample","slide","spectrum"]'::jsonb then
       fb := 'Fixe somente as camadas físicas e instrumentais que permanecem iguais.';
     elsif coalesce(p_payload->>'divergent', '') <> 'descriptive_record' then
       fb := 'A camada divergente é a descrição registrada, não a amostra.';
-    elsif not coalesce((p_payload->>'physical_print')::boolean, false) then
+    elsif coalesce(p_payload->>'physical_print', 'false') <> 'true' then
       fb := 'A impressão física precisa entrar na contraprova para excluir falha exclusiva do monitor.';
     elsif coalesce(p_payload->>'hypothesis', '') <> 'record_change' then
       fb := 'A hipótese escolhida ainda contradiz a estabilidade do objeto e do espectro.';
@@ -346,12 +355,22 @@ begin
     end if;
   elsif cs.sector = 'env' then
     select exists (
-      select 1 from jsonb_array_elements_text(coalesce(p_payload->'tests', '[]'::jsonb)) t(value)
+      select 1 from jsonb_array_elements_text(
+        case when jsonb_typeof(coalesce(p_payload->'tests', '[]'::jsonb)) = 'array'
+          then coalesce(p_payload->'tests', '[]'::jsonb) else '[]'::jsonb end
+      ) t(value)
       where value not in ('light','airflow','rotation','humidity','crt')
     ) into invalid_test;
-    if jsonb_array_length(coalesce(p_payload->'tests', '[]'::jsonb)) <> 3 or invalid_test then
+    if jsonb_typeof(coalesce(p_payload->'tests', '[]'::jsonb)) <> 'array'
+       or jsonb_array_length(case when jsonb_typeof(coalesce(p_payload->'tests', '[]'::jsonb)) = 'array'
+            then coalesce(p_payload->'tests', '[]'::jsonb) else '[]'::jsonb end) <> 3
+       or (select count(distinct t.value) from jsonb_array_elements_text(
+            case when jsonb_typeof(coalesce(p_payload->'tests', '[]'::jsonb)) = 'array'
+              then coalesce(p_payload->'tests', '[]'::jsonb) else '[]'::jsonb end
+          ) t(value)) <> 3
+       or invalid_test then
       fb := 'Selecione exatamente três intervenções que alterem variáveis ambientais reais.';
-    elsif not coalesce((p_payload->>'normalized')::boolean, false) then
+    elsif coalesce(p_payload->>'normalized', 'false') <> 'true' then
       fb := 'As referências ainda não foram normalizadas no eixo comum da estação.';
     elsif coalesce(p_payload->>'conclusion', '') <> 'direction_invariant' then
       fb := 'As causas mudam entre testes; a direção é o componente que persiste.';
@@ -370,7 +389,10 @@ begin
     else good := true;
     end if;
   elsif cs.sector = 'sec' then
-    if not coalesce(p_payload->'inspected', '[]'::jsonb) @> '[0,1,2,3,4,5]'::jsonb then
+    if jsonb_typeof(coalesce(p_payload->'inspected', '[]'::jsonb)) <> 'array'
+       or jsonb_array_length(case when jsonb_typeof(coalesce(p_payload->'inspected', '[]'::jsonb)) = 'array'
+            then coalesce(p_payload->'inspected', '[]'::jsonb) else '[]'::jsonb end) <> 6
+       or not coalesce(p_payload->'inspected', '[]'::jsonb) @> '[0,1,2,3,4,5]'::jsonb then
       fb := 'Reproduza todas as janelas T+00 a T+05 antes de fechar a hipótese.';
     elsif coalesce(p_payload->>'presence', '') <> 't03' then
       fb := 'A primeira confirmação de movimento interno ocorre em T+03.';
@@ -385,8 +407,12 @@ begin
       fb := 'A matriz final exige cinco assinaturas publicadas ou liberação manual do Mestre.';
     elsif coalesce(p_payload->>'stage', '') = 'matrix' then
       select count(*) into assignment_count
-      from jsonb_object_keys(coalesce(p_payload->'assignments', '{}'::jsonb));
-      if assignment_count <> 10
+      from jsonb_object_keys(
+        case when jsonb_typeof(coalesce(p_payload->'assignments', '{}'::jsonb)) = 'object'
+          then coalesce(p_payload->'assignments', '{}'::jsonb) else '{}'::jsonb end
+      );
+      if jsonb_typeof(coalesce(p_payload->'assignments', '{}'::jsonb)) <> 'object'
+         or assignment_count <> 10
          or p_payload#>>'{assignments,ops:physical}' <> 'physical'
          or p_payload#>>'{assignments,gen:physical}' <> 'physical'
          or p_payload#>>'{assignments,env:physical}' <> 'physical'
