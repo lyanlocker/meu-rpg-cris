@@ -3,7 +3,7 @@ set -euo pipefail
 
 rm -rf public
 mkdir -p public
-cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/sepulcro.css pani-w77/containment.css pani-w77/core.js pani-w77/views.js pani-w77/sepulcro.js pani-w77/containment.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/index.html pani-w77/containment-qa.html public/
+cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/sepulcro.css pani-w77/containment.css pani-w77/core.js pani-w77/views.js pani-w77/sepulcro.js pani-w77/containment.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/index.html pani-w77/containment-qa.html pani-w77/containment-mobile-qa.html public/
 
 python3 - <<'PY'
 from pathlib import Path
@@ -78,8 +78,10 @@ assert "view!=='cred'&&view!=='report'" in mission_runtime
 assist=Path('public/assistance.js').read_text(encoding='utf-8')
 for required in ('pani_assistance_submit','pani_assistance_reply','pani_crew_assistance','pani_master_assistance','pani_master_assistance_reply','CANAL DE SUPORTE','CAIXA DE SOLICITAÇÕES'):assert required in assist,required
 
-for filename in ('index.html','containment-qa.html','style.css','files.css','mission.css','assistance.css','sepulcro.css','containment.css','core.js','views.js','sepulcro.js','containment.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js'):
+for filename in ('index.html','containment-qa.html','containment-mobile-qa.html','style.css','files.css','mission.css','assistance.css','sepulcro.css','containment.css','core.js','views.js','sepulcro.js','containment.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js'):
  p=Path('public')/filename;assert p.exists() and p.stat().st_size>100
+mobile_qa=Path('public/containment-mobile-qa.html').read_text(encoding='utf-8')
+assert 'width:390px' in mobile_qa and 'height:844px' in mobile_qa and 'containment-qa.html?scenario=' in mobile_qa
 assert 'CONEXO' in containment and 'pani_containment_crew_action_v12' in containment
 assert 'active_side' in containment_sql_v12 and 'containment_v1_3' in containment_sql_v12
 for needle in ('player_position','master_position','master_pulse','energy_rematch','energy_claim','control_mode'):
