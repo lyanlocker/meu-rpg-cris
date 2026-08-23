@@ -82,6 +82,11 @@ for filename in ('index.html','containment-qa.html','containment-mobile-qa.html'
  p=Path('public')/filename;assert p.exists() and p.stat().st_size>100
 mobile_qa=Path('public/containment-mobile-qa.html').read_text(encoding='utf-8')
 assert 'width:390px' in mobile_qa and 'height:844px' in mobile_qa and 'containment-qa.html?scenario=' in mobile_qa
+containment_qa=Path('public/containment-qa.html').read_text(encoding='utf-8')
+for scenario in ('knowledge','blood','death','death-final','players-win','master-win'):
+ assert scenario in containment_qa,scenario
+for event_id in ('knowledge','energy','blood','death'):
+ assert "eventId:'"+event_id+"'" in containment_qa,event_id
 assert 'CONEXO' in containment and 'pani_containment_crew_action_v12' in containment
 assert 'active_side' in containment_sql_v12 and 'containment_v1_3' in containment_sql_v12
 for needle in ('player_position','master_position','master_pulse','energy_rematch','energy_claim','control_mode'):
