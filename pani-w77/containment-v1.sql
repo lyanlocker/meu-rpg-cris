@@ -337,7 +337,7 @@ begin
   if active_event is not null and phase is not null then
     select v.value into my_vote from pani_private.containment_vote v
       where v.session_id='W77-01' and v.event_id=active_event and v.phase_key=phase and v.crew_id=c.crew_id;
-    if (active_event='death' and role_name='witness') or (active_event<>'death' and role_name='representative') then
+    if (active_event='death' and role_name='witness') or (active_event in ('energy','blood') and role_name='representative') then
       summary := pani_private.containment_vote_summary('W77-01',active_event,phase);
       if active_event='blood' and role_name='representative' and s.secret_state#>'{blood,fake_votes}' is not null
          and s.secret_state#>'{blood,fake_votes}' <> 'null'::jsonb then
@@ -403,7 +403,7 @@ begin
   if p_action='vote' then
     value:=left(trim(coalesce(p_payload->>'value','')),40);
     if active_event is null or phase is null or value='' then raise exception 'vote_unavailable'; end if;
-    if active_event='knowledge' and value !~ '^c([0-9]|1[0-5])$' then raise exception 'invalid_vote'; end if;
+    if active_event='knowledge' then raise exception 'direct_play_required'; end if;
     if active_event='energy' and value not in ('advance','stable','volatile') then raise exception 'invalid_vote'; end if;
     if active_event='blood' and (ev->>'phase'<>'beats' or value not in ('A','B','C')) then raise exception 'invalid_vote'; end if;
     if active_event='death' and (ev->>'phase'<>'cycles' or value not in ('clock','lamp','door','sample','chair','mirror')) then raise exception 'invalid_vote'; end if;
@@ -413,7 +413,10 @@ begin
     perform pani_private.containment_log_event('W77-01',c.display_name,'vote',active_event||':'||phase||':'||value);
 
   elsif p_action='knowledge_mark' then
-    if active_event<>'knowledge' or c.crew_id<>rep or ev->>'phase' not in ('round1','round2') then raise exception 'representative_required'; end if;
+    if active_event<>'knowledge' or ev->>'phase' not in ('round1','round2') then raise exception 'knowledge_unavailable'; end if;
+    select count(*) into connected_count from pani_private.containment_participant p
+      where p.session_id='W77-01' and p.joined and p.last_seen>now()-interval '12 seconds';
+    if connected_count>1 and coalesce(ev->>'last_actor_id','')=c.crew_id then raise exception 'alternate_operator_required'; end if;
     cell:=coalesce(p_payload->>'cell',''); size:=coalesce((ev->>'size')::int,3);
     if cell !~ '^c[0-9]{1,2}$' then raise exception 'invalid_cell'; end if;
     idx:=substring(cell from 2)::int;
@@ -425,7 +428,7 @@ begin
     if ev->>'phase'='round2' and rule_id='false_center' and idx in (5,6,9,10) then raise exception 'rule_violation'; end if;
     mark:=coalesce(ev->>'current_mark','X'); marks:=jsonb_set(marks,array[cell],to_jsonb(mark),true);
     ev:=ev||jsonb_build_object('marks',marks,'current_mark',case when mark='X' then 'O' else 'X' end,
-      'move',coalesce((ev->>'move')::int,0)+1);
+      'move',coalesce((ev->>'move')::int,0)+1,'last_actor_id',c.crew_id);
     if pani_private.containment_knowledge_line(marks,size,mark) then
       wins:=coalesce((ev->>'wins')::int,0)+1;
       if ev->>'phase'='round1' then
@@ -436,15 +439,15 @@ begin
             when 'false_center' then 'O centro geométrico é uma zona falsa.'
             when 'mobile_cell' then 'Uma casa móvel permanece instável nesta rodada.'
             else 'Uma linha de três encerra a rodada antes da quarta marca.' end,
-          'hint',null,'locked',false,'vote_phase','knowledge:r2:m1');
+          'hint',null,'locked',false,'last_actor_id',null,'vote_phase','knowledge:r2:m1');
       else
         ev:=jsonb_build_object('phase','missing','round',3,'size',3,'marks',jsonb_build_object('c1','X','c7','X'),
           'current_mark','X','move',0,'wins',wins,'unstable','[]'::jsonb,'absent',jsonb_build_array('c4'),
           'rule_title','CASA AUSENTE','rule_text','A casa removida continua pertencendo ao tabuleiro.',
-          'hint','A ausência também ocupa uma posição.','locked',false,'vote_phase','knowledge:missing');
+          'hint','A ausência também ocupa uma posição.','locked',false,'last_actor_id',null,'vote_phase','knowledge:missing');
       end if;
     elsif (select count(*) from jsonb_object_keys(marks))>=size*size-jsonb_array_length(coalesce(ev->'unstable','[]'::jsonb)) then
-      ev:=ev||jsonb_build_object('marks','{}'::jsonb,'current_mark','X','move',0);
+      ev:=ev||jsonb_build_object('marks','{}'::jsonb,'current_mark','X','move',0,'last_actor_id',null);
       st:=jsonb_set(st,'{saturation}',to_jsonb(least(8,coalesce((st->>'saturation')::int,0)+1)));
     else
       ev:=ev||jsonb_build_object('vote_phase','knowledge:r'||coalesce(ev->>'round','1')||':m'||(coalesce((ev->>'move')::int,0)+1));
@@ -452,12 +455,12 @@ begin
     st:=jsonb_set(st,'{event}',ev,true);
 
   elsif p_action='knowledge_missing' then
-    if active_event<>'knowledge' or c.crew_id<>rep or ev->>'phase'<>'missing' or p_payload->>'cell'<>'c4' then raise exception 'missing_house_required'; end if;
+    if active_event<>'knowledge' or ev->>'phase'<>'missing' or p_payload->>'cell'<>'c4' then raise exception 'missing_house_required'; end if;
     st:=pani_private.containment_capture(st,'knowledge');
     delete from pani_private.containment_vote v where v.session_id='W77-01' and v.event_id='knowledge';
 
   elsif p_action in ('knowledge_scan','knowledge_lock') then
-    if active_event<>'knowledge' or c.crew_id<>rep then raise exception 'representative_required'; end if;
+    if active_event<>'knowledge' then raise exception 'knowledge_unavailable'; end if;
     if p_action='knowledge_scan' then
       if coalesce((st#>>'{pani_charges,scan}')::int,0)<1 then raise exception 'charge_unavailable'; end if;
       st:=jsonb_set(st,'{pani_charges,scan}','0'::jsonb,true);
@@ -564,7 +567,7 @@ begin
     end if;
 
   elsif p_action='death_anchor' then
-    if active_event<>'death' or c.crew_id not in (coalesce(witness,''),coalesce(rep,'')) or ev->>'anchor' is not null then raise exception 'anchor_unavailable'; end if;
+    if active_event<>'death' or c.crew_id<>witness or ev->>'anchor' is not null then raise exception 'anchor_unavailable'; end if;
     value:=coalesce(p_payload->>'object',''); if value not in ('clock','lamp','door','sample','chair','mirror') then raise exception 'invalid_object'; end if;
     ev:=ev||jsonb_build_object('anchor',value);st:=jsonb_set(st,'{event}',ev,true);
 
@@ -576,7 +579,7 @@ begin
       where p.session_id='W77-01' and p.joined and p.last_seen>now()-interval '12 seconds';
     select count(*) into hold_count from pani_private.containment_participant p
       where p.session_id='W77-01' and p.joined and p.last_seen>now()-interval '12 seconds' and p.hold_until>now();
-    if connected_count>=3 and hold_count>=connected_count then st:=pani_private.containment_capture(st,'death'); end if;
+    if connected_count>=1 and hold_count>=connected_count then st:=pani_private.containment_capture(st,'death'); end if;
   else
     raise exception 'unknown_action';
   end if;
@@ -663,8 +666,10 @@ begin
   elsif p_action='start_event' then
     target:=coalesce(p_payload->>'event',''); rep:=coalesce(p_payload->>'representative_id','');
     if target not in ('knowledge','energy','blood','death') then raise exception 'invalid_event'; end if;
+    if active_event is not null then raise exception 'event_in_progress'; end if;
     if st#>>array['event_status',target] not in ('available','in_progress') then raise exception 'event_unavailable'; end if;
-    if not exists(select 1 from pani_private.containment_participant p where p.session_id='W77-01' and p.crew_id=rep and p.joined) then raise exception 'representative_unavailable'; end if;
+    if target in ('energy','blood') and not exists(select 1 from pani_private.containment_participant p where p.session_id='W77-01' and p.crew_id=rep and p.joined) then raise exception 'representative_unavailable'; end if;
+    if target not in ('energy','blood') then rep:=null; end if;
     statuses:=jsonb_set(st->'event_status',array[target],'"in_progress"'::jsonb,true);
     st:=st||jsonb_build_object('status','active','active_event',target,'event_status',statuses,
       'representative_id',rep,'witness_id',null,'corruption_charges',2,'pani_charges',jsonb_build_object('scan',1,'lock',1),
@@ -675,7 +680,7 @@ begin
       rule_id:=(array['diagonal_prohibited','false_center','mobile_cell','anti_three'])[1+floor(random()*4)::int];
       ev:=jsonb_build_object('phase','round1','round',1,'size',3,'marks','{}'::jsonb,'current_mark','X','move',0,'wins',0,
         'unstable',jsonb_build_array('c4'),'absent','[]'::jsonb,'rule_title','MALHA INSTÁVEL',
-        'rule_text','Forme uma linha de três sem ocupar a casa instável.','hint',null,'locked',false,'ghost_cells','[]'::jsonb,
+        'rule_text','Forme uma linha de três sem ocupar a casa instável.','hint',null,'locked',false,'ghost_cells','[]'::jsonb,'last_actor_id',null,
         'vote_phase','knowledge:r1:m1');
       sec:=jsonb_set(sec,'{knowledge}',jsonb_build_object('rule_id',rule_id),true);
     elsif target='energy' then
@@ -701,6 +706,7 @@ begin
     st:=jsonb_set(st,'{event}',ev,true);
 
   elsif p_action='set_representative' then
+    if active_event not in ('energy','blood') then raise exception 'representative_not_required'; end if;
     rep:=coalesce(p_payload->>'crew_id','');
     if not exists(select 1 from pani_private.containment_participant p where p.session_id='W77-01' and p.crew_id=rep and p.joined) then raise exception 'representative_unavailable'; end if;
     st:=jsonb_set(st,'{representative_id}',to_jsonb(rep),true);
@@ -708,7 +714,9 @@ begin
   elsif p_action='set_witness' then
     witness:=coalesce(p_payload->>'crew_id','');
     if active_event<>'death' then raise exception 'death_only'; end if;
-    if witness=coalesce(st->>'witness_id','') or witness=coalesce(ev->>'previous_witness','')
+    select count(*) into value from pani_private.containment_participant p
+      where p.session_id='W77-01' and p.joined and p.last_seen>now()-interval '12 seconds';
+    if witness=coalesce(st->>'witness_id','') or (value>1 and witness=coalesce(ev->>'previous_witness',''))
        or not exists(select 1 from pani_private.containment_participant p where p.session_id='W77-01' and p.crew_id=witness and p.joined) then raise exception 'witness_unavailable'; end if;
     st:=jsonb_set(st,'{witness_id}',to_jsonb(witness),true);
 
@@ -716,7 +724,8 @@ begin
     if active_event is null or coalesce((st->>'corruption_charges')::int,0)<1 then raise exception 'corruption_unavailable'; end if;
     kind:=coalesce(p_payload->>'kind','');duration:=greatest(900,least(2200,coalesce((p_payload->>'duration_ms')::int,1400)));
     if kind='' then kind:=case active_event when 'knowledge' then 'ghost_mark' when 'energy' then 'swapped_card' when 'blood' then 'false_reading' else 'false_echo' end; end if;
-    backup:=ev;sec:=sec||jsonb_build_object('corruption',jsonb_build_object('event',active_event,'kind',kind),'corruption_backup',backup);
+    backup:=jsonb_build_object('event',ev,'event_secret',coalesce(sec->active_event,'{}'::jsonb));
+    sec:=sec||jsonb_build_object('corruption',jsonb_build_object('event',active_event,'kind',kind),'corruption_backup',backup);
     if active_event='knowledge' then
       if kind='semantic_swap' then ev:=ev||jsonb_build_object('rule_text','A casa instável é obrigatória para validar a linha.');
       else ghost:='c'||floor(random()*greatest(1,coalesce((ev->>'size')::int,3)^2))::int;ev:=ev||jsonb_build_object('ghost_cells',coalesce(ev->'ghost_cells','[]'::jsonb)||jsonb_build_array(ghost)); end if;
@@ -737,7 +746,13 @@ begin
 
   elsif p_action='restore_corruption' then
     backup:=sec->'corruption_backup'; if backup is null or backup='null'::jsonb then raise exception 'no_corruption'; end if;
-    st:=jsonb_set(st,'{event}',backup,true);st:=jsonb_set(st,'{corruption_charges}',to_jsonb(least(2,coalesce((st->>'corruption_charges')::int,0)+1)),true);
+    if backup ? 'event' then
+      st:=jsonb_set(st,'{event}',backup->'event',true);
+      sec:=jsonb_set(sec,array[active_event],coalesce(backup->'event_secret','{}'::jsonb),true);
+    else
+      st:=jsonb_set(st,'{event}',backup,true);
+    end if;
+    st:=jsonb_set(st,'{corruption_charges}',to_jsonb(least(2,coalesce((st->>'corruption_charges')::int,0)+1)),true);
     sec:=jsonb_set(sec,'{blood,fake_votes}','null'::jsonb,true)||jsonb_build_object('corruption',null,'corruption_backup',null);
 
   elsif p_action='pause' then
