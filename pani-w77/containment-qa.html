@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>PANI // QA ENERGIA</title>
+  <title>PANI // QA CONTENÇÃO</title>
   <style>html,body{margin:0;min-height:100%;background:#050b0e;color:#e9f4f4;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.qa-wrap{width:min(1380px,calc(100% - 24px));margin:18px auto}.qa-controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}.qa-controls button{padding:9px 12px;border:1px solid #25505a;border-radius:8px;background:#07161b;color:#e9f4f4;cursor:pointer}.qa-label{margin:22px 0 8px;color:#77cfc2;font:700 11px ui-monospace;letter-spacing:.12em}.qa-master{padding:14px;border:1px solid #28434a;border-radius:12px;background:#071116}</style>
   <link rel="stylesheet" href="./style.css?v=25">
   <link rel="stylesheet" href="./containment.css?v=25">
@@ -11,7 +11,7 @@
 <body>
   <main class="qa-wrap">
     <div class="qa-label">PANI // PÁGINA DE VERIFICAÇÃO VISUAL // SEM DADOS REAIS</div>
-    <div class="qa-controls"><button onclick="qaSet('team')">EQUIPE</button><button onclick="qaSet('master')">TURNO MESTRE</button><button onclick="qaSet('operator')">OPERADOR</button><button onclick="qaSet('players-win')">VITÓRIA EQUIPE</button><button onclick="qaSet('master-win')">VITÓRIA CRIATURA</button></div>
+    <div class="qa-controls"><button onclick="qaSet('team')">ENERGIA // EQUIPE</button><button onclick="qaSet('master')">ENERGIA // MESTRE</button><button onclick="qaSet('operator')">ENERGIA // OPERADOR</button><button onclick="qaSet('players-win')">ENERGIA // VITÓRIA EQUIPE</button><button onclick="qaSet('master-win')">ENERGIA // VITÓRIA CRIATURA</button><button onclick="qaSet('knowledge')">CONHECIMENTO</button><button onclick="qaSet('blood')">SANGUE</button><button onclick="qaSet('death')">MORTE</button><button onclick="qaSet('death-final')">MORTE // FINAL</button></div>
     <div class="qa-label">VISÃO DOS JOGADORES</div><div id="qa-player"></div>
     <div class="qa-label">VISÃO DO MESTRE</div><div id="qa-master" class="qa-master"></div>
   </main>
@@ -23,15 +23,21 @@
   </script>
   <script src="./containment.js?v=25"></script>
   <script>
-    const qaBase={released:true,status:'active',active_event:'energy',event_status:{energy:'in_progress'},modules_restored:[],saturation:2};
-    const qaEvents={
-      team:{phase:'race',active_side:'PLAYERS',control_mode:'team',player_position:7,master_position:5,pulse:3,master_pulse:2,turn:4,overload:2,forks:[3,9,15],checkpoints:[6,13],last_card:'ANÁRQUICO',last_effect:'A Equipe recuou 2 casas.'},
-      master:{phase:'master_threat',active_side:'MASTER',control_mode:'team',player_position:11,master_position:9,pulse:4,master_pulse:3,turn:6,overload:4,forks:[3,9,15],checkpoints:[6,13],last_card:'DIABO',last_effect:'O Mestre escolhe a próxima ameaça.'},
-      operator:{phase:'race',active_side:'PLAYERS',control_mode:'operator',player_position:3,master_position:4,pulse:2,master_pulse:4,turn:3,overload:1,forks:[3,9,15],checkpoints:[6,13],last_card:null,last_effect:'O operador decide a rota da Equipe.'},
-      'players-win':{phase:'finished',active_side:'PLAYERS',winner:'PLAYERS',control_mode:'team',player_position:19,master_position:16,pulse:4,master_pulse:2,turn:8,overload:3,last_card:'PASSAR',last_effect:'A Equipe alcançou a contenção primeiro.'},
-      'master-win':{phase:'finished',active_side:'MASTER',winner:'MASTER',control_mode:'team',player_position:15,master_position:19,pulse:2,master_pulse:4,turn:9,overload:5,last_card:'ANFITRIÃO',last_effect:'A Criatura alcançou a contenção primeiro.'}
+    const qaWords=['ARQUIVO','ÍNDICE','DOSSIÊ','RELATÓRIO','CHAVE','TRAVA','SENHA','PORTA','ECO','LEMBRANÇA','SONHO','VESTÍGIO','MÓDULO','SETOR','CÂMARA','CORREDOR'];
+    const qaBase={released:true,status:'active',modules_restored:[],saturation:2};
+    const qaScenarios={
+      team:{eventId:'energy',role:'spectator',event:{phase:'race',active_side:'PLAYERS',control_mode:'team',player_position:7,master_position:5,pulse:3,master_pulse:2,turn:4,overload:2,forks:[3,9,15],checkpoints:[6,13],last_card:'ANÁRQUICO',last_effect:'A Equipe recuou 2 casas.'}},
+      master:{eventId:'energy',role:'spectator',event:{phase:'master_threat',active_side:'MASTER',control_mode:'team',player_position:11,master_position:9,pulse:4,master_pulse:3,turn:6,overload:4,forks:[3,9,15],checkpoints:[6,13],last_card:'DIABO',last_effect:'O Mestre escolhe a próxima ameaça.'}},
+      operator:{eventId:'energy',role:'representative',event:{phase:'race',active_side:'PLAYERS',control_mode:'operator',player_position:3,master_position:4,pulse:2,master_pulse:4,turn:3,overload:1,forks:[3,9,15],checkpoints:[6,13],last_card:null,last_effect:'O operador decide a rota da Equipe.'}},
+      'players-win':{eventId:'energy',role:'spectator',event:{phase:'finished',active_side:'PLAYERS',winner:'PLAYERS',control_mode:'team',player_position:19,master_position:16,pulse:4,master_pulse:2,turn:8,overload:3,last_card:'PASSAR',last_effect:'A Equipe alcançou a contenção primeiro.'}},
+      'master-win':{eventId:'energy',role:'spectator',event:{phase:'finished',active_side:'MASTER',winner:'MASTER',control_mode:'team',player_position:15,master_position:19,pulse:2,master_pulse:4,turn:9,overload:5,last_card:'ANFITRIÃO',last_effect:'A Criatura alcançou a contenção primeiro.'}},
+      knowledge:{eventId:'knowledge',role:'spectator',event:{phase:'groups',active_side:'PLAYERS',words:qaWords,solved:[],solved_groups:[],coherence:4,vote_phase:'knowledge:g1'}},
+      blood:{eventId:'blood',role:'representative',event:{phase:'beats',active_side:'PLAYERS',beat:2,beat_seconds:15,stabilization:2,hemorrhage:1,readings:['A estável','B oscilante','C crítica'],selected_valve:'B',vote_phase:'blood:beat2'}},
+      death:{eventId:'death',role:'witness',event:{phase:'cycles',active_side:'PLAYERS',cycle:2,scene_kind:'alternate',changed_visuals:['lamp'],vote_phase:'death:c2'}},
+      'death-final':{eventId:'death',role:'spectator',event:{phase:'final',active_side:'PLAYERS',cycle:4}}
     };
-    function qaSet(name){let event=qaEvents[name]||qaEvents.team,role=name==='operator'?'representative':'spectator';containmentState={released:true,joined:true,revision:1,player:{crew_id:'qa',display_name:'QA',role},players:[{crew_id:'qa',display_name:'QA',connected:true}],state:{...qaBase,event}};containmentMasterState={state:{...qaBase,event},secret_state:{energy:{hand:['ANÁRQUICO','DIABO','VIAJANTE']}}};$('#qa-player').innerHTML=containmentEnergy();$('#qa-master').innerHTML=ctMasterSpecific('energy');document.body.dataset.scenario=name}
+    const qaSecrets={energy:{energy:{hand:['ANÁRQUICO','DIABO','VIAJANTE']}},knowledge:{knowledge:{corruption_hand:['marca_fantasma','troca_semântica']}},blood:{blood:{answer_locked:true,answer:'B',choices:[{answer:'A'},{answer:'B'},{answer:'C'}]}},death:{death:{choices:[{answer:'lamp'},{answer:'clock'},{answer:'door'}]}}};
+    function qaSet(name){let spec=qaScenarios[name]||qaScenarios.team,eventId=spec.eventId,event=spec.event,state={...qaBase,active_event:eventId,event_status:{[eventId]:'in_progress'},event,witness_id:eventId==='death'?'qa':null};window.ctKSelection=[];containmentState={released:true,joined:true,revision:1,player:{crew_id:'qa',display_name:'QA',role:spec.role},players:[{crew_id:'qa',display_name:'QA',connected:true}],state};containmentMasterState={players:[{crew_id:'qa',display_name:'QA',connected:true,joined:true,module:'gen'}],state,secret_state:qaSecrets[eventId]||{}};$('#qa-player').innerHTML=eventId==='knowledge'?containmentKnowledge():eventId==='energy'?containmentEnergy():eventId==='blood'?containmentBlood():containmentDeath();$('#qa-master').innerHTML=ctMasterSpecific(eventId);document.body.dataset.scenario=name;document.body.dataset.event=eventId}
     qaSet(new URLSearchParams(location.search).get('scenario')||'team');
   </script>
 </body>
