@@ -10,7 +10,7 @@ const CT_STATUS_LABEL={detected:'DETECTADA',available:'DISPONÍVEL',in_progress:
 const CT_OBJECTS={clock:'RELÓGIO',lamp:'LUMINÁRIA',door:'PORTA',sample:'AMOSTRA',chair:'CADEIRA',mirror:'ESPELHO'};
 const CT_CARDS=['ZUMBI DE SANGUE','ESQUELETO DE LODO','ANÁRQUICO','EXISTIDO','ENRAIZADO','MARIONETE','VIAJANTE','CARNIÇAL PRETO DA MORTE','ENPAP-X','DEGOLIFICADA','MAGISTRADA','DEUS DA MORTE','DIABO','ANFITRIÃO'];
 
-let containmentState={released:false,state:{}},containmentMasterState={},containmentBusy=false;
+let containmentState={released:false,state:{},sync_error:null},containmentMasterState={},containmentBusy=false;
 let containmentClockOffset=0,containmentSeen=false,containmentGlitchRevision=0,containmentAnnouncementRevision=0;
 let containmentDeathHoldTimer=null;
 let containmentReduced=localStorage.getItem('pani-containment-reduced')==='1'||
@@ -47,11 +47,19 @@ async function containmentCrewRefresh(rerender=false){
   if(MASTER||!tok||!me)return containmentState;
   try{
     let data=await rpc('pani_containment_crew_state',{p_token:tok});
+    data.sync_error=null;
     let wasActive=containmentActive();containmentAdopt(data,false);
     if(containmentActive()&&!wasActive)view='containment';
     if(rerender&&view==='containment')render(true);
     return containmentState;
-  }catch(error){console.error('containment crew state',error);return containmentState}
+  }catch(error){console.error('containment crew state',error);containmentState={...containmentState,sync_error:String(error?.message||'Falha de sincronização')};if(rerender&&view==='containment')render(true);return null}
+}
+
+async function containmentOpen(){
+  view='containment';navRender();render(true);
+  let refreshed=await containmentCrewRefresh(false);
+  if(!refreshed)toast('Não foi possível sincronizar a arena. Use TENTAR NOVAMENTE.',true);
+  render(true)
 }
 
 async function containmentJoin(){
@@ -139,6 +147,7 @@ function containmentDeathHoldStop(){clearInterval(containmentDeathHoldTimer);con
 
 function containmentPage(){
   document.body.classList.toggle('ct-reduced',containmentReduced);
+  if(containmentState?.sync_error)return `<div class="card ct-closed"><div class="k">PANI // FALHA DE SINCRONIZAÇÃO</div><h2>A ARENA NÃO RESPONDEU</h2><p class="mut">${esc(containmentState.sync_error)}</p><button class="btn a" onclick="containmentOpen()">TENTAR NOVAMENTE</button>${ctAccessibility()}</div>`;
   if(!containmentReleased())return `<div class="card ct-closed"><div class="k">PANI // ROTINA EXTRAORDINÁRIA</div><h2>NENHUMA SESSÃO DE CONTENÇÃO ATIVA</h2><p class="mut">O Protocolo de Recaptura permanece selado pelo Diretor da Sessão.</p>${ctAccessibility()}</div>`;
   if(!containmentJoined())return ctLobby();
   let id=ctState().active_event;
@@ -198,7 +207,7 @@ CT_EVENT_META.knowledge.title='CONEXO // MATRIZ DE ASSOCIAÇÃO';
 
 async function containmentAction(action,payload={}){
   if(containmentBusy)return null;containmentBusy=true;
-  try{let data=await rpc('pani_containment_crew_action_v12',{p_token:token,p_action:action,p_payload:payload});containmentAdopt(data);render();return data}
+  try{let data=await rpc('pani_containment_crew_action_v12',{p_token:tok,p_action:action,p_payload:payload});containmentAdopt(data);render();return data}
   catch(error){let m=String(error?.message||''),friendly=m.includes('master_turn')?'A entidade está agindo. Aguarde a vez da equipe.':m.includes('representative_required')?'A decisão final pertence ao representante.':m.includes('witness_required')?'A confirmação pertence à Testemunha.':m.includes('four_unique_words_required')?'Selecione exatamente quatro palavras diferentes.':m.includes('anchor_protected')?'A Âncora não pode ser alterada.':m;toast(friendly,true);return null}
   finally{containmentBusy=false}
 }
@@ -209,15 +218,15 @@ async function containmentMasterAction(action,payload={}){
   finally{containmentBusy=false}
 }
 
-function ctSideBanner(){let side=ctEvent().active_side||'PLAYERS';return `<div class="ct-side ${side.toLowerCase()}"><span>TURNO ATIVO</span><b>${side==='MASTER'?'MESTRE // ENTIDADE':'PLAYERS // EQUIPE'}</b><small>${side==='MASTER'?'Aguardando a ação hostil do Mestre.':'A equipe pode votar; o representante confirma.'}</small></div>`}
+function ctSideBanner(){let side=ctEvent().active_side||'PLAYERS',knowledge=ctState().active_event==='knowledge';return `<div class="ct-side ${side.toLowerCase()}"><span>TURNO ATIVO</span><b>${side==='MASTER'?'MESTRE // ENTIDADE':'PLAYERS // EQUIPE'}</b><small>${side==='MASTER'?'Aguardando a ação hostil do Mestre.':knowledge?'Qualquer integrante pode fechar um grupo; o primeiro envio válido é processado.':'A equipe pode votar; o representante confirma.'}</small></div>`}
 function ctKnowledgeWords(){return ctEvent().words||[]}
 function ctKnowledgeSelection(){window.ctKSelection=Array.isArray(window.ctKSelection)?window.ctKSelection.filter(x=>ctKnowledgeWords().includes(x)):[];return window.ctKSelection}
 function ctKnowledgeToggle(word){let a=ctKnowledgeSelection(),i=a.indexOf(word);if(i>=0)a.splice(i,1);else if(a.length<4)a.push(word);render()}
 function ctKnowledgeSubmit(){let words=ctKnowledgeSelection();if(words.length!==4)return toast('Selecione quatro palavras.',true);window.ctKSelection=[];return containmentAction('knowledge_submit',{words})}
 function containmentKnowledge(){let ev=ctEvent(),words=ctKnowledgeWords(),selected=ctKnowledgeSelection(),masterTurn=ev.active_side==='MASTER';
-  if(ev.phase==='final')return `<div class="card ct-shell knowledge final">${ctHeader()}${ctRoleBanner()}${ctSideBanner()}<div class="ct-final-call"><div class="k">MATRIZ SEMÂNTICA 4/4</div><h2>INDEXAÇÃO RESTAURADA</h2><p>A entidade permaneceu como o único objeto sem categoria válida.</p></div>${ctIsRepresentative()?'<button class="ct-contain-command" onclick="containmentAction(\'knowledge_contain\')"><b>CONTER</b><span>CONFIRMAR CAPTURA</span></button>':'<p class="mut">Aguardando o representante confirmar a contenção.</p>'}</div>`;
+  if(ev.phase==='final')return `<div class="card ct-shell knowledge final">${ctHeader()}${ctSideBanner()}<div class="ct-final-call"><div class="k">MATRIZ SEMÂNTICA 4/4</div><h2>INDEXAÇÃO RESTAURADA</h2><p>A entidade permaneceu como o único objeto sem categoria válida.</p></div><button class="ct-contain-command" onclick="containmentAction('knowledge_contain')"><b>CONTER</b><span>CONFIRMAR CAPTURA DA EQUIPE</span></button></div>`;
   let solved=(ev.solved_groups||[]).map(g=>`<article><b>${esc(g.name)}</b><span>${(g.words||[]).map(esc).join(' · ')}</span></article>`).join('');
-  return `<div class="card ct-shell knowledge">${ctHeader()}${ctRoleBanner()}${ctSideBanner()}<div class="ct-arena-head"><div><div class="k">CONHECIMENTO // CONEXO</div><h2>MATRIZ DE ASSOCIAÇÃO</h2><p>Reconstrua quatro relações ocultas. A criatura corrompe a percepção, nunca a solução.</p></div><div class="ct-score"><b>${ev.coherence??4}/4</b><span>COERÊNCIA PANI</span></div></div>${ev.partial?'<div class="ct-hint">CORRELAÇÃO PARCIAL DETECTADA // três palavras pertencem ao mesmo grupo.</div>':''}${ev.hint?`<div class="ct-hint">${esc(ev.hint)}</div>`:''}<div class="ct-k-solved">${solved}</div><div class="ct-conexo">${words.map(w=>`<button class="${selected.includes(w)?'selected':''} ${ev.blocked_word===w?'blocked':''} ${ev.unstable_word===w?'unstable':''}" ${masterTurn||ev.blocked_word===w?'disabled':''} onclick="ctKnowledgeToggle('${ctEscAttr(w)}')">${esc(w)}${containmentState.my_vote===w?'<small>SEU VOTO</small>':''}</button>`).join('')}</div>${ctIsRepresentative()?`${ctConsensus(words.map(w=>({value:w,label:w})))}<button class="btn a ct-submit-group" ${masterTurn||selected.length!==4?'disabled':''} onclick="ctKnowledgeSubmit()">ENVIAR GRUPO // ${selected.length}/4</button>`:`<p class="mut small">Selecione uma palavra para recomendar ao representante.</p><div class="ct-votes">${words.map(w=>`<button ${masterTurn?'disabled':''} onclick="containmentVote('${ctEscAttr(w)}')"><b>${esc(w)}</b><span>SUGERIR</span></button>`).join('')}</div>`}</div>`}
+  return `<div class="card ct-shell knowledge">${ctHeader()}${ctSideBanner()}<div class="ct-arena-head"><div><div class="k">CONHECIMENTO // CONEXO</div><h2>MATRIZ DE ASSOCIAÇÃO</h2><p>Reconstrua quatro relações ocultas em equipe. A criatura corrompe a percepção, nunca a solução.</p></div><div class="ct-score"><b>${ev.coherence??4}/4</b><span>COERÊNCIA PANI</span></div></div>${ev.partial?'<div class="ct-hint">CORRELAÇÃO PARCIAL DETECTADA // três palavras pertencem ao mesmo grupo.</div>':''}${ev.hint?`<div class="ct-hint">${esc(ev.hint)}</div>`:''}<div class="ct-k-solved">${solved}</div><div class="ct-conexo">${words.map(w=>`<button class="${selected.includes(w)?'selected':''} ${ev.blocked_word===w?'blocked':''} ${ev.unstable_word===w?'unstable':''}" ${masterTurn||ev.blocked_word===w?'disabled':''} onclick="ctKnowledgeToggle('${ctEscAttr(w)}')">${esc(w)}</button>`).join('')}</div><button class="btn a ct-submit-group" ${masterTurn||selected.length!==4?'disabled':''} onclick="ctKnowledgeSubmit()">ENVIAR GRUPO DA EQUIPE // ${selected.length}/4</button></div>`}
 
 const containmentEnergyV11=containmentEnergy;
 containmentEnergy=function(){let html=containmentEnergyV11(),ev=ctEvent();return html.replace(ctRoleBanner(),ctRoleBanner()+ctSideBanner()).replace('<div class="ct-votes">',`<div class="ct-turn-note">${ev.active_side==='MASTER'?'A entidade está escolhendo uma ameaça. Nenhum movimento será aceito.':'A equipe controla um único peão coletivo.'}</div><div class="ct-votes">`).replace(/onclick="containmentEnergyMove/g,`${ev.active_side==='MASTER'?'disabled ':''}onclick="containmentEnergyMove`) }
@@ -226,8 +235,8 @@ containmentBlood=function(){let ev=ctEvent();if(ev.phase==='master_prepare')retu
 const containmentDeathV11=containmentDeath;
 containmentDeath=function(){let ev=ctEvent();if(ev.phase==='master_prepare')return `<div class="card ct-shell death">${ctHeader()}${ctRoleBanner()}${ctSideBanner()}<div class="ct-final-call"><div class="k">CÂMERA 13 // CICLO ${ev.cycle||1}/4</div><h2>A ENTIDADE PREPARA A MUTAÇÃO</h2><p>A cena só será exibida após o Mestre registrar uma alteração válida.</p></div></div>`;return containmentDeathV11().replace(ctRoleBanner(),ctRoleBanner()+ctSideBanner())}
 
-function containmentMasterStart(event){let needsRep=['knowledge','energy','blood'].includes(event),representative_id=$('#ctmrep')?.value||'';if(needsRep&&!representative_id)return toast('Escolha um representante conectado para esta arena.',true);return containmentMasterAction('start_event',{event,representative_id:needsRep?representative_id:null,beat_seconds:ctSafeInt($('#ctmbloodseconds')?.value,15)})}
-function containmentMasterRep(){let crew_id=$('#ctmrep')?.value||'',active=ctState().active_event;if(crew_id&&['knowledge','energy','blood'].includes(active))return containmentMasterAction('set_representative',{crew_id})}
+function containmentMasterStart(event){let needsRep=['energy','blood'].includes(event),representative_id=$('#ctmrep')?.value||'';if(needsRep&&!representative_id)return toast('Escolha um representante conectado para esta arena.',true);return containmentMasterAction('start_event',{event,representative_id:needsRep?representative_id:null,beat_seconds:ctSafeInt($('#ctmbloodseconds')?.value,15)})}
+function containmentMasterRep(){let crew_id=$('#ctmrep')?.value||'',active=containmentMasterState?.state?.active_event;if(crew_id&&['energy','blood'].includes(active))return containmentMasterAction('set_representative',{crew_id})}
 function ctMasterSpecific(id){let st=containmentMasterState.state||{},ev=st.event||{},sec=containmentMasterState.secret_state||{};
  if(id==='knowledge'){let hand=sec?.knowledge?.corruption_hand||[];return `<div class="ctm-specific"><div class="k">CONEXO // ${ev.active_side==='MASTER'?'SUA VEZ':'VEZ DA EQUIPE'}</div><div class="ct-master-hand">${hand.map(c=>`<button class="btn" ${ev.active_side!=='MASTER'?'disabled':''} onclick="containmentMasterAction('knowledge_master',{card:'${c}'})">${c.replaceAll('_',' ').toUpperCase()}</button>`).join('')}<button class="btn a" ${ev.active_side!=='MASTER'?'disabled':''} onclick="containmentMasterAction('knowledge_master',{card:'pass'})">PASSAR</button></div><small>A solução real permanece imutável.</small></div>`}
  if(id==='energy'){let hand=sec?.energy?.hand||[];return `<div class="ctm-specific"><div class="k">MÃO PRIVADA DE AMEAÇAS // ${ev.active_side==='MASTER'?'ESCOLHA OBRIGATÓRIA':'AGUARDANDO PLAYERS'}</div><div class="ct-master-hand">${hand.map(c=>`<button class="btn r" onclick="containmentMasterAction('energy_threat',{card:'${ctEscAttr(c)}'})">${esc(c)}</button>`).join('')}<button class="btn a" ${ev.active_side!=='MASTER'?'disabled':''} onclick="containmentMasterAction('energy_threat',{card:'PASSAR'})">PASSAR</button></div></div>`}
@@ -235,5 +244,5 @@ function ctMasterSpecific(id){let st=containmentMasterState.state||{},ev=st.even
  if(id==='death'){let choices=sec?.death?.choices||[];return `<div class="ctm-specific"><div class="k">MUTAÇÕES PREPARADAS // CICLO ${ev.cycle||1}</div><label>TESTEMUNHA DO CICLO<select id="ctmwitness" onchange="containmentMasterWitness()">${ctMasterPlayerOptions(st.witness_id||'')}</select></label><div class="ct-master-hand">${choices.map((c,i)=>`<button class="btn r" ${ev.active_side!=='MASTER'?'disabled':''} onclick="containmentMasterAction('death_mutation',{index:${i}})">ALTERAR ${esc(CT_OBJECTS[c.answer]||c.answer)}</button>`).join('')}</div><small>A mutação é gravada no servidor antes da exibição.</small></div>`}return ''}
 
 const containmentMasterRenderV11=containmentMasterRender;
-containmentMasterRender=function(){containmentMasterRenderV11();let root=$('#ctmasterbody');if(!root)return;root.innerHTML=root.innerHTML.replaceAll('v1.1','v1.2').replace('REPRESENTANTE // SOMENTE ENERGIA E SANGUE','REPRESENTANTE // CONEXO, ENERGIA E SANGUE').replace('Conhecimento é jogado diretamente por todos. Morte utiliza Testemunha.','Todos opinam; o representante confirma quando a arena exige decisão final. Morte utiliza Testemunha.');let active=ctState().active_event;if(active){let spec=root.querySelector('.ctm-specific');if(spec)spec.outerHTML=ctMasterSpecific(active);let playerList=root.querySelector('.ctm-player-list');if(playerList&&['knowledge','energy','blood'].includes(active)){playerList.insertAdjacentHTML('beforebegin','<button class="btn" onclick="containmentMasterSkipAbsent()">PULAR AUSENTE / TROCAR OPERADOR</button>')}}}
-function containmentMasterSkipAbsent(){let current=ctState().representative_id,players=(containmentMasterState.players||[]).filter(p=>p.joined&&p.crew_id!==current),next=players.find(p=>p.connected)||players[0];if(!next)return toast('Nenhum outro jogador disponível.',true);return containmentMasterAction('skip_player',{crew_id:next.crew_id})}
+containmentMasterRender=function(){containmentMasterRenderV11();let root=$('#ctmasterbody');if(!root)return;root.innerHTML=root.innerHTML.replaceAll('v1.1','v1.2').replace('REPRESENTANTE // SOMENTE ENERGIA E SANGUE','REPRESENTANTE // ENERGIA E SANGUE').replace('Conhecimento é jogado diretamente por todos. Morte utiliza Testemunha.','Conhecimento é cooperativo e não exige representante. Energia e Sangue usam operador; Morte utiliza Testemunha.');let active=containmentMasterState?.state?.active_event;if(active){let spec=root.querySelector('.ctm-specific');if(spec)spec.outerHTML=ctMasterSpecific(active);let playerList=root.querySelector('.ctm-player-list');if(playerList&&['energy','blood'].includes(active)){playerList.insertAdjacentHTML('beforebegin','<button class="btn" onclick="containmentMasterSkipAbsent()">PULAR AUSENTE / TROCAR OPERADOR</button>')}}}
+function containmentMasterSkipAbsent(){let current=containmentMasterState?.state?.representative_id,players=(containmentMasterState.players||[]).filter(p=>p.joined&&p.crew_id!==current),next=players.find(p=>p.connected)||players[0];if(!next)return toast('Nenhum outro jogador disponível.',true);return containmentMasterAction('skip_player',{crew_id:next.crew_id})}

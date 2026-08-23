@@ -7,6 +7,7 @@ cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistanc
 
 python3 - <<'PY'
 from pathlib import Path
+import re
 
 index_path=Path('public/index.html');index=index_path.read_text(encoding='utf-8')
 for asset in ('./style.css','./files.css','./mission.css','./assistance.css','./sepulcro.css','./containment.css','./core.js','./views.js','./sepulcro.js','./containment.js','./files.js','./runtime.js','./mission.js','./mission-runtime.js','./assistance.js'):
@@ -81,6 +82,12 @@ for filename in ('index.html','style.css','files.css','mission.css','assistance.
 assert 'CONEXO' in containment and 'pani_containment_crew_action_v12' in containment
 assert 'active_side' in containment_sql_v12 and 'containment_v1_2' in containment_sql_v12
 assert 'knowledge_mark' not in containment.split('// v1.2 //',1)[-1]
+assert "p_token:tok" in containment.split('// v1.2 //',1)[-1]
+assert "p_token:token" not in containment
+assert "let needsRep=['energy','blood']" in containment.split('// v1.2 //',1)[-1]
+assert "target in('energy','blood')" in containment_sql_v12
+for field in ('solved','solved_groups','hand','readings','changed_visuals'):
+ assert not re.search(r"'"+field+r"','\[\]'(?!::jsonb)",containment_sql_v12),field
 print('PANI build audit OK // W77-01 CONTENCAO ANOMALA v1.2')
 PY
 
