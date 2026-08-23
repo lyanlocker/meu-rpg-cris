@@ -84,6 +84,9 @@ assert 'active_side' in containment_sql_v12 and 'containment_v1_2' in containmen
 assert 'knowledge_mark' not in containment.split('// v1.2 //',1)[-1]
 assert "p_token:tok" in containment.split('// v1.2 //',1)[-1]
 assert "p_token:token" not in containment
+assert "ctKnowledgeToggle(word)" in containment and "a.push(word);render(true)" in containment
+assert 'aria-pressed="${chosen}"' in containment and 'ct-selection-status' in containment
+assert "containmentAdopt(data);render(true)" in containment
 assert "let needsRep=['energy','blood']" in containment.split('// v1.2 //',1)[-1]
 assert "target in('energy','blood')" in containment_sql_v12
 for field in ('solved','solved_groups','hand','readings','changed_visuals'):
