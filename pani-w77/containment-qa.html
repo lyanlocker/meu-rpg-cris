@@ -20,6 +20,7 @@
     function $(q){return document.querySelector(q)}
     function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
     function toast(){} function navRender(){} async function rpc(){throw new Error('QA sem backend')}
+    function render(){qaRender()}
   </script>
   <script src="./containment.js?v=25"></script>
   <script>
@@ -37,7 +38,8 @@
       'death-final':{eventId:'death',role:'spectator',event:{phase:'final',active_side:'PLAYERS',cycle:4}}
     };
     const qaSecrets={energy:{energy:{hand:['ANÁRQUICO','DIABO','VIAJANTE']}},knowledge:{knowledge:{corruption_hand:['marca_fantasma','troca_semântica']}},blood:{blood:{answer_locked:true,answer:'B',choices:[{answer:'A'},{answer:'B'},{answer:'C'}]}},death:{death:{choices:[{answer:'lamp'},{answer:'clock'},{answer:'door'}]}}};
-    function qaSet(name){let spec=qaScenarios[name]||qaScenarios.team,eventId=spec.eventId,event=spec.event,state={...qaBase,active_event:eventId,event_status:{[eventId]:'in_progress'},event,witness_id:eventId==='death'?'qa':null};window.ctKSelection=[];containmentState={released:true,joined:true,revision:1,player:{crew_id:'qa',display_name:'QA',role:spec.role},players:[{crew_id:'qa',display_name:'QA',connected:true}],state};containmentMasterState={players:[{crew_id:'qa',display_name:'QA',connected:true,joined:true,module:'gen'}],state,secret_state:qaSecrets[eventId]||{}};$('#qa-player').innerHTML=eventId==='knowledge'?containmentKnowledge():eventId==='energy'?containmentEnergy():eventId==='blood'?containmentBlood():containmentDeath();$('#qa-master').innerHTML=ctMasterSpecific(eventId);document.body.dataset.scenario=name;document.body.dataset.event=eventId}
+    function qaRender(){let eventId=containmentState?.state?.active_event||'energy';$('#qa-player').innerHTML=eventId==='knowledge'?containmentKnowledge():eventId==='energy'?containmentEnergy():eventId==='blood'?containmentBlood():containmentDeath();$('#qa-master').innerHTML=ctMasterSpecific(eventId)}
+    function qaSet(name){let spec=qaScenarios[name]||qaScenarios.team,eventId=spec.eventId,event=spec.event,state={...qaBase,active_event:eventId,event_status:{[eventId]:'in_progress'},event,witness_id:eventId==='death'?'qa':null};window.ctKSelection=[];containmentState={released:true,joined:true,revision:1,player:{crew_id:'qa',display_name:'QA',role:spec.role},players:[{crew_id:'qa',display_name:'QA',connected:true}],state};containmentMasterState={players:[{crew_id:'qa',display_name:'QA',connected:true,joined:true,module:'gen'}],state,secret_state:qaSecrets[eventId]||{}};document.body.dataset.scenario=name;document.body.dataset.event=eventId;qaRender()}
     qaSet(new URLSearchParams(location.search).get('scenario')||'team');
   </script>
 </body>
