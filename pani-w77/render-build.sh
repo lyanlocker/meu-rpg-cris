@@ -35,6 +35,7 @@ for forbidden in ("first_glyph_value = 'E'","reciprocity_established = true"):as
 
 containment=Path('public/containment.js').read_text(encoding='utf-8')
 containment_sql=Path('pani-w77/containment-v1.sql').read_text(encoding='utf-8')
+containment_sql_v12=Path('pani-w77/containment-v1-2.sql').read_text(encoding='utf-8')
 for needle in ('pani_containment_crew_state','pani_containment_join','pani_containment_master_action','containmentKnowledge','containmentEnergy','containmentBlood','containmentDeath','CORROMPER PANI','RESÍDUO BIOLÓGICO NÃO CATALOGADO'):assert needle in containment+containment_sql,needle
 for needle in ('pani_private.containment_session','containment_tick','corruption_backup','fake_votes','death_hold','residue_reveal'):assert needle in containment_sql,needle
 assert 'secret_state' not in containment.split('function containmentPage',1)[1].split('function containmentMasterRefresh',1)[0]
@@ -77,7 +78,10 @@ for required in ('pani_assistance_submit','pani_assistance_reply','pani_crew_ass
 
 for filename in ('index.html','style.css','files.css','mission.css','assistance.css','sepulcro.css','containment.css','core.js','views.js','sepulcro.js','containment.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js'):
  p=Path('public')/filename;assert p.exists() and p.stat().st_size>100
-print('PANI build audit OK // W77-01 CONTENCAO ANOMALA v1.1')
+assert 'CONEXO' in containment and 'pani_containment_crew_action_v12' in containment
+assert 'active_side' in containment_sql_v12 and 'containment_v1_2' in containment_sql_v12
+assert 'knowledge_mark' not in containment.split('// v1.2 //',1)[-1]
+print('PANI build audit OK // W77-01 CONTENCAO ANOMALA v1.2')
 PY
 
 node --check public/core.js
