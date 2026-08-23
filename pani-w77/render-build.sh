@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 
 index_path=Path('public/index.html');index=index_path.read_text(encoding='utf-8')
+assert '?v=25' in index and '?v=24' not in index
 for asset in ('./style.css','./files.css','./mission.css','./assistance.css','./sepulcro.css','./containment.css','./core.js','./views.js','./sepulcro.js','./containment.js','./files.js','./runtime.js','./mission.js','./mission-runtime.js','./assistance.js'):
     assert asset in index,asset
 assert index.index('./sepulcro.js') < index.index('./containment.js') < index.index('./runtime.js') < index.index('./mission.js') < index.index('./mission-runtime.js') < index.index('./assistance.js')
