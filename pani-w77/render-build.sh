@@ -83,6 +83,7 @@ for filename in ('index.html','containment-qa.html','containment-mobile-qa.html'
 mobile_qa=Path('public/containment-mobile-qa.html').read_text(encoding='utf-8')
 assert 'width:390px' in mobile_qa and 'height:844px' in mobile_qa and 'containment-qa.html?scenario=' in mobile_qa
 containment_qa=Path('public/containment-qa.html').read_text(encoding='utf-8')
+assert 'function render(){qaRender()}' in containment_qa and 'function qaRender()' in containment_qa
 for scenario in ('knowledge','blood','death','death-final','players-win','master-win'):
  assert scenario in containment_qa,scenario
 for event_id in ('knowledge','energy','blood','death'):
