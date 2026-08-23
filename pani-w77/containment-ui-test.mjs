@@ -99,5 +99,6 @@ assert.equal((masterDeath.match(/ALTERAR/g)||[]).length,3,'Mestre deve receber t
 
 const css=fs.readFileSync(new URL('./containment.css',import.meta.url),'utf8');
 for(const required of ('.ct-duel-board .ct-duel-track .ct-racer.team .ct-racer.creature .ct-energy-turnbar @media(max-width:680px)').split(' '))assert.ok(css.includes(required),`CSS ausente: ${required}`);
+assert.match(css,/\.ct-energy-duel\{display:block;grid-template-columns:none/,'a arena deve neutralizar a classe global .energy');
 
 console.log('PANI containment UI interaction QA PASS');

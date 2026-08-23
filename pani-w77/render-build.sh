@@ -84,6 +84,7 @@ assert 'active_side' in containment_sql_v12 and 'containment_v1_3' in containmen
 for needle in ('player_position','master_position','master_pulse','energy_rematch','energy_claim','control_mode'):
  assert needle in containment+containment_sql_v12,needle
 assert 'ctEnergyBoard' in containment and 'ct-duel-board' in containment and 'CORRIDA DE SOBRECARGA' in containment
+assert '.ct-energy-duel{display:block;grid-template-columns:none' in Path('public/containment.css').read_text(encoding='utf-8')
 assert 'knowledge_mark' not in containment.split('// v1.2 //',1)[-1]
 assert "p_token:tok" in containment.split('// v1.2 //',1)[-1]
 assert "p_token:token" not in containment
