@@ -19,8 +19,8 @@
     <iframe id="mobile-frame" title="QA móvel da arena de Energia"></iframe>
   </main>
   <script>
-    const scenario=new URLSearchParams(location.search).get('scenario')||'team';
-    document.getElementById('mobile-frame').src=`./containment-qa.html?scenario=${encodeURIComponent(scenario)}&viewport=mobile`;
+    const params=new URLSearchParams(location.search),scenario=params.get('scenario')||'team',deploy=params.get('deploy')||'qa';
+    document.getElementById('mobile-frame').src=`./containment-qa.html?scenario=${encodeURIComponent(scenario)}&viewport=mobile&deploy=${encodeURIComponent(deploy)}`;
   </script>
 </body>
 </html>
