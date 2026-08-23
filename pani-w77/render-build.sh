@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 
 index_path=Path('public/index.html');index=index_path.read_text(encoding='utf-8')
-assert '?v=25' in index and '?v=24' not in index
+assert '?v=26' in index and '?v=25' not in index
 for asset in ('./style.css','./files.css','./mission.css','./assistance.css','./sepulcro.css','./containment.css','./core.js','./views.js','./sepulcro.js','./containment.js','./files.js','./runtime.js','./mission.js','./mission-runtime.js','./assistance.js'):
     assert asset in index,asset
 assert index.index('./sepulcro.js') < index.index('./containment.js') < index.index('./runtime.js') < index.index('./mission.js') < index.index('./mission-runtime.js') < index.index('./assistance.js')
@@ -94,6 +94,7 @@ for needle in ('player_position','master_position','master_pulse','energy_rematc
  assert needle in containment+containment_sql_v12,needle
 assert 'ctEnergyBoard' in containment and 'ct-duel-board' in containment and 'CORRIDA DE SOBRECARGA' in containment
 assert '.ct-energy-duel{display:block;grid-template-columns:none' in Path('public/containment.css').read_text(encoding='utf-8')
+assert '@media(max-width:680px){.ct-access .btn{min-height:44px}' in Path('public/containment.css').read_text(encoding='utf-8')
 assert 'knowledge_mark' not in containment.split('// v1.2 //',1)[-1]
 assert "p_token:tok" in containment.split('// v1.2 //',1)[-1]
 assert "p_token:token" not in containment
