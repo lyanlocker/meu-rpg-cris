@@ -3,7 +3,7 @@ set -euo pipefail
 
 rm -rf public
 mkdir -p public
-cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/sepulcro.css pani-w77/containment.css pani-w77/core.js pani-w77/views.js pani-w77/sepulcro.js pani-w77/containment.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/index.html public/
+cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/sepulcro.css pani-w77/containment.css pani-w77/core.js pani-w77/views.js pani-w77/sepulcro.js pani-w77/containment.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/index.html pani-w77/containment-qa.html public/
 
 python3 - <<'PY'
 from pathlib import Path
@@ -77,21 +77,24 @@ assert "view!=='cred'&&view!=='report'" in mission_runtime
 assist=Path('public/assistance.js').read_text(encoding='utf-8')
 for required in ('pani_assistance_submit','pani_assistance_reply','pani_crew_assistance','pani_master_assistance','pani_master_assistance_reply','CANAL DE SUPORTE','CAIXA DE SOLICITAÇÕES'):assert required in assist,required
 
-for filename in ('index.html','style.css','files.css','mission.css','assistance.css','sepulcro.css','containment.css','core.js','views.js','sepulcro.js','containment.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js'):
+for filename in ('index.html','containment-qa.html','style.css','files.css','mission.css','assistance.css','sepulcro.css','containment.css','core.js','views.js','sepulcro.js','containment.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js'):
  p=Path('public')/filename;assert p.exists() and p.stat().st_size>100
 assert 'CONEXO' in containment and 'pani_containment_crew_action_v12' in containment
-assert 'active_side' in containment_sql_v12 and 'containment_v1_2' in containment_sql_v12
+assert 'active_side' in containment_sql_v12 and 'containment_v1_3' in containment_sql_v12
+for needle in ('player_position','master_position','master_pulse','energy_rematch','energy_claim','control_mode'):
+ assert needle in containment+containment_sql_v12,needle
+assert 'ctEnergyBoard' in containment and 'ct-duel-board' in containment and 'CORRIDA DE SOBRECARGA' in containment
 assert 'knowledge_mark' not in containment.split('// v1.2 //',1)[-1]
 assert "p_token:tok" in containment.split('// v1.2 //',1)[-1]
 assert "p_token:token" not in containment
 assert "ctKnowledgeToggle(word)" in containment and "a.push(word);render(true)" in containment
 assert 'aria-pressed="${chosen}"' in containment and 'ct-selection-status' in containment
 assert "containmentAdopt(data);render(true)" in containment
-assert "let needsRep=['energy','blood']" in containment.split('// v1.2 //',1)[-1]
-assert "target in('energy','blood')" in containment_sql_v12
+assert "event==='blood'||(event==='energy'&&energyMode==='operator')" in containment.split('// v1.2 //',1)[-1]
+assert "control_mode='operator'" in containment_sql_v12 and "control_mode='team'" in containment_sql_v12
 for field in ('solved','solved_groups','hand','readings','changed_visuals'):
  assert not re.search(r"'"+field+r"','\[\]'(?!::jsonb)",containment_sql_v12),field
-print('PANI build audit OK // W77-01 CONTENCAO ANOMALA v1.2')
+print('PANI build audit OK // W77-01 CONTENCAO ANOMALA v1.3')
 PY
 
 node --check public/core.js
