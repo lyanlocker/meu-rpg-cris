@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 
 index_path=Path('public/index.html');index=index_path.read_text(encoding='utf-8')
-assert '?v=26' in index and '?v=25' not in index
+assert './containment.css?v=27' in index and './containment.js?v=27' in index
 for asset in ('./style.css','./files.css','./mission.css','./assistance.css','./sepulcro.css','./containment.css','./core.js','./views.js','./sepulcro.js','./containment.js','./files.js','./runtime.js','./mission.js','./mission-runtime.js','./assistance.js'):
     assert asset in index,asset
 assert index.index('./sepulcro.js') < index.index('./containment.js') < index.index('./runtime.js') < index.index('./mission.js') < index.index('./mission-runtime.js') < index.index('./assistance.js')
@@ -38,8 +38,9 @@ for forbidden in ("first_glyph_value = 'E'","reciprocity_established = true"):as
 containment=Path('public/containment.js').read_text(encoding='utf-8')
 containment_sql=Path('pani-w77/containment-v1.sql').read_text(encoding='utf-8')
 containment_sql_v12=Path('pani-w77/containment-v1-2.sql').read_text(encoding='utf-8')
-for needle in ('pani_containment_crew_state','pani_containment_join','pani_containment_master_action','containmentKnowledge','containmentEnergy','containmentBlood','containmentDeath','CORROMPER PANI','RESÍDUO BIOLÓGICO NÃO CATALOGADO'):assert needle in containment+containment_sql,needle
-for needle in ('pani_private.containment_session','containment_tick','corruption_backup','fake_votes','death_hold','residue_reveal'):assert needle in containment_sql,needle
+containment_sql_v2=Path('pani-w77/containment-v2.sql').read_text(encoding='utf-8')
+for needle in ('pani_containment_crew_state','pani_containment_join','pani_containment_master_action_v2','containmentKnowledge','containmentEnergy','containmentBlood','containmentDeath','CORROMPER PANI','RESÍDUO BIOLÓGICO NÃO CATALOGADO'):assert needle in containment+containment_sql+containment_sql_v2,needle
+for needle in ('containment_v2_0','containment_v2_board','containment_tick_v2','fake_votes','energy_roll','blood_confirm','death_confirm','knowledge_suggest'):assert needle in containment_sql_v2,needle
 assert 'secret_state' not in containment.split('function containmentPage',1)[1].split('function containmentMasterRefresh',1)[0]
 
 files_path=Path('public/files.js');files=files_path.read_text(encoding='utf-8')
@@ -84,28 +85,30 @@ mobile_qa=Path('public/containment-mobile-qa.html').read_text(encoding='utf-8')
 assert 'width:390px' in mobile_qa and 'height:844px' in mobile_qa and 'containment-qa.html?scenario=' in mobile_qa
 containment_qa=Path('public/containment-qa.html').read_text(encoding='utf-8')
 assert 'function render(){qaRender()}' in containment_qa and 'function qaRender()' in containment_qa
-for scenario in ('knowledge','blood','death','death-final','players-win','master-win'):
+for scenario in ('knowledge','team','operator','energy-choice','master','anarchic','blood','death-observe','death-blackout','death','death-final'):
  assert scenario in containment_qa,scenario
 for event_id in ('knowledge','energy','blood','death'):
  assert "eventId:'"+event_id+"'" in containment_qa,event_id
-assert 'CONEXO' in containment and 'pani_containment_crew_action_v12' in containment
-assert 'active_side' in containment_sql_v12 and 'containment_v1_3' in containment_sql_v12
-for needle in ('player_position','master_position','master_pulse','energy_rematch','energy_claim','control_mode'):
- assert needle in containment+containment_sql_v12,needle
-assert 'ctEnergyBoard' in containment and 'ct-duel-board' in containment and 'CORRIDA DE SOBRECARGA' in containment
-assert '.ct-energy-duel{display:block;grid-template-columns:none' in Path('public/containment.css').read_text(encoding='utf-8')
-assert '@media(max-width:680px){.ct-access .btn{min-height:44px}' in Path('public/containment.css').read_text(encoding='utf-8')
-assert 'knowledge_mark' not in containment.split('// v1.2 //',1)[-1]
-assert "p_token:tok" in containment.split('// v1.2 //',1)[-1]
+assert 'CONEXO' in containment and 'pani_containment_crew_action_v2' in containment
+assert 'active_side' in containment_sql_v2 and 'containment_v2_0' in containment_sql_v2
+for needle in ('board_version','v2-24','position','last_checkpoint','overload','control_mode'):
+ assert needle in containment+containment_sql_v2,needle
+assert 'ctEnergyBoard' in containment and 'ct-energy-board' in containment and 'TRILHA DE SOBRECARGA' in containment
+css=Path('public/containment.css').read_text(encoding='utf-8')
+for needle in ('.ct-energy-board','.ct-die-face','.ct-room-v2','.ct-wave-option','@media(max-width:680px)','@media(prefers-reduced-motion:reduce)'):assert needle in css,needle
+assert 'ct-racer creature' not in containment and 'CORRIDA DE SOBRECARGA' not in containment
+assert 'ct-scenes' not in containment and 'MEMÓRIA BASE</span>${ctDeathScene(false)' not in containment
+assert 'knowledge_mark' not in containment
+assert "p_token:tok" in containment
 assert "p_token:token" not in containment
 assert "ctKnowledgeToggle(word)" in containment and "a.push(word);render(true)" in containment
-assert 'aria-pressed="${chosen}"' in containment and 'ct-selection-status' in containment
-assert "containmentAdopt(data);render(true)" in containment
-assert "event==='blood'||(event==='energy'&&energyMode==='operator')" in containment.split('// v1.2 //',1)[-1]
-assert "control_mode='operator'" in containment_sql_v12 and "control_mode='team'" in containment_sql_v12
-for field in ('solved','solved_groups','hand','readings','changed_visuals'):
- assert not re.search(r"'"+field+r"','\[\]'(?!::jsonb)",containment_sql_v12),field
-print('PANI build audit OK // W77-01 CONTENCAO ANOMALA v1.3')
+assert 'aria-pressed="${on}"' in containment and 'ct-selection-status' in containment
+assert 'containmentAdopt(data)' in containment
+assert "['knowledge','blood'].includes(event)" in containment
+assert "ev->>'control_mode'='operator'" in containment_sql_v2 and "mode not in('team','operator')" in containment_sql_v2
+for forbidden in ('changed_object_id\' in containmentState','correct_option\' in containmentState','secret_state\' in containmentState'):
+ assert forbidden not in containment,forbidden
+print('PANI build audit OK // W77-01 CONTENCAO ANOMALA v2.0 DEFINITIVO')
 PY
 
 node --check public/core.js
