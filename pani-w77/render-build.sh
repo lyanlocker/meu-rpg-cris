@@ -103,6 +103,7 @@ node --check public/runtime.js
 node --check public/mission.js
 node --check public/mission-runtime.js
 node --check public/assistance.js
+node pani-w77/containment-ui-test.mjs
 
 if [[ -n "${PANI_MASTER_PIN:-}" ]]; then
   export PANI_STORAGE_QA
