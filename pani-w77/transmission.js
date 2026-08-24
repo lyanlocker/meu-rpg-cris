@@ -4,9 +4,7 @@
    Semântica/legendas existem somente no console do mestre.
    O feed do jogador recebe exclusivamente asset_key + tempo restante. */
 const TX_ASSET_BASE='https://nvwzcnfonhpilnxmopgi.supabase.co/storage/v1/object/public/pani-transmission-assets/';
-const TX_CREW=[
-  ['gilbert','Gilbert'],['willy','Willy'],['viego','Viego'],['alice','Alice'],['eklay','Eklay'],['christian','Christian']
-];
+const TX_CREW=CREW_DIRECTORY;
 let txCatalog=[],txSelected=null,txTab='alphabet',txSearch='',txActive=[],txMasterBusy=false;
 let txLastFeedId=0,txOverlayTimer=null,txMasterMounted=false;
 

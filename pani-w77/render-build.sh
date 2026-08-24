@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 
 index_path=Path('public/index.html');index=index_path.read_text(encoding='utf-8')
-assert './containment.css?v=27' in index and './containment.js?v=27' in index
+assert './containment.css?v=27' in index and './containment.js?v=28' in index
 for asset in ('./style.css','./files.css','./mission.css','./assistance.css','./sepulcro.css','./containment.css','./core.js','./views.js','./sepulcro.js','./containment.js','./files.js','./runtime.js','./mission.js','./mission-runtime.js','./assistance.js'):
     assert asset in index,asset
 assert index.index('./sepulcro.js') < index.index('./containment.js') < index.index('./runtime.js') < index.index('./mission.js') < index.index('./mission-runtime.js') < index.index('./assistance.js')
@@ -20,8 +20,12 @@ core_path=Path('public/core.js');core=core_path.read_text(encoding='utf-8')
 bad_key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im52d3pjbmZvbmhwaWxueG1vcGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTI3NTcsImV4cCI6MjEwMjMyODc1N30.5FBDbk8J1uN8JLLpKMk_Hubw6K7kbQQiulIamwm9Vso'
 good_key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d3pjbmZvbmhwaWxueG1vcGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTI3NTcsImV4cCI6MjEwMjMyODc1N30.5FBDbk8J1uN8JLLpKMk_Hubw6K7kbQQiulIamwm9Vso'
 core=core.replace(bad_key,good_key);assert good_key in core and bad_key not in core
-for needle in ('STATION_ID','W77-01','PORTAS SETORIAIS RESTAURADAS','LEGACY_SECTOR'):assert needle in core,needle
+for needle in ('STATION_ID','W77-01','PORTAS SETORIAIS RESTAURADAS','LEGACY_SECTOR','CREW_DIRECTORY',"['aliya','Aliya Kessler']",'INVESTIGAÇÃO PARANORMAL & COORDENAÇÃO'):assert needle in core,needle
+assert "['alice','Alice Velvet']" in core
 core_path.write_text(core,encoding='utf-8')
+
+views=Path('public/views.js').read_text(encoding='utf-8')
+for needle in ('ALIYA_PROFILE','Bióloga marinha','águas profundas','Alef Dena','Investigação Paranormal e Coordenação','stationProfile'):assert needle in views,needle
 
 runtime_path=Path('public/runtime.js');runtime=runtime_path.read_text(encoding='utf-8')
 for needle in ('backendHealth','sepMasterRefresh','CONTRAPROVA',"toast('PIN inválido.'",'MASTER // BACKEND INDISPONÍVEL','sepMasterToggleAutoHint','sepMasterToggleMatrix','sepMasterToggleSequence'):assert needle in runtime,needle
@@ -30,6 +34,16 @@ for forbidden in ('DISPARAR IMPACTO DO SATÉLITE','impact_active','pani_power_ma
 sep=Path('public/sepulcro.js').read_text(encoding='utf-8')
 for needle in ('DEPENDÊNCIA FANTASMA','A COLUNA AUSENTE','pani_contraprova_attempt','pani_contraprova_hint','INFORMATION / RELATION','GLYPH SEMANTICS','NOT ATTEMPTED','sepMasterToggleSequence'):assert needle in sep,needle
 for forbidden in ('VALOR ATRIBUÍDO: E','RECIPROCIDADE ESTABELECIDA','ENTENDIMENTO REGISTRADO','SEPULTURA-INV','tx-concept-sprite.webp'):assert forbidden not in sep,forbidden
+assert 'Aliya pode acompanhar o padrão emergente.' in sep
+
+for source in ('core.js','views.js','sepulcro.js','transmission.js','files.js','mission.js'):
+ source_path=Path('pani-w77',source) if source=='transmission.js' else Path('public',source)
+ text=source_path.read_text(encoding='utf-8')
+ assert 'Viego' not in text and 'viego' not in text,source
+assert 'ALICE VELVET' in Path('public/containment.js').read_text(encoding='utf-8').upper()
+
+aliya_migration=Path('supabase/migrations/20260824220000_migrate_inv_slot_to_aliya_kessler.sql').read_text(encoding='utf-8')
+for needle in ("crew_id = 'aliya'",'Aliya Kessler','on update cascade','pani_signal_deliveries','pani_files','event_log_insert'):assert needle in aliya_migration,needle
 
 migration=Path('pani-w77/contraprova-v1.sql').read_text(encoding='utf-8')
 for needle in ('pani_contraprova_crew_state','pani_contraprova_attempt','pani_contraprova_hint','pani_contraprova_master_state','pani_contraprova_master_action','information_relation','NOT_ATTEMPTED','disarm_event'):assert needle in migration,needle
