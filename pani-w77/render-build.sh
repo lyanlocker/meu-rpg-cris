@@ -4,6 +4,12 @@ set -euo pipefail
 rm -rf public
 mkdir -p public
 cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/corruption.css pani-w77/core.js pani-w77/views.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/corruption.js pani-w77/index.html pani-w77/layout-qa.html public/
+cp pani-w77/retired-event.js public/containment.js
+cp pani-w77/retired-event.js public/sepulcro.js
+cp pani-w77/retired-event.css public/containment.css
+cp pani-w77/retired-event.css public/sepulcro.css
+cp pani-w77/retired-event.html public/containment-qa.html
+cp pani-w77/retired-event.html public/containment-mobile-qa.html
 
 python3 - <<'PY'
 from pathlib import Path
@@ -62,8 +68,13 @@ for filename in ('index.html','style.css','files.css','mission.css','assistance.
 qa=Path('public/layout-qa.html').read_text(encoding='utf-8')
 assert 'stationSectorPage()' in qa and 'PANI_ALPHA_PATHS' not in qa and 'alphabet-paths.js' in qa
 assert 'containment' not in qa.lower() and 'sepulcro' not in qa.lower() and 'contraprova' not in qa.lower()
-for retired in ('sepulcro.css','sepulcro.js','containment.css','containment.js','containment-qa.html','containment-mobile-qa.html'):
-    assert not (Path('public')/retired).exists(),retired
+for retired in ('sepulcro.js','containment.js'):
+    text=(Path('public')/retired).read_text(encoding='utf-8')
+    assert 'PANI_RETIRED_EVENT_ASSET' in text and 'pani_containment' not in text and 'pani_contraprova' not in text,retired
+for retired in ('sepulcro.css','containment.css'):
+    assert 'aposentados' in (Path('public')/retired).read_text(encoding='utf-8'),retired
+for retired in ('containment-qa.html','containment-mobile-qa.html'):
+    assert 'MÓDULO CONCLUÍDO' in (Path('public')/retired).read_text(encoding='utf-8'),retired
 print('PANI build audit OK // EVENTOS CONCLUIDOS REMOVIDOS // CORRUPTED UPDATE UI')
 PY
 
