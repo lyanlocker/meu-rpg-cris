@@ -5,8 +5,16 @@ const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im
 const SID='W77-02',STATION_ID='W77-01';
 const $=s=>document.querySelector(s),Q=new URLSearchParams(location.search),MASTER=Q.get('master')==='1';
 const H={'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json'};
-const N={ops:'OPERAÇÕES & INFRAESTRUTURA',gen:'PESQUISA GENÉTICA & BIOCONTENÇÃO',env:'ECOLOGIA & CONTROLE AMBIENTAL',med:'MEDICINA & PATOLOGIA',sec:'SEGURANÇA & CONTROLE DE ACESSO',inv:'INVESTIGAÇÃO & CORRELAÇÃO DE SINAIS',power:'OPERAÇÕES & INFRAESTRUTURA',bio:'PESQUISA GENÉTICA & BIOCONTENÇÃO',environment:'ECOLOGIA & CONTROLE AMBIENTAL',life:'MEDICINA & PATOLOGIA',navigation:'SEGURANÇA & CONTROLE DE ACESSO',comms:'INVESTIGAÇÃO & CORRELAÇÃO DE SINAIS'};
+const N={ops:'OPERAÇÕES & INFRAESTRUTURA',gen:'PESQUISA GENÉTICA & BIOCONTENÇÃO',env:'ECOLOGIA & CONTROLE AMBIENTAL',med:'MEDICINA & PATOLOGIA',sec:'SEGURANÇA & CONTROLE DE ACESSO',inv:'INVESTIGAÇÃO PARANORMAL & COORDENAÇÃO',power:'OPERAÇÕES & INFRAESTRUTURA',bio:'PESQUISA GENÉTICA & BIOCONTENÇÃO',environment:'ECOLOGIA & CONTROLE AMBIENTAL',life:'MEDICINA & PATOLOGIA',navigation:'SEGURANÇA & CONTROLE DE ACESSO',comms:'INVESTIGAÇÃO PARANORMAL & COORDENAÇÃO'};
 const NL={ops:'OPS',gen:'GEN',env:'ENV',med:'MED',sec:'SEC',inv:'INV',power:'OPS',bio:'GEN',environment:'ENV',life:'MED',navigation:'SEC',comms:'INV'};
+const CREW_DIRECTORY=Object.freeze([
+  Object.freeze(['gilbert','Gilbert William Beladona']),
+  Object.freeze(['willy','Willy Jacques Ofnir']),
+  Object.freeze(['aliya','Aliya Kessler']),
+  Object.freeze(['alice','Alice Velvet']),
+  Object.freeze(['eklay','Eklay Evans Garrote']),
+  Object.freeze(['christian','Christian Barletta'])
+]);
 const LEGACY_SECTOR={power:'ops',bio:'gen',environment:'env',life:'med',navigation:'sec',comms:'inv'};
 let state={mode:'normal',energy_capacity:100,occupancy:6,system_health:{}},sepState={},sepMasterState={},me=null,prog={},tok=Q.get('access')||'',pin='',view='dash',fp='',manifest={},draft={};
 function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}

@@ -3,7 +3,7 @@
 const PF_ENDPOINT=U+'/functions/v1/pani-files';
 const PF_STATUS={available:['ÍNTEGRO','ok'],corrupted:['CORROMPIDO','bad'],fragmented:['FRAGMENTADO','warn'],decoding:['EM DECODIFICAÇÃO','purple'],encrypted:['CRIPTOGRAFADO','purple'],hidden:['OCULTO','mut']};
 const PF_CATEGORY={documento:'DOCUMENTO',relatorio:'RELATÓRIO',fotografia:'FOTOGRAFIA',transmissao:'TRANSMISSÃO',pesquisa:'PESQUISA',seguranca:'SEGURANÇA',medico:'MÉDICO',mapa:'MAPA',outro:'OUTRO'};
-const PF_CREW=[['gilbert','Gilbert'],['willy','Willy'],['viego','Viego'],['alice','Alice'],['eklay','Eklay'],['christian','Christian']];
+const PF_CREW=CREW_DIRECTORY;
 let pfCrewData=null,pfCrewLoading=false,pfKnown=null,pfMasterData=[],pfQueue=[],pfEditId=null,pfViewerScale=1,pfMasterReady=false;
 
 async function pfEdge(body){let c=new AbortController(),t=setTimeout(()=>c.abort(),10000);try{let r=await fetch(PF_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:c.signal});let x=await r.json().catch(()=>({}));if(!r.ok||x.ok===false)throw Error(x.error||'file_service');return x}finally{clearTimeout(t)}}
