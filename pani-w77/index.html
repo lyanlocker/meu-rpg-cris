@@ -3,35 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="pani-host" content="render-static-v9-contraprova">
+  <meta name="theme-color" content="#03070a">
+  <meta name="pani-host" content="render-static-v10-corrupted-update">
   <title>PANI // W77-01</title>
-  <style>html,body{margin:0;min-height:100%;background:#050b0e;color:#e9f4f4;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.hidden{display:none!important}</style>
-  <link rel="stylesheet" href="./style.css?v=26">
-  <link rel="stylesheet" href="./files.css?v=26">
-  <link rel="stylesheet" href="./mission.css?v=26">
-  <link rel="stylesheet" href="./assistance.css?v=26">
-  <link rel="stylesheet" href="./sepulcro.css?v=26">
-  <link rel="stylesheet" href="./containment.css?v=27">
+  <style>html,body{margin:0;min-height:100%;background:#03070a;color:#eef8f8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.hidden{display:none!important}</style>
+  <link rel="stylesheet" href="./style.css?v=29">
+  <link rel="stylesheet" href="./files.css?v=29">
+  <link rel="stylesheet" href="./mission.css?v=29">
+  <link rel="stylesheet" href="./assistance.css?v=29">
+  <link rel="stylesheet" href="./corruption.css?v=29">
 </head>
 <body>
-<header class="top"><div><div class="brand">PANACEA INDUSTRIES</div><div class="sub">W77-01 STATION // PANI OPERATING SYSTEM</div></div><div class="status"><i id="dot" class="dot"></i><span id="conn">INICIALIZANDO...</span></div></header>
+<div class="pani-ambient" aria-hidden="true"><div class="pani-scanlines"></div><div class="pani-noise"></div><div id="pani-glyph-rail" class="pani-glyph-rail"></div></div>
+<header class="top">
+  <div class="brand-lockup"><div class="brand glitch-title" data-text="PANACEA INDUSTRIES">PANACEA INDUSTRIES</div><div class="sub">W77-01 STATION // PANI OPERATING SYSTEM</div></div>
+  <div class="update-readout"><span class="update-label">UPDATE CHANNEL</span><span class="update-value">PARTIAL // 88.7%</span><i class="update-bar"><b></b></i></div>
+  <div class="status"><i id="dot" class="dot"></i><span id="conn">INICIALIZANDO...</span></div>
+</header>
 <main>
-  <section id="gate" class="card hero hidden"><div class="k">CREDENCIAL INDIVIDUAL</div><h1>PANI</h1><p>Este terminal exige um link individual emitido pela Panacea Industries.</p><p class="mut">Solicite sua credencial ao Diretor da Sessão.</p></section>
-  <section id="loading" class="card hero hidden"><div class="k">AUTENTICAÇÃO BIOMÉTRICA</div><h1>PANI</h1><p id="loadtxt" class="mut">Validando credencial individual...</p></section>
-  <section id="crew" class="hidden"><div class="layout"><aside class="card side"><div class="sub">OPERADOR AUTENTICADO</div><div id="who" class="who"></div><div id="role" class="role"></div><div id="occ" class="sub"></div><div id="badge" class="badge"></div><nav id="nav" class="nav"></nav></aside><div><div id="alert" class="hidden"></div><div id="view"></div></div></div></section>
+  <section id="gate" class="card hero hidden"><div class="k">CREDENCIAL INDIVIDUAL</div><h1 class="glitch-title" data-text="PANI">PANI</h1><p>Este terminal exige um link individual emitido pela Panacea Industries.</p><p class="mut">Solicite sua credencial ao Diretor da Sessão.</p></section>
+  <section id="loading" class="card hero hidden"><div class="k">AUTENTICAÇÃO BIOMÉTRICA</div><h1 class="glitch-title" data-text="PANI">PANI</h1><p id="loadtxt" class="mut">Validando credencial individual...</p><div class="boot-track" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div></section>
+  <section id="crew" class="hidden"><div class="layout"><aside class="card side"><div class="side-signal"><span>OPERATOR LINK</span><i></i></div><div class="sub">OPERADOR AUTENTICADO</div><div id="who" class="who"></div><div id="role" class="role"></div><div id="occ" class="sub"></div><div id="badge" class="badge"></div><nav id="nav" class="nav" aria-label="Navegação principal"></nav><div class="side-integrity" aria-label="Integridade da interface"><span>INTERFACE INTEGRITY</span><b>DEGRADING // STABLE</b></div></aside><div class="crew-content"><div id="alert" class="hidden"></div><div id="view"></div></div></div></section>
   <section id="mlogin" class="card master hidden"><div class="k" style="color:var(--red)">RESTRICTED ACCESS</div><h1>MASTER CONTROL</h1><p class="mut">Digite o PIN do Diretor da Sessão.</p><input id="pin" type="password" autocomplete="off" placeholder="••••••"><button id="auth" class="btn a">AUTENTICAR</button></section>
-  <section id="mapp" class="hidden">
-    <div class="mastergrid">
-      <div class="card"><h3>ESTADO DA ESTAÇÃO</h3><div class="pills"><span id="mmode" class="pill">—</span><span id="msep" class="pill">—</span><span id="msync" class="pill">—</span></div><p id="msepstate" class="mut">—</p><label>Ocupantes detectados<input id="occupancy" type="number" min="0" max="99"></label><button id="save" class="btn a">ATUALIZAR</button></div>
-      <div class="card"><h3>PROTOCOLO CONTRAPROVA</h3><p class="mut">Cinco módulos publicam assinaturas forenses; INV correlaciona a coluna ausente. O protocolo não traduz Sinais nem aciona eventos narrativos automaticamente.</p><div class="actions"><button id="seprelease" class="btn a">LIBERAR PARA JOGADORES</button><button id="sepautohint" class="btn">AUTO-HINT: ATIVO</button><button id="sepmatrix" class="btn">MATRIZ: RESTRITA</button><button id="sepsequence" class="btn">SEQ-08: OCULTA</button><button id="separm" class="btn r">EVENTO INDEPENDENTE // ALHEIOS</button><button id="sepreset" class="btn r">RESET CONTRAPROVA</button><button id="trans" class="btn x">TRANSMISSION CONNECTED</button><button id="clear" class="btn">LIMPAR MENSAGEM</button></div></div>
-      <div class="card"><h3>MENSAGEM PANI</h3><textarea id="msg" placeholder="Mensagem global..."></textarea><select id="sev"><option value="info">Informação</option><option value="warning">Aviso</option><option value="critical">Crítico</option><option value="transmission">Transmissão</option></select><button id="send" class="btn a">TRANSMITIR</button></div>
-      <div class="card"><h3>MATRIZ DE CONTRAPROVA</h3><div id="progress"></div></div>
-    </div>
-    <div class="card" style="margin-top:14px"><h3>LOG DE SESSÃO</h3><div id="logs" class="term">Carregando...</div></div>
-  </section>
+  <section id="mapp" class="hidden"><div class="mastergrid"><div class="card"><h3>ESTADO DA ESTAÇÃO</h3><div class="pills"><span id="mmode" class="pill">—</span><span id="msync" class="pill">—</span></div><label>Ocupantes detectados<input id="occupancy" type="number" min="0" max="99"></label><button id="save" class="btn a">ATUALIZAR</button></div><div class="card"><h3>CONTROLES DE SESSÃO</h3><p class="mut">Ferramentas narrativas e comunicação global da estação.</p><div class="actions"><button id="trans" class="btn x">TRANSMISSION CONNECTED</button><button id="clear" class="btn">LIMPAR MENSAGEM</button></div></div><div class="card"><h3>MENSAGEM PANI</h3><textarea id="msg" placeholder="Mensagem global..."></textarea><select id="sev"><option value="info">Informação</option><option value="warning">Aviso</option><option value="critical">Crítico</option><option value="transmission">Transmissão</option></select><button id="send" class="btn a">TRANSMITIR</button></div></div><div class="card" style="margin-top:14px"><h3>LOG DE SESSÃO</h3><div id="logs" class="term">Carregando...</div></div></section>
 </main>
-<div id="toast" class="toast hidden"></div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 <div id="modal" class="modalback hidden"><div class="card modal"><h3 id="mtitle"></h3><p id="mbody" class="mut"></p><div class="actions"><button id="mcancel" class="btn">CANCELAR</button><button id="mconfirm" class="btn r">CONFIRMAR</button></div></div></div>
-<script src="./core.js?v=28"></script><script src="./views.js?v=28"></script><script src="./sepulcro.js?v=28"></script><script src="./containment.js?v=28"></script><script src="./files.js?v=28"></script><script src="./runtime.js?v=28"></script><script src="./mission.js?v=28"></script><script src="./mission-runtime.js?v=28"></script><script src="./assistance.js?v=28"></script>
+<script src="./core.js?v=29"></script><script src="./views.js?v=29"></script><script src="./files.js?v=29"></script><script src="./runtime.js?v=29"></script><script src="./mission.js?v=29"></script><script src="./mission-runtime.js?v=29"></script><script src="./assistance.js?v=29"></script><script src="./corruption.js?v=29"></script>
 <script>setTimeout(function(){var c=document.getElementById('conn');if(c&&c.textContent==='INICIALIZANDO...'){c.textContent='ERRO DE CARREGAMENTO';var d=document.getElementById('dot');if(d)d.className='dot off';}},9000);</script>
 </body></html>

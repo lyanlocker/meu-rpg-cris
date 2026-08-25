@@ -11,8 +11,13 @@ from pathlib import Path
 import os,re
 p=Path('public/index.html');s=p.read_text(encoding='utf-8')
 
+# Mantém a camada de corrupção por último para que o tema seja a autoridade visual.
+corruption=re.search(r'<link\s+rel=["\']stylesheet["\']\s+href=["\']\./corruption\.css(?:\?v=[^"\']*)?["\']\s*>',s)
+corruption_tag=corruption.group(0) if corruption else '<link rel="stylesheet" href="./corruption.css">'
+if corruption:s=s.replace(corruption_tag,'',1)
 if './transmission.css' not in s:s=s.replace('</head>','<link rel="stylesheet" href="./transmission.css"></head>',1)
 if './transmission-sprites.css' not in s:s=s.replace('</head>','<link rel="stylesheet" href="./transmission-sprites.css"></head>',1)
+s=s.replace('</head>',corruption_tag+'</head>',1)
 if './transmission.js' not in s:s=s.replace('</body>','<script src="./transmission.js"></script></body>',1)
 if './transmission-sprites.js' not in s:s=s.replace('</body>','<script src="./transmission-sprites.js"></script></body>',1)
 
@@ -31,10 +36,11 @@ s=re.sub(r'(["\'])(\./[^"\']+\.(?:js|css))(?:\?v=[^"\']*)?(["\'])',lambda m:f'{m
 if 'http-equiv="Cache-Control"' not in s:s=s.replace('<head>','<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">',1)
 p.write_text(s,encoding='utf-8')
 
-for asset in ('transmission.css','transmission-sprites.css','transmission.js','alphabet-paths.js','transmission-sprites.js','runtime.js','core.js'):
+for asset in ('transmission.css','transmission-sprites.css','corruption.css','transmission.js','alphabet-paths.js','transmission-sprites.js','runtime.js','core.js','corruption.js'):
     assert f'./{asset}?v={version}' in s,asset
 assert s.index('./alphabet-paths.js') > s.index('./transmission.js')
 assert s.index('./transmission-sprites.js') > s.index('./alphabet-paths.js')
+assert s.index('./corruption.css') > s.index('./transmission-sprites.css')
 
 paths=Path('public/alphabet-paths.js').read_text(encoding='utf-8')
 assert 'PANI_ALPHA_PATHS' in paths
@@ -61,3 +67,4 @@ node --check public/assistance.js
 node --check public/transmission.js
 node --check public/alphabet-paths.js
 node --check public/transmission-sprites.js
+node --check public/corruption.js

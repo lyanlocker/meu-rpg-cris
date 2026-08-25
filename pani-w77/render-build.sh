@@ -3,145 +3,79 @@ set -euo pipefail
 
 rm -rf public
 mkdir -p public
-cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/sepulcro.css pani-w77/containment.css pani-w77/core.js pani-w77/views.js pani-w77/sepulcro.js pani-w77/containment.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/index.html pani-w77/containment-qa.html pani-w77/containment-mobile-qa.html public/
+cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/corruption.css pani-w77/core.js pani-w77/views.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/corruption.js pani-w77/index.html public/
 
 python3 - <<'PY'
 from pathlib import Path
-import re
 
-index_path=Path('public/index.html');index=index_path.read_text(encoding='utf-8')
-assert './containment.css?v=27' in index and './containment.js?v=28' in index
-for asset in ('./style.css','./files.css','./mission.css','./assistance.css','./sepulcro.css','./containment.css','./core.js','./views.js','./sepulcro.js','./containment.js','./files.js','./runtime.js','./mission.js','./mission-runtime.js','./assistance.js'):
-    assert asset in index,asset
-assert index.index('./sepulcro.js') < index.index('./containment.js') < index.index('./runtime.js') < index.index('./mission.js') < index.index('./mission-runtime.js') < index.index('./assistance.js')
-assert 'SATÉLITE' not in index.upper() and 'ESTADO DA NAVE' not in index.upper()
+index=Path('public/index.html').read_text(encoding='utf-8')
+for asset in ('style.css','files.css','mission.css','assistance.css','corruption.css','core.js','views.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js','corruption.js'):
+    assert f'./{asset}' in index,asset
+for removed in ('sepulcro.css','sepulcro.js','containment.css','containment.js','containment-qa','containment-mobile'):
+    assert removed not in index,removed
+for removed_control in ('seprelease','sepautohint','sepmatrix','sepsequence','separm','sepreset','msep','msepstate','progress'):
+    assert f'id="{removed_control}"' not in index,removed_control
+assert 'render-static-v10-corrupted-update' in index
+assert 'pani-glyph-rail' in index and 'UPDATE CHANNEL' in index and 'INTERFACE INTEGRITY' in index
 
-core_path=Path('public/core.js');core=core_path.read_text(encoding='utf-8')
-bad_key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im52d3pjbmZvbmhwaWxueG1vcGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTI3NTcsImV4cCI6MjEwMjMyODc1N30.5FBDbk8J1uN8JLLpKMk_Hubw6K7kbQQiulIamwm9Vso'
-good_key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d3pjbmZvbmhwaWxueG1vcGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTI3NTcsImV4cCI6MjEwMjMyODc1N30.5FBDbk8J1uN8JLLpKMk_Hubw6K7kbQQiulIamwm9Vso'
-core=core.replace(bad_key,good_key);assert good_key in core and bad_key not in core
-for needle in ('STATION_ID','W77-01','PORTAS SETORIAIS RESTAURADAS','LEGACY_SECTOR','CREW_DIRECTORY',"['aliya','Aliya Kessler']",'INVESTIGAÇÃO PARANORMAL & COORDENAÇÃO'):assert needle in core,needle
-assert "['alice','Alice Velvet']" in core
-core_path.write_text(core,encoding='utf-8')
-
+core=Path('public/core.js').read_text(encoding='utf-8')
 views=Path('public/views.js').read_text(encoding='utf-8')
-for needle in ('ALIYA_PROFILE','Bióloga marinha','águas profundas','Alef Dena','Investigação Paranormal e Coordenação','stationProfile'):assert needle in views,needle
+runtime=Path('public/runtime.js').read_text(encoding='utf-8')
+joined='\n'.join((core,views,runtime))
+for removed in ('sepState','sepMasterState','sepReleased','sepulcro','containmentState','containmentPage','containmentCrewRefresh','containmentMasterRefresh','pani_contraprova','pani_containment'):
+    assert removed not in joined,removed
+for required in ('STATION_ID','LEGACY_SECTOR','CREW_DIRECTORY',"['aliya','Aliya Kessler']",'INVESTIGAÇÃO PARANORMAL & COORDENAÇÃO'):
+    assert required in core,required
+assert "['alice','Alice Velvet']" in core
+for required in ('ALIYA_PROFILE','Bióloga marinha','águas profundas','Alef Dena','Investigação Paranormal e Coordenação','stationProfile'):
+    assert required in views,required
+for required in ('backendHealth',"toast('PIN inválido.'",'MASTER // BACKEND INDISPONÍVEL','pani_master_action','pani_master_logs'):
+    assert required in runtime,required
 
-runtime_path=Path('public/runtime.js');runtime=runtime_path.read_text(encoding='utf-8')
-for needle in ('backendHealth','sepMasterRefresh','CONTRAPROVA',"toast('PIN inválido.'",'MASTER // BACKEND INDISPONÍVEL','sepMasterToggleAutoHint','sepMasterToggleMatrix','sepMasterToggleSequence'):assert needle in runtime,needle
-for forbidden in ('DISPARAR IMPACTO DO SATÉLITE','impact_active','pani_power_manifest'):assert forbidden not in runtime,forbidden
+corruption_css=Path('public/corruption.css').read_text(encoding='utf-8')
+corruption_js=Path('public/corruption.js').read_text(encoding='utf-8')
+for required in ('pani-scanlines','glitch-title','dash-hero','station-sector','pani-console','@media(max-width:520px)','@media(prefers-reduced-motion:reduce)',':focus-visible'):
+    assert required in corruption_css,required
+for required in ('PANI_ALPHA_PATHS','pani-glyph','prefers-reduced-motion','pani-glitch-pulse','pani:render'):
+    assert required in corruption_js,required
 
-sep=Path('public/sepulcro.js').read_text(encoding='utf-8')
-for needle in ('DEPENDÊNCIA FANTASMA','A COLUNA AUSENTE','pani_contraprova_attempt','pani_contraprova_hint','INFORMATION / RELATION','GLYPH SEMANTICS','NOT ATTEMPTED','sepMasterToggleSequence'):assert needle in sep,needle
-for forbidden in ('VALOR ATRIBUÍDO: E','RECIPROCIDADE ESTABELECIDA','ENTENDIMENTO REGISTRADO','SEPULTURA-INV','tx-concept-sprite.webp'):assert forbidden not in sep,forbidden
-assert 'Aliya pode acompanhar o padrão emergente.' in sep
-
-for source in ('core.js','views.js','sepulcro.js','transmission.js','files.js','mission.js'):
- source_path=Path('pani-w77',source) if source=='transmission.js' else Path('public',source)
- text=source_path.read_text(encoding='utf-8')
- assert 'Viego' not in text and 'viego' not in text,source
-assert 'ALICE VELVET' in Path('public/containment.js').read_text(encoding='utf-8').upper()
-
-aliya_migration=Path('supabase/migrations/20260824220000_migrate_inv_slot_to_aliya_kessler.sql').read_text(encoding='utf-8')
-for needle in ("crew_id = 'aliya'",'Aliya Kessler','on update cascade','pani_signal_deliveries','pani_files','event_log_insert'):assert needle in aliya_migration,needle
-
-migration=Path('pani-w77/contraprova-v1.sql').read_text(encoding='utf-8')
-for needle in ('pani_contraprova_crew_state','pani_contraprova_attempt','pani_contraprova_hint','pani_contraprova_master_state','pani_contraprova_master_action','information_relation','NOT_ATTEMPTED','disarm_event'):assert needle in migration,needle
-for forbidden in ("first_glyph_value = 'E'","reciprocity_established = true"):assert forbidden not in migration,forbidden
-
-containment=Path('public/containment.js').read_text(encoding='utf-8')
-containment_sql=Path('pani-w77/containment-v1.sql').read_text(encoding='utf-8')
-containment_sql_v12=Path('pani-w77/containment-v1-2.sql').read_text(encoding='utf-8')
-containment_sql_v2=Path('pani-w77/containment-v2.sql').read_text(encoding='utf-8')
-for needle in ('pani_containment_crew_state','pani_containment_join','pani_containment_master_action_v2','containmentKnowledge','containmentEnergy','containmentBlood','containmentDeath','CORROMPER PANI','RESÍDUO BIOLÓGICO NÃO CATALOGADO'):assert needle in containment+containment_sql+containment_sql_v2,needle
-for needle in ('containment_v2_0','containment_v2_board','containment_tick_v2','fake_votes','energy_roll','blood_confirm','death_confirm','knowledge_suggest'):assert needle in containment_sql_v2,needle
-assert 'secret_state' not in containment.split('function containmentPage',1)[1].split('function containmentMasterRefresh',1)[0]
-
-files_path=Path('public/files.js');files=files_path.read_text(encoding='utf-8')
-old_new="let ids=new Set((d.files||[]).filter(f=>f.is_new).map(f=>f.id));";new_new="let ids=new Set((d.files||[]).filter(f=>f.is_new&&f.can_open).map(f=>f.id));";assert old_new in files;files=files.replace(old_new,new_new)
-old_button="${submit&&!can?`<button class=\"btn\" onclick=\"paniDecodeOpen('${f.id}','${esc(f.display_name).replace(/'/g,'&#39;')}')\">ENVIAR MATERIAL À PANI</button>`:''}"
-new_button="${submit&&!can?`<button class=\"btn\" onclick=\"paniDecodeOpen('${f.id}')\">ENVIAR MATERIAL À PANI</button>`:''}";assert old_button in files;files=files.replace(old_button,new_button)
-old_decode="function paniDecodeOpen(id,name){$('#pfdecodeid').value=id;$('#pfdecodename').textContent=name;$('#pfdecodetext').value='';$('#pfdecode').classList.remove('hidden')}"
-new_decode="function paniDecodeOpen(id){let f=pfCrewData?.files?.find(x=>x.id===id);$('#pfdecodeid').value=id;$('#pfdecodename').textContent=f?.display_name||'ARQUIVO';$('#pfdecodetext').value='';$('#pfdecode').classList.remove('hidden')}";assert old_decode in files;files=files.replace(old_decode,new_decode)
-
-mime_helper="function pfMime(file){let t=(file?.type||'').toLowerCase();if(t)return t;let n=(file?.name||'').toLowerCase();return n.endsWith('.pdf')?'application/pdf':n.endsWith('.png')?'image/png':n.endsWith('.jpg')||n.endsWith('.jpeg')?'image/jpeg':n.endsWith('.webp')?'image/webp':'text/plain'}\n"
-anchor="function pfMasterFileChosen(i){let f=i.files?.[0];if(f&&!$('#pfname').value)$('#pfname').value=f.name}\n";assert anchor in files;files=files.replace(anchor,anchor+mime_helper)
-files=files.replace("mime_type:file.type||'text/plain'","mime_type:pfMime(file)")
-files=files.replace("let fd=new FormData();fd.append('cacheControl','3600');fd.append('',file,file.name);","let mime=pfMime(file),uploadFile=file.type===mime?file:new File([file],file.name,{type:mime});let fd=new FormData();fd.append('cacheControl','3600');fd.append('',uploadFile,file.name);")
-files=files.replace("payload.mime_type=file.type;","payload.mime_type=pfMime(file);")
-
-old_mode="let can=f.can_open,submit=['corrupted','fragmented','decoding','encrypted'].includes(f.status);"
-new_mode="let can=f.can_open,submit=['corrupted','fragmented','decoding'].includes(f.status),unlock=!can&&f.locked_reason==='CHAVE DE DECODIFICAÇÃO NECESSÁRIA';";assert old_mode in files;files=files.replace(old_mode,new_mode)
-old_safe="${submit&&!can?`<button class=\"btn\" onclick=\"paniDecodeOpen('${f.id}')\">ENVIAR MATERIAL À PANI</button>`:''}"
-new_safe="${submit&&!can?`<button class=\"btn\" onclick=\"paniDecodeOpen('${f.id}')\">ENVIAR MATERIAL À PANI</button>`:''}${unlock?`<button class=\"btn a\" onclick=\"paniUnlockOpen('${f.id}')\">INSERIR CHAVE</button>`:''}";assert old_safe in files;files=files.replace(old_safe,new_safe)
-unlock_functions="""function paniUnlockOpen(id){let f=pfCrewData?.files?.find(x=>x.id===id);$('#pfunlockid').value=id;$('#pfunlockname').textContent=f?.display_name||'ARQUIVO';$('#pfunlockcode').value='';$('#pfunlock').classList.remove('hidden');setTimeout(()=>$('#pfunlockcode')?.focus(),30)}
-function paniUnlockClose(){$('#pfunlock').classList.add('hidden')}
-async function paniUnlockSubmit(){let id=$('#pfunlockid').value,code=$('#pfunlockcode').value.trim();if(!code)return toast('Informe a chave de decodificação.',true);let b=$('#pfunlocksend');b.disabled=true;try{let r=await rpc('pani_unlock_file',{p_token:tok,p_file:id,p_code:code});if(!r.ok)return toast(r.message||'CHAVE REJEITADA',true);paniUnlockClose();toast(r.message||'CHAVE ACEITA');await paniCrewFilesRefresh(false);render(true)}catch(e){toast('PANI // FALHA AO VALIDAR A CHAVE',true)}finally{b.disabled=false}}
-function pfUnlockInject(){if($('#pfunlock'))return;document.body.insertAdjacentHTML('beforeend',`<div id=\"pfunlock\" class=\"modalback hidden\"><div class=\"card modal\"><div class=\"k\">PANI // CAMADA CRIPTOGRÁFICA</div><h3>CHAVE DE DECODIFICAÇÃO</h3><p id=\"pfunlockname\" class=\"mut\"></p><input id=\"pfunlockid\" type=\"hidden\"><input id=\"pfunlockcode\" autocomplete=\"off\" placeholder=\"INSERIR CHAVE\" onkeydown=\"if(event.key==='Enter')paniUnlockSubmit()\"><p class=\"small mut\">Tentativas são registradas pela PANI. A autorização vale somente para esta credencial.</p><div class=\"actions\"><button class=\"btn\" onclick=\"paniUnlockClose()\">CANCELAR</button><button id=\"pfunlocksend\" class=\"btn a\" onclick=\"paniUnlockSubmit()\">DECODIFICAR</button></div></div></div>`) }
-"""
-unlock_anchor="function paniDecodeClose(){$('#pfdecode').classList.add('hidden')}\n";assert unlock_anchor in files;files=files.replace(unlock_anchor,unlock_anchor+unlock_functions)
-old_boot="pfInject();pfMasterInject();";new_boot="pfInject();pfUnlockInject();pfMasterInject();";assert old_boot in files;files=files.replace(old_boot,new_boot)
-assert "f.is_new&&f.can_open" in files and "paniDecodeOpen('${f.id}')" in files and "function pfMime(file)" in files and "new File([file],file.name,{type:mime})" in files
-assert "pani_unlock_file" in files and "INSERIR CHAVE" in files and "pfUnlockInject" in files
-files_path.write_text(files,encoding='utf-8')
-
+files=Path('public/files.js').read_text(encoding='utf-8')
+for required in ('f.is_new&&f.can_open','function pfMime(file)','pani_unlock_file','INSERIR CHAVE','new File([file],file.name,{type:mime})'):
+    assert required in files,required
 mission=Path('public/mission.js').read_text(encoding='utf-8')
 mission_runtime=Path('public/mission-runtime.js').read_text(encoding='utf-8')
-for required in ('pani_submit_report','pani_crew_redeem_credential','pani_master_access_code_upsert','missionTransmissionGlitch','RELATÓRIO DO DIA'):assert required in mission,required
-assert 'data-v="report"' in mission_runtime
-assert "view!=='cred'&&view!=='report'" in mission_runtime
+for required in ('pani_submit_report','pani_crew_redeem_credential','pani_master_access_code_upsert','missionTransmissionGlitch','RELATÓRIO DO DIA'):
+    assert required in mission,required
+assert 'data-v="report"' in mission_runtime and "view!=='cred'&&view!=='report'" in mission_runtime
 assist=Path('public/assistance.js').read_text(encoding='utf-8')
-for required in ('pani_assistance_submit','pani_assistance_reply','pani_crew_assistance','pani_master_assistance','pani_master_assistance_reply','CANAL DE SUPORTE','CAIXA DE SOLICITAÇÕES'):assert required in assist,required
+for required in ('pani_assistance_submit','pani_assistance_reply','pani_crew_assistance','pani_master_assistance','CAIXA DE SOLICITAÇÕES'):
+    assert required in assist,required
 
-for filename in ('index.html','containment-qa.html','containment-mobile-qa.html','style.css','files.css','mission.css','assistance.css','sepulcro.css','containment.css','core.js','views.js','sepulcro.js','containment.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js'):
- p=Path('public')/filename;assert p.exists() and p.stat().st_size>100
-mobile_qa=Path('public/containment-mobile-qa.html').read_text(encoding='utf-8')
-assert 'width:390px' in mobile_qa and 'height:844px' in mobile_qa and 'containment-qa.html?scenario=' in mobile_qa
-containment_qa=Path('public/containment-qa.html').read_text(encoding='utf-8')
-assert 'function render(){qaRender()}' in containment_qa and 'function qaRender()' in containment_qa
-for scenario in ('knowledge','team','operator','energy-choice','master','anarchic','blood','death-observe','death-blackout','death','death-final'):
- assert scenario in containment_qa,scenario
-for event_id in ('knowledge','energy','blood','death'):
- assert "eventId:'"+event_id+"'" in containment_qa,event_id
-assert 'CONEXO' in containment and 'pani_containment_crew_action_v2' in containment
-assert 'active_side' in containment_sql_v2 and 'containment_v2_0' in containment_sql_v2
-for needle in ('board_version','v2-24','position','last_checkpoint','overload','control_mode'):
- assert needle in containment+containment_sql_v2,needle
-assert 'ctEnergyBoard' in containment and 'ct-energy-board' in containment and 'TRILHA DE SOBRECARGA' in containment
-css=Path('public/containment.css').read_text(encoding='utf-8')
-for needle in ('.ct-energy-board','.ct-die-face','.ct-room-v2','.ct-wave-option','@media(max-width:680px)','@media(prefers-reduced-motion:reduce)'):assert needle in css,needle
-assert 'ct-racer creature' not in containment and 'CORRIDA DE SOBRECARGA' not in containment
-assert 'ct-scenes' not in containment and 'MEMÓRIA BASE</span>${ctDeathScene(false)' not in containment
-assert 'knowledge_mark' not in containment
-assert "p_token:tok" in containment
-assert "p_token:token" not in containment
-assert "ctKnowledgeToggle(word)" in containment and "a.push(word);render(true)" in containment
-assert 'aria-pressed="${on}"' in containment and 'ct-selection-status' in containment
-assert 'containmentAdopt(data)' in containment
-assert "['knowledge','blood'].includes(event)" in containment
-assert "ev->>'control_mode'='operator'" in containment_sql_v2 and "mode not in('team','operator')" in containment_sql_v2
-for forbidden in ('changed_object_id\' in containmentState','correct_option\' in containmentState','secret_state\' in containmentState'):
- assert forbidden not in containment,forbidden
-print('PANI build audit OK // W77-01 CONTENCAO ANOMALA v2.0 DEFINITIVO')
+for source in ('core.js','views.js','transmission.js','files.js','mission.js'):
+    path=Path('pani-w77',source) if source=='transmission.js' else Path('public',source)
+    text=path.read_text(encoding='utf-8')
+    assert 'Viego' not in text and 'viego' not in text,source
+
+for filename in ('index.html','style.css','files.css','mission.css','assistance.css','corruption.css','core.js','views.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js','corruption.js'):
+    path=Path('public')/filename
+    assert path.exists() and path.stat().st_size>100,filename
+for retired in ('sepulcro.css','sepulcro.js','containment.css','containment.js','containment-qa.html','containment-mobile-qa.html'):
+    assert not (Path('public')/retired).exists(),retired
+print('PANI build audit OK // EVENTOS CONCLUIDOS REMOVIDOS // CORRUPTED UPDATE UI')
 PY
 
 node --check public/core.js
 node --check public/views.js
-node --check public/sepulcro.js
-node --check public/containment.js
 node --check public/files.js
 node --check public/runtime.js
 node --check public/mission.js
 node --check public/mission-runtime.js
 node --check public/assistance.js
-node pani-w77/containment-ui-test.mjs
+node --check public/corruption.js
 
 if [[ -n "${PANI_MASTER_PIN:-}" ]]; then
   export PANI_STORAGE_QA
-  PANI_STORAGE_QA="$(curl --fail --silent --show-error --max-time 20 \
-    -H 'Content-Type: application/json' \
-    --data "{\"action\":\"self_test\",\"pin\":\"${PANI_MASTER_PIN}\"}" \
-    'https://nvwzcnfonhpilnxmopgi.supabase.co/functions/v1/pani-files')"
+  PANI_STORAGE_QA="$(curl --fail --silent --show-error --max-time 20 -H 'Content-Type: application/json' --data "{\"action\":\"self_test\",\"pin\":\"${PANI_MASTER_PIN}\"}" 'https://nvwzcnfonhpilnxmopgi.supabase.co/functions/v1/pani-files')"
   python3 - <<'PY'
 import json, os
 r=json.loads(os.environ['PANI_STORAGE_QA'])
