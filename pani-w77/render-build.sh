@@ -3,7 +3,7 @@ set -euo pipefail
 
 rm -rf public
 mkdir -p public
-cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/corruption.css pani-w77/core.js pani-w77/views.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/corruption.js pani-w77/index.html public/
+cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/corruption.css pani-w77/core.js pani-w77/views.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/corruption.js pani-w77/index.html pani-w77/layout-qa.html public/
 
 python3 - <<'PY'
 from pathlib import Path
@@ -59,6 +59,9 @@ for source in ('core.js','views.js','transmission.js','files.js','mission.js'):
 for filename in ('index.html','style.css','files.css','mission.css','assistance.css','corruption.css','core.js','views.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js','corruption.js'):
     path=Path('public')/filename
     assert path.exists() and path.stat().st_size>100,filename
+qa=Path('public/layout-qa.html').read_text(encoding='utf-8')
+assert 'stationSectorPage()' in qa and 'PANI_ALPHA_PATHS' not in qa and 'alphabet-paths.js' in qa
+assert 'containment' not in qa.lower() and 'sepulcro' not in qa.lower() and 'contraprova' not in qa.lower()
 for retired in ('sepulcro.css','sepulcro.js','containment.css','containment.js','containment-qa.html','containment-mobile-qa.html'):
     assert not (Path('public')/retired).exists(),retired
 print('PANI build audit OK // EVENTOS CONCLUIDOS REMOVIDOS // CORRUPTED UPDATE UI')
