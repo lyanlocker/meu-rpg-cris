@@ -68,6 +68,9 @@ for filename in ('index.html','style.css','files.css','mission.css','assistance.
 qa=Path('public/layout-qa.html').read_text(encoding='utf-8')
 assert 'stationSectorPage()' in qa and 'PANI_ALPHA_PATHS' not in qa and 'alphabet-paths.js' in qa
 assert 'containment' not in qa.lower() and 'sepulcro' not in qa.lower() and 'contraprova' not in qa.lower()
+eco_qa=Path('public/eco-w77-qa.html').read_text(encoding='utf-8')
+for required in ('function qaPaint()','function qaRender()','window.render=qaPaint','window.ecoQaInput'):
+    assert required in eco_qa,required
 for retired in ('sepulcro.js','containment.js','sepulcro.css','containment.css','containment-qa.html','containment-mobile-qa.html'):
     assert not (Path('public')/retired).exists(),retired
 migration=Path('supabase/migrations/20260826143000_eco_w77_five_anchors_v2.sql').read_text(encoding='utf-8')
