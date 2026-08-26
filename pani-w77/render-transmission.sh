@@ -11,13 +11,16 @@ from pathlib import Path
 import os,re
 p=Path('public/index.html');s=p.read_text(encoding='utf-8')
 
-# Mantém a camada de corrupção por último para que o tema seja a autoridade visual.
+# Mantém a camada ECO depois da corrupção global.
 corruption=re.search(r'<link\s+rel=["\']stylesheet["\']\s+href=["\']\./corruption\.css(?:\?v=[^"\']*)?["\']\s*>',s)
 corruption_tag=corruption.group(0) if corruption else '<link rel="stylesheet" href="./corruption.css">'
 if corruption:s=s.replace(corruption_tag,'',1)
+eco=re.search(r'<link\s+rel=["\']stylesheet["\']\s+href=["\']\./eco-w77\.css(?:\?v=[^"\']*)?["\']\s*>',s)
+eco_tag=eco.group(0) if eco else '<link rel="stylesheet" href="./eco-w77.css">'
+if eco:s=s.replace(eco_tag,'',1)
 if './transmission.css' not in s:s=s.replace('</head>','<link rel="stylesheet" href="./transmission.css"></head>',1)
 if './transmission-sprites.css' not in s:s=s.replace('</head>','<link rel="stylesheet" href="./transmission-sprites.css"></head>',1)
-s=s.replace('</head>',corruption_tag+'</head>',1)
+s=s.replace('</head>',corruption_tag+eco_tag+'</head>',1)
 if './transmission.js' not in s:s=s.replace('</body>','<script src="./transmission.js"></script></body>',1)
 if './transmission-sprites.js' not in s:s=s.replace('</body>','<script src="./transmission-sprites.js"></script></body>',1)
 
@@ -36,11 +39,15 @@ s=re.sub(r'(["\'])(\./[^"\']+\.(?:js|css))(?:\?v=[^"\']*)?(["\'])',lambda m:f'{m
 if 'http-equiv="Cache-Control"' not in s:s=s.replace('<head>','<head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">',1)
 p.write_text(s,encoding='utf-8')
 
-for asset in ('transmission.css','transmission-sprites.css','corruption.css','transmission.js','alphabet-paths.js','transmission-sprites.js','runtime.js','core.js','corruption.js'):
+for asset in ('transmission.css','transmission-sprites.css','corruption.css','eco-w77.css','transmission.js','alphabet-paths.js','transmission-sprites.js','runtime.js','core.js','eco-w77.js','corruption.js'):
     assert f'./{asset}?v={version}' in s,asset
 assert s.index('./alphabet-paths.js') > s.index('./transmission.js')
 assert s.index('./transmission-sprites.js') > s.index('./alphabet-paths.js')
 assert s.index('./corruption.css') > s.index('./transmission-sprites.css')
+assert s.index('./eco-w77.css') > s.index('./corruption.css')
+
+for route in ('eco-w77','eco-w77/gilbert','eco-w77/eklay','eco-w77/christian','eco-w77/willy','eco-w77/aliya','control/eco-w77'):
+    target=Path('public',route,'index.html');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(s,encoding='utf-8');assert target.stat().st_size>100
 
 paths=Path('public/alphabet-paths.js').read_text(encoding='utf-8')
 assert 'PANI_ALPHA_PATHS' in paths
@@ -60,6 +67,7 @@ PY
 node --check public/core.js
 node --check public/views.js
 node --check public/files.js
+node --check public/eco-w77.js
 node --check public/runtime.js
 node --check public/mission.js
 node --check public/mission-runtime.js

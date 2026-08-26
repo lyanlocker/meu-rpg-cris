@@ -3,7 +3,7 @@
 const U='https://nvwzcnfonhpilnxmopgi.supabase.co';
 const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d3pjbmZvbmhwaWxueG1vcGdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTI3NTcsImV4cCI6MjEwMjMyODc1N30.5FBDbk8J1uN8JLLpKMk_Hubw6K7kbQQiulIamwm9Vso';
 const SID='W77-02',STATION_ID='W77-01';
-const $=s=>document.querySelector(s),Q=new URLSearchParams(location.search),MASTER=Q.get('master')==='1';
+const $=s=>document.querySelector(s),Q=new URLSearchParams(location.search),ECO_ROUTE=location.pathname.replace(/^\/+|\/+$/g,'').toLowerCase(),MASTER=Q.get('master')==='1'||ECO_ROUTE==='control/eco-w77';
 const H={'apikey':K,'Authorization':'Bearer '+K,'Content-Type':'application/json'};
 const N={ops:'OPERAÇÕES & INFRAESTRUTURA',gen:'PESQUISA GENÉTICA & BIOCONTENÇÃO',env:'ECOLOGIA & CONTROLE AMBIENTAL',med:'MEDICINA & PATOLOGIA',sec:'SEGURANÇA & CONTROLE DE ACESSO',inv:'INVESTIGAÇÃO PARANORMAL & COORDENAÇÃO',power:'OPERAÇÕES & INFRAESTRUTURA',bio:'PESQUISA GENÉTICA & BIOCONTENÇÃO',environment:'ECOLOGIA & CONTROLE AMBIENTAL',life:'MEDICINA & PATOLOGIA',navigation:'SEGURANÇA & CONTROLE DE ACESSO',comms:'INVESTIGAÇÃO PARANORMAL & COORDENAÇÃO'};
 const NL={ops:'OPS',gen:'GEN',env:'ENV',med:'MED',sec:'SEC',inv:'INV',power:'OPS',bio:'GEN',environment:'ENV',life:'MED',navigation:'SEC',comms:'INV'};
@@ -11,7 +11,7 @@ const CREW_DIRECTORY=Object.freeze([
   Object.freeze(['gilbert','Gilbert William Beladona']),Object.freeze(['willy','Willy Jacques Ofnir']),Object.freeze(['aliya','Aliya Kessler']),Object.freeze(['alice','Alice Velvet']),Object.freeze(['eklay','Eklay Evans Garrote']),Object.freeze(['christian','Christian Barletta'])
 ]);
 const LEGACY_SECTOR={power:'ops',bio:'gen',environment:'env',life:'med',navigation:'sec',comms:'inv'};
-let state={mode:'normal',energy_capacity:100,occupancy:6,system_health:{}},me=null,prog={},tok=Q.get('access')||'',pin='',view='dash',fp='',manifest={},draft={};
+let state={mode:'normal',energy_capacity:100,occupancy:6,system_health:{}},me=null,prog={},tok=Q.get('access')||'',pin='',view=ECO_ROUTE.startsWith('eco-w77')?'eco':'dash',fp='',manifest={},draft={},ecoState=null,ecoMasterState=null,ecoDraft={},ecoBusy=false;
 function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
 function conn(t,on){let c=$('#conn'),d=$('#dot');if(c)c.textContent=t;if(d)d.className='dot '+(on===true?'on':on===false?'off':'')}
 function toast(t,e=false){let x=$('#toast');if(!x)return;x.textContent=t;x.className='toast'+(e?' err':'');clearTimeout(window.__paniToast);window.__paniToast=setTimeout(()=>x.classList.add('hidden'),4200)}
@@ -24,7 +24,7 @@ function sectorKey(){return LEGACY_SECTOR[me?.module]||me?.module||'ops'}
 function modeName(){if(state.alert_severity==='critical')return 'ALERTA';if(state.transmission)return 'TRANSMISSÃO';return 'ESTAÇÃO'}
 function capDraft(){document.querySelectorAll('#view input,#view select,#view textarea').forEach(e=>{if(e.id)draft[e.id]=e.value})}
 function putDraft(){Object.entries(draft).forEach(([k,v])=>{let e=document.getElementById(k);if(e)e.value=v})}
-function fingerprint(){return JSON.stringify([state.mode,state.occupancy,state.alert_text,state.alert_severity,state.transmission,state.system_health,prog,view])}
+function fingerprint(){return JSON.stringify([state.mode,state.occupancy,state.alert_text,state.alert_severity,state.transmission,state.system_health,prog,view,ecoState?.revision,ecoState?.anchor?.revision,ecoMasterState?.revision])}
 function alertRender(){let a=$('#alert');if(!a)return;if(!state.alert_text){a.className='hidden';return}a.textContent=state.alert_text;a.className='alert '+(state.alert_severity==='transmission'?'trans':state.alert_severity==='info'?'info':'')+(state.alert_severity==='critical'?' pulse':'')}
 function navRender(){document.querySelectorAll('#nav [data-v]').forEach(b=>b.classList.toggle('active',b.dataset.v===view))}
 function sysCards(){let mine=sectorKey();return ['ops','gen','env','med','sec','inv'].map((k,i)=>`<article class="sys ${mine===k?'mine':''}"><span class="sys-index">0${i+1}</span><div class="sub">${mine===k?'SEU SETOR':'SETOR W77-01'}</div><b>${NL[k]} // ${N[k]}</b><div class="sys-line"><i></i><span>OPERACIONAL</span></div>${mine===k?'<span class="tag">CREDENCIAL VINCULADA</span>':'<span class="sub">ROTINA NOMINAL</span>'}</article>`).join('')}

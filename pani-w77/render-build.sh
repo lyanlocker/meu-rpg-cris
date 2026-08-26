@@ -1,21 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-rm -rf public
+if [[ -e public && ! -d public ]]; then echo 'Refusing non-directory public target' >&2;exit 1;fi
 mkdir -p public
-cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/corruption.css pani-w77/core.js pani-w77/views.js pani-w77/files.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/corruption.js pani-w77/index.html pani-w77/layout-qa.html public/
-cp pani-w77/retired-event.js public/containment.js
-cp pani-w77/retired-event.js public/sepulcro.js
-cp pani-w77/retired-event.css public/containment.css
-cp pani-w77/retired-event.css public/sepulcro.css
-cp pani-w77/retired-event.html public/containment-qa.html
-cp pani-w77/retired-event.html public/containment-mobile-qa.html
+find public -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+cp pani-w77/style.css pani-w77/files.css pani-w77/mission.css pani-w77/assistance.css pani-w77/corruption.css pani-w77/eco-w77.css pani-w77/core.js pani-w77/views.js pani-w77/files.js pani-w77/eco-w77.js pani-w77/runtime.js pani-w77/mission.js pani-w77/mission-runtime.js pani-w77/assistance.js pani-w77/corruption.js pani-w77/index.html pani-w77/layout-qa.html pani-w77/eco-w77-qa.html public/
 
 python3 - <<'PY'
 from pathlib import Path
 
 index=Path('public/index.html').read_text(encoding='utf-8')
-for asset in ('style.css','files.css','mission.css','assistance.css','corruption.css','core.js','views.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js','corruption.js'):
+for asset in ('style.css','files.css','mission.css','assistance.css','corruption.css','eco-w77.css','core.js','views.js','files.js','eco-w77.js','runtime.js','mission.js','mission-runtime.js','assistance.js','corruption.js'):
     assert f'./{asset}' in index,asset
 for removed in ('sepulcro.css','sepulcro.js','containment.css','containment.js','containment-qa','containment-mobile'):
     assert removed not in index,removed
@@ -27,7 +22,8 @@ assert 'pani-glyph-rail' in index and 'UPDATE CHANNEL' in index and 'INTERFACE I
 core=Path('public/core.js').read_text(encoding='utf-8')
 views=Path('public/views.js').read_text(encoding='utf-8')
 runtime=Path('public/runtime.js').read_text(encoding='utf-8')
-joined='\n'.join((core,views,runtime))
+eco=Path('public/eco-w77.js').read_text(encoding='utf-8')
+joined='\n'.join((core,views,runtime,eco))
 for removed in ('sepState','sepMasterState','sepReleased','sepulcro','containmentState','containmentPage','containmentCrewRefresh','containmentMasterRefresh','pani_contraprova','pani_containment'):
     assert removed not in joined,removed
 for required in ('STATION_ID','LEGACY_SECTOR','CREW_DIRECTORY',"['aliya','Aliya Kessler']",'INVESTIGAÇÃO PARANORMAL & COORDENAÇÃO'):
@@ -37,6 +33,10 @@ for required in ('ALIYA_PROFILE','Bióloga marinha','águas profundas','Alef Den
     assert required in views,required
 for required in ('backendHealth',"toast('PIN inválido.'",'MASTER // BACKEND INDISPONÍVEL','pani_master_action','pani_master_logs'):
     assert required in runtime,required
+for required in ('pani_eco_status','pani_eco_input','pani_eco_master_status','pani_eco_master_action','CINCO ÂNCORAS','ecoConvergence','ecoMasterRender'):
+    assert required in joined,required
+for crew in ('gilbert','eklay','christian','willy','aliya'):assert crew in eco,crew
+assert 'Alice Velvet' not in eco and 'alice:' not in eco
 
 corruption_css=Path('public/corruption.css').read_text(encoding='utf-8')
 corruption_js=Path('public/corruption.js').read_text(encoding='utf-8')
@@ -62,25 +62,25 @@ for source in ('core.js','views.js','transmission.js','files.js','mission.js'):
     text=path.read_text(encoding='utf-8')
     assert 'Viego' not in text and 'viego' not in text,source
 
-for filename in ('index.html','style.css','files.css','mission.css','assistance.css','corruption.css','core.js','views.js','files.js','runtime.js','mission.js','mission-runtime.js','assistance.js','corruption.js'):
+for filename in ('index.html','style.css','files.css','mission.css','assistance.css','corruption.css','eco-w77.css','core.js','views.js','files.js','eco-w77.js','runtime.js','mission.js','mission-runtime.js','assistance.js','corruption.js','eco-w77-qa.html'):
     path=Path('public')/filename
     assert path.exists() and path.stat().st_size>100,filename
 qa=Path('public/layout-qa.html').read_text(encoding='utf-8')
 assert 'stationSectorPage()' in qa and 'PANI_ALPHA_PATHS' not in qa and 'alphabet-paths.js' in qa
 assert 'containment' not in qa.lower() and 'sepulcro' not in qa.lower() and 'contraprova' not in qa.lower()
-for retired in ('sepulcro.js','containment.js'):
-    text=(Path('public')/retired).read_text(encoding='utf-8')
-    assert 'PANI_RETIRED_EVENT_ASSET' in text and 'pani_containment' not in text and 'pani_contraprova' not in text,retired
-for retired in ('sepulcro.css','containment.css'):
-    assert 'aposentados' in (Path('public')/retired).read_text(encoding='utf-8'),retired
-for retired in ('containment-qa.html','containment-mobile-qa.html'):
-    assert 'MÓDULO CONCLUÍDO' in (Path('public')/retired).read_text(encoding='utf-8'),retired
+for retired in ('sepulcro.js','containment.js','sepulcro.css','containment.css','containment-qa.html','containment-mobile-qa.html'):
+    assert not (Path('public')/retired).exists(),retired
+migration=Path('supabase/migrations/20260826143000_eco_w77_five_anchors_v2.sql').read_text(encoding='utf-8')
+for required in ('pani_private.eco_session','pani_private.eco_anchor','pani_eco_status','pani_eco_input','pani_eco_master_status','pani_eco_master_action',"array['gilbert','eklay','christian','willy','aliya']"):
+    assert required in migration,required
+assert "'alice','env'" not in migration and 'enable row level security' in migration
 print('PANI build audit OK // EVENTOS CONCLUIDOS REMOVIDOS // CORRUPTED UPDATE UI')
 PY
 
 node --check public/core.js
 node --check public/views.js
 node --check public/files.js
+node --check public/eco-w77.js
 node --check public/runtime.js
 node --check public/mission.js
 node --check public/mission-runtime.js
