@@ -42,6 +42,8 @@ assert 'render(old!==fingerprint())' not in runtime
 assert 'if(repaint||ecoMasterState)' not in eco
 for required in ('ecoMasterPaintKey','ecoMasterCaptureUi','ecoMasterRestoreUi','paniEditing(b)'):
     assert required in eco,required
+for required in ('ecoMedAudio','ecoMedTone','window.AudioContext||window.webkitAudioContext','RESOLVER FASE',"ecoMasterAction('solve_phase'"):
+    assert required in eco,required
 for crew in ('gilbert','eklay','christian','willy','aliya'):assert crew in eco,crew
 assert 'Alice Velvet' not in eco and 'alice:' not in eco
 
@@ -90,6 +92,10 @@ seed_fix=Path('supabase/migrations/20260827120000_fix_eco_sec_seed_routes.sql').
 for seed in ('when 5','when 6','when 7','when 8','when 10'):
     assert seed in seed_fix,seed
 assert 'eco_sec_seed_routes_invalid' in seed_fix
+solve_phase=Path('supabase/migrations/20260827121000_eco_master_solve_phase.sql').read_text(encoding='utf-8')
+for required in ("p_action='solve_phase'",'perform pani_private.eco_advance(c)','INTERVENÇÃO DO MESTRE REGISTRADA','solve_phase_unavailable','public_log=public_log'):
+    assert required in solve_phase,required
+assert "not s.released or s.status<>'active' or s.paused" in solve_phase
 print('PANI build audit OK // EVENTOS CONCLUIDOS REMOVIDOS // CORRUPTED UPDATE UI')
 PY
 

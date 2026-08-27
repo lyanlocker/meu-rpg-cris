@@ -12,6 +12,20 @@ begin
        generate_series(1,cardinality(seed.sec_route)-1) edge_index
   where pani_private.eco_edge(seed.sec_route[edge_index],seed.sec_route[edge_index+1]) is null
  ),'a SEC seed contains an impossible edge';
+ create or replace function public.pani_master_valid(p_pin text) returns boolean language sql stable security definer set search_path=pg_catalog as $$select p_pin='eco-master-test'$$;
+ v:=public.pani_eco_master_action('eco-master-test','solve_phase','{"crewId":"willy"}');
+ assert(select phase=2 and progress=25 and stability=3 and not locked from pani_private.eco_anchor where crew_id='willy'),'master did not solve exactly one MED phase';
+ assert(select count(*) from pani_private.eco_anchor where crew_id<>'willy' and phase=1 and progress=0)=4,'master solve changed another anchor';
+ assert(select public_log @> '[{"type":"master_solve"}]'::jsonb from pani_private.eco_anchor where crew_id='willy'),'master solve was not audited on anchor';
+ begin perform public.pani_eco_master_action('eco-master-test','solve_phase','{"crewId":"alice"}');assert false,'master solved an invalid anchor';exception when others then assert sqlerrm='invalid_anchor';end;
+ perform public.pani_eco_master_action('eco-master-test','pause','{}');
+ begin perform public.pani_eco_master_action('eco-master-test','solve_phase','{"crewId":"willy"}');assert false,'master solved phase while paused';exception when others then assert sqlerrm='solve_phase_unavailable';end;
+ perform public.pani_eco_master_action('eco-master-test','resume','{}');
+ perform public.pani_eco_master_action('eco-master-test','solve_phase','{"crewId":"willy"}');
+ perform public.pani_eco_master_action('eco-master-test','solve_phase','{"crewId":"willy"}');
+ perform public.pani_eco_master_action('eco-master-test','solve_phase','{"crewId":"willy"}');
+ assert(select phase=4 and progress=100 and locked from pani_private.eco_anchor where crew_id='willy'),'fourth master solve did not lock MED';
+ begin perform public.pani_eco_master_action('eco-master-test','solve_phase','{"crewId":"willy"}');assert false,'master solved a locked anchor';exception when others then assert sqlerrm='anchor_locked';end;
  v:=public.pani_eco_status('eco-test-alice');assert not(v->>'eligible')::boolean,'Alice must remain ineligible';
  v:=public.pani_eco_status('eco-test-gilbert');select revision into r from pani_private.eco_session where session_id='W77-02';v2:=public.pani_eco_status('eco-test-gilbert');assert(select revision from pani_private.eco_session where session_id='W77-02')=r,'heartbeat revision churn';assert(v->'anchor'->>'revision')=(v2->'anchor'->>'revision'),'anchor revision churn';
  begin perform public.pani_eco_status('invalid');assert false,'bad token accepted';exception when others then assert sqlerrm='unauthorized';end;
