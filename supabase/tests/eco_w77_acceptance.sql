@@ -6,6 +6,12 @@ begin
  perform pani_private.eco_reset(1,true);
  assert(select count(*) from pani_private.eco_anchor where session_id='W77-02')=5,'requires five anchors';
  assert not exists(select 1 from pani_private.eco_anchor where crew_id='alice'),'Alice became sixth anchor';
+ assert not exists(
+  select 1
+  from pani_private.eco_seed_library seed,
+       generate_series(1,cardinality(seed.sec_route)-1) edge_index
+  where pani_private.eco_edge(seed.sec_route[edge_index],seed.sec_route[edge_index+1]) is null
+ ),'a SEC seed contains an impossible edge';
  v:=public.pani_eco_status('eco-test-alice');assert not(v->>'eligible')::boolean,'Alice must remain ineligible';
  v:=public.pani_eco_status('eco-test-gilbert');select revision into r from pani_private.eco_session where session_id='W77-02';v2:=public.pani_eco_status('eco-test-gilbert');assert(select revision from pani_private.eco_session where session_id='W77-02')=r,'heartbeat revision churn';assert(v->'anchor'->>'revision')=(v2->'anchor'->>'revision'),'anchor revision churn';
  begin perform public.pani_eco_status('invalid');assert false,'bad token accepted';exception when others then assert sqlerrm='unauthorized';end;

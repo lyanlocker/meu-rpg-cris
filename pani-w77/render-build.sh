@@ -16,7 +16,8 @@ for removed in ('sepulcro.css','sepulcro.js','containment.css','containment.js',
     assert removed not in index,removed
 for removed_control in ('seprelease','sepautohint','sepmatrix','sepsequence','separm','sepreset','msep','msepstate','progress'):
     assert f'id="{removed_control}"' not in index,removed_control
-assert 'render-static-v10-corrupted-update' in index
+assert 'render-static-v11-stable-interactions' in index
+assert index.count('?v=31')==9
 assert 'pani-glyph-rail' in index and 'UPDATE CHANNEL' in index and 'INTERFACE INTEGRITY' in index
 
 core=Path('public/core.js').read_text(encoding='utf-8')
@@ -35,6 +36,12 @@ for required in ('backendHealth',"toast('PIN inválido.'",'MASTER // BACKEND IND
     assert required in runtime,required
 for required in ('pani_eco_status','pani_eco_input','pani_eco_master_status','pani_eco_master_action','CINCO ÂNCORAS','ecoConvergence','ecoMasterRender'):
     assert required in joined,required
+for required in ('paniEditing','paniStableHtml','paniStableOptions'):
+    assert required in core,required
+assert 'render(old!==fingerprint())' not in runtime
+assert 'if(repaint||ecoMasterState)' not in eco
+for required in ('ecoMasterPaintKey','ecoMasterCaptureUi','ecoMasterRestoreUi','paniEditing(b)'):
+    assert required in eco,required
 for crew in ('gilbert','eklay','christian','willy','aliya'):assert crew in eco,crew
 assert 'Alice Velvet' not in eco and 'alice:' not in eco
 
@@ -56,6 +63,8 @@ assert 'data-v="report"' in mission_runtime and "view!=='cred'&&view!=='report'"
 assist=Path('public/assistance.js').read_text(encoding='utf-8')
 for required in ('pani_assistance_submit','pani_assistance_reply','pani_crew_assistance','pani_master_assistance','CAIXA DE SOLICITAÇÕES'):
     assert required in assist,required
+assert 'paniStableOptions(s,html' in assist
+assert 'pfCrewPaintKey' in files and "paniStableHtml($('#pfqueue')" in files
 
 for source in ('core.js','views.js','transmission.js','files.js','mission.js'):
     path=Path('pani-w77',source) if source=='transmission.js' else Path('public',source)
@@ -77,6 +86,10 @@ migration=Path('supabase/migrations/20260826143000_eco_w77_five_anchors_v2.sql')
 for required in ('pani_private.eco_session','pani_private.eco_anchor','pani_eco_status','pani_eco_input','pani_eco_master_status','pani_eco_master_action',"array['gilbert','eklay','christian','willy','aliya']"):
     assert required in migration,required
 assert "'alice','env'" not in migration and 'enable row level security' in migration
+seed_fix=Path('supabase/migrations/20260827120000_fix_eco_sec_seed_routes.sql').read_text(encoding='utf-8')
+for seed in ('when 5','when 6','when 7','when 8','when 10'):
+    assert seed in seed_fix,seed
+assert 'eco_sec_seed_routes_invalid' in seed_fix
 print('PANI build audit OK // EVENTOS CONCLUIDOS REMOVIDOS // CORRUPTED UPDATE UI')
 PY
 
@@ -89,6 +102,7 @@ node --check public/mission.js
 node --check public/mission-runtime.js
 node --check public/assistance.js
 node --check public/corruption.js
+node pani-w77/interaction-stability.test.cjs
 
 if [[ -n "${PANI_MASTER_PIN:-}" ]]; then
   export PANI_STORAGE_QA

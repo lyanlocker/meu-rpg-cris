@@ -12,6 +12,7 @@ const CREW_DIRECTORY=Object.freeze([
 ]);
 const LEGACY_SECTOR={power:'ops',bio:'gen',environment:'env',life:'med',navigation:'sec',comms:'inv'};
 let state={mode:'normal',energy_capacity:100,occupancy:6,system_health:{}},me=null,prog={},tok=Q.get('access')||'',pin='',view=ECO_ROUTE.startsWith('eco-w77')?'eco':'dash',fp='',manifest={},draft={},ecoState=null,ecoMasterState=null,ecoDraft={},ecoBusy=false;
+const PANI_RENDER_KEYS=new WeakMap();
 function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
 function conn(t,on){let c=$('#conn'),d=$('#dot');if(c)c.textContent=t;if(d)d.className='dot '+(on===true?'on':on===false?'off':'')}
 function toast(t,e=false){let x=$('#toast');if(!x)return;x.textContent=t;x.className='toast'+(e?' err':'');clearTimeout(window.__paniToast);window.__paniToast=setTimeout(()=>x.classList.add('hidden'),4200)}
@@ -22,8 +23,12 @@ async function backendHealth(){let a=await req('/rest/v1/game_state?id=eq.'+enco
 async function getState(){let a=await req('/rest/v1/game_state?id=eq.'+encodeURIComponent(SID)+'&select=*');if(a?.[0]){state=a[0];conn(MASTER&&pin?'MASTER ONLINE':'ONLINE // SINCRONIZADO',true);return state}throw Error('state_unavailable')}
 function sectorKey(){return LEGACY_SECTOR[me?.module]||me?.module||'ops'}
 function modeName(){if(state.alert_severity==='critical')return 'ALERTA';if(state.transmission)return 'TRANSMISSÃO';return 'ESTAÇÃO'}
-function capDraft(){document.querySelectorAll('#view input,#view select,#view textarea').forEach(e=>{if(e.id)draft[e.id]=e.value})}
-function putDraft(){Object.entries(draft).forEach(([k,v])=>{let e=document.getElementById(k);if(e)e.value=v})}
+function paniDataKey(v){try{return JSON.stringify(v??null)}catch{return String(v??'')}}
+function paniEditing(root){let a=document.activeElement;if(!root||!a||a===document.body)return false;return (a===root||root.contains(a))&&!!a.matches?.('input,select,textarea,[contenteditable="true"]')}
+function paniStableHtml(root,html,key=html,force=false){if(!root)return false;key=String(key);if(!force&&PANI_RENDER_KEYS.get(root)===key)return false;if(!force&&paniEditing(root))return false;root.innerHTML=html;PANI_RENDER_KEYS.set(root,key);return true}
+function paniStableOptions(select,html,preferred=select?.value,force=false){if(!select)return false;let changed=paniStableHtml(select,html,html,force);if(changed&&preferred!=null&&[...select.options].some(o=>o.value===String(preferred)))select.value=String(preferred);return changed}
+function capDraft(){document.querySelectorAll('#view input,#view select,#view textarea').forEach(e=>{if(e.id)draft[e.id]={value:e.value,checked:'checked'in e?e.checked:undefined}})}
+function putDraft(){Object.entries(draft).forEach(([k,v])=>{let e=document.getElementById(k);if(!e)return;if(v&&typeof v==='object'){if(v.value!=null)e.value=v.value;if(v.checked!==undefined&&'checked'in e)e.checked=!!v.checked}else e.value=v})}
 function fingerprint(){return JSON.stringify([state.mode,state.occupancy,state.alert_text,state.alert_severity,state.transmission,state.system_health,prog,view,ecoState?.revision,ecoState?.anchor?.revision,ecoMasterState?.revision])}
 function alertRender(){let a=$('#alert');if(!a)return;if(!state.alert_text){a.className='hidden';return}a.textContent=state.alert_text;a.className='alert '+(state.alert_severity==='transmission'?'trans':state.alert_severity==='info'?'info':'')+(state.alert_severity==='critical'?' pulse':'')}
 function navRender(){document.querySelectorAll('#nav [data-v]').forEach(b=>b.classList.toggle('active',b.dataset.v===view))}

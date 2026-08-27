@@ -6,6 +6,7 @@ render=function(force=false){
   if(!me)return;
   let f=fingerprint();
   if(!force&&f===fp){alertRender();return}
+  if(!force&&paniEditing($('#view'))){alertRender();return}
   capDraft();fp=f;alertRender();
   $('#view').innerHTML=view==='cred'?missionCredentialPage():missionReportPage();
   putDraft();navRender();
