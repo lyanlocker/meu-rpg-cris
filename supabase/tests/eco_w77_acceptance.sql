@@ -41,7 +41,13 @@ begin
  assert(public.pani_eco_status('eco-test-gilbert')->'anchor'->>'phase')::int=4,'GEN reconnect lost phase';
  perform public.pani_eco_input('eco-test-gilbert','gen_fix','{"support":["B2","D4","A1","NØ"],"separateDescription":true}');
 
- -- OPS: every placement and rotation passes through the public API.
+ -- OPS: placement, selection edits and rotations pass through the public API.
+ perform public.pani_eco_input('eco-test-eklay','ops_place','{"cell":"0,1"}');
+ perform public.pani_eco_input('eco-test-eklay','ops_move','{"cell":"0,1","target":"4,0"}');
+ perform public.pani_eco_input('eco-test-eklay','ops_move','{"cell":"4,0","target":"0,1"}');
+ perform public.pani_eco_input('eco-test-eklay','ops_rotate','{"cell":"0,1"}');
+ perform public.pani_eco_input('eco-test-eklay','ops_remove','{"cell":"0,1"}');
+ assert(select public_state->'returned'->>0='straight' from pani_private.eco_anchor where crew_id='eklay'),'OPS removal did not return the piece';
  for i in 1..3 loop
   select secret_state->'solution' into sol from pani_private.eco_anchor where crew_id='eklay';
   for piece in select value from jsonb_array_elements(sol) loop
@@ -64,16 +70,42 @@ begin
  for i in 1..2 loop perform public.pani_eco_input('eco-test-willy','med_timed','{"sequence":[{"channel":"pulse","time":0},{"channel":"resp","time":720},{"channel":"neural","time":1390},{"channel":"tonus","time":2050},{"channel":"pulse","time":2720}]}');end loop;
  perform public.pani_eco_input('eco-test-willy','med_markers','{"markers":[31,34,29,33,30,35],"conclusion":"anticipated"}');perform public.pani_eco_input('eco-test-willy','med_preserve','{"sequence":["pulse","resp","neural","tonus","pulse"],"preserveRaw":true}');
 
- -- INV: Aliya, current equivalent of Alef Dena.
- perform public.pani_eco_input('eco-test-aliya','inv_classify','{"assignments":{"A1":"DEFINIR","A2":"DEFINIR","B1":"LOCALIZAR","B2":"LOCALIZAR","C1":"DELIMITAR","C2":"DELIMITAR","D1":"PERCEBER","D2":"PERCEBER","E1":"RELACIONAR","E2":"RELACIONAR"}}');
- perform public.pani_eco_input('eco-test-aliya','inv_pairs','{"pairs":[["SEC-A","SEC-B"],["GEN-A","GEN-B"],["MED-A","MED-B"],["OPS-A","OPS-B"]]}');
- perform public.pani_eco_input('eco-test-aliya','inv_hypothesis','{"hypothesis":"five"}');perform public.pani_eco_input('eco-test-aliya','inv_hypothesis','{"hypothesis":"pani"}');perform public.pani_eco_input('eco-test-aliya','inv_hypothesis','{"hypothesis":"one"}');perform public.pani_eco_input('eco-test-aliya','inv_fix','{"outputs":["GEN","OPS","SEC","MED","INV"],"noName":true}');
+ -- INV: gabarito oficial Aliya/Alef, validação unitária e persistente.
+ perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C1","category":"DEFINIR"}');
+ assert(select not(public_state->'classified'?'C1') and public_state->'lastResult'->>'message'='CLASSIFICAÇÃO INCONSISTENTE' from pani_private.eco_anchor where crew_id='aliya'),'C1 em DEFINIR foi aceito';
+ perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C1","category":"LOCALIZAR"}');
+ v:=public.pani_eco_status('eco-test-aliya');assert v->'anchor'->'publicState'->'classified'->>'C1'='LOCALIZAR','refresh perdeu C1';
+ perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C3","category":"LOCALIZAR"}');
+ assert(select not(public_state->'classified'?'C3') from pani_private.eco_anchor where crew_id='aliya'),'C3 em LOCALIZAR foi aceito';
+ perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C3","category":"DEFINIR"}');
+ perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C2","category":"LOCALIZAR"}');
+ perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C4","category":"LOCALIZAR"}');
+ assert(select not(public_state->'classified'?'C4') and (public_state->'lastResult'->>'categoryFull')::boolean from pani_private.eco_anchor where crew_id='aliya'),'terceira carta entrou em categoria 2/2';
+ perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C4","category":"DEFINIR"}');
+ perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C5","category":"PERCEBER"}');perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C6","category":"PERCEBER"}');
+ perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C7","category":"DELIMITAR"}');perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C8","category":"DELIMITAR"}');
+ perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C9","category":"RELACIONAR"}');perform public.pani_eco_input('eco-test-aliya','inv_classify_card','{"cardId":"C10","category":"RELACIONAR"}');
+ assert(select phase=2 from pani_private.eco_anchor where crew_id='aliya'),'10/10 não avançou Aliya';
+ sol:=(select secret_state from pani_private.eco_anchor where crew_id='aliya');
+ perform public.pani_eco_master_action('eco-master-test','interfere','{"crewId":"aliya","type":"phantom_relation"}');
+ assert(select secret_state=sol from pani_private.eco_anchor where crew_id='aliya'),'interferência alterou o gabarito INV';
+ perform public.pani_eco_input('eco-test-aliya','inv_validate_pair','{"cards":["C7","C3"]}');assert(select (public_state->>'pairCount')::int=0 from pani_private.eco_anchor where crew_id='aliya'),'C7+C3 foi aceito';
+ perform public.pani_eco_input('eco-test-aliya','inv_validate_pair','{"cards":["C7","C1"]}');perform public.pani_eco_input('eco-test-aliya','inv_validate_pair','{"cards":["C3","C4"]}');perform public.pani_eco_input('eco-test-aliya','inv_validate_pair','{"cards":["C5","C6"]}');perform public.pani_eco_input('eco-test-aliya','inv_validate_pair','{"cards":["C8","C2"]}');
+ assert(select phase=3 from pani_private.eco_anchor where crew_id='aliya'),'quatro pares não avançaram';
+ perform public.pani_eco_input('eco-test-aliya','inv_test_hypothesis','{"hypothesis":"five"}');assert(select public_state->'testedHypotheses'->'five'->>'result'='INCOMPATÍVEL' from pani_private.eco_anchor where crew_id='aliya'),'cinco falhas não foi refutada';
+ perform public.pani_eco_input('eco-test-aliya','inv_test_hypothesis','{"hypothesis":"pani"}');assert(select public_state->'testedHypotheses'->'pani'->>'result'='INCOMPATÍVEL' from pani_private.eco_anchor where crew_id='aliya'),'PANI danificada não foi refutada';
+ perform public.pani_eco_input('eco-test-aliya','inv_test_hypothesis','{"hypothesis":"one"}');assert(select phase=4 from pani_private.eco_anchor where crew_id='aliya'),'hipótese correta não avançou';
+ perform public.pani_eco_input('eco-test-aliya','inv_name_relation','{"name":"ESTRANGEIRO"}');assert(select not locked from pani_private.eco_anchor where crew_id='aliya'),'nomear Estrangeiro foi aceito';
+ perform public.pani_eco_input('eco-test-aliya','inv_link_output','{"output":"GEN"}');perform public.pani_eco_input('eco-test-aliya','inv_link_output','{"output":"OPS"}');perform public.pani_eco_input('eco-test-aliya','inv_link_output','{"output":"SEC"}');perform public.pani_eco_input('eco-test-aliya','inv_link_output','{"output":"MED"}');perform public.pani_eco_input('eco-test-aliya','inv_link_output','{"output":"INV"}');
+ perform public.pani_eco_input('eco-test-aliya','inv_fix_relation','{"noName":true,"fixRelation":true}');
+ assert(select locked and public_state->>'ecoTimestamp'='03:17:12.2' and public_state->>'output'='CINCO SUPORTES // UMA ESTRUTURA RECORRENTE // SIGNIFICADO AINDA NÃO ATRIBUÍDO' from pani_private.eco_anchor where crew_id='aliya'),'Aliya não finalizou com output oficial';
 
  perform public.pani_eco_status('eco-test-aliya');assert(select status from pani_private.eco_session where session_id='W77-02')='convergence','five locks did not open convergence';assert(select count(*) from pani_private.eco_anchor where locked)=5,'missing lock';
  update pani_private.eco_session set convergence=convergence||jsonb_build_object('windowEnd',now()-interval'1 second');perform public.pani_eco_status('eco-test-gilbert');assert(select convergence->>'state' from pani_private.eco_session where session_id='W77-02')='recalibrating','no retry state';update pani_private.eco_session set convergence=convergence||jsonb_build_object('retryAt',now()-interval'1 second');perform public.pani_eco_status('eco-test-gilbert');assert(select convergence->>'state' from pani_private.eco_session where session_id='W77-02')='open','retry did not reopen';assert(select count(*) from pani_private.eco_anchor where locked)=5,'retry erased locks';
+ sol:=(select secret_state from pani_private.eco_anchor where crew_id='aliya');perform public.pani_eco_master_action('eco-master-test','rupture','{"crewId":"aliya"}');assert(select secret_state=sol and extract(epoch from((interference->>'until')::timestamptz-now())) between 2 and 3.2 from pani_private.eco_anchor where crew_id='aliya'),'Ruptura Aliya mudou gabarito ou não dura aproximadamente 3 s';
  begin perform public.pani_eco_input('eco-test-gilbert','convergence','{"marker":"NØ","holdMs":2999}');assert false,'short hold accepted';exception when others then assert sqlerrm='invalid_convergence_action';end;
- perform public.pani_eco_input('eco-test-gilbert','convergence','{"marker":"NØ","holdMs":3100}');perform public.pani_eco_input('eco-test-gilbert','convergence','{"marker":"NØ","holdMs":3100}');assert(select(convergence->>'readyCount')::int from pani_private.eco_session where session_id='W77-02')=1,'duplicate ready counted';perform public.pani_eco_input('eco-test-eklay','convergence','{"nodes":["A","B","C"]}');perform public.pani_eco_input('eco-test-christian','convergence','{"sector":"Ø-C"}');perform public.pani_eco_input('eco-test-willy','convergence','{"sequence":["pulse","resp","neural","tonus"]}');v:=public.pani_eco_input('eco-test-aliya','convergence','{"noName":true}');assert v->>'status'='complete'and(v->'convergence'->>'readyCount')::int=5,'ready 5/5 failed';assert v->'sixthLayer'->>'layer'='ENV'and position('Alice'in v::text)=0,'sixth layer leaked Alice';
- v:=public.pani_eco_status('eco-test-gilbert');assert not(v->'anchor')?'secretState','secretState leaked';assert position('"solution"'in v::text)=0 and position('correctSuspect'in v::text)=0,'solution leaked';assert not has_table_privilege('anon','pani_private.eco_anchor','select'),'anon reads private anchor';
+ perform public.pani_eco_input('eco-test-gilbert','convergence','{"marker":"NØ","holdMs":3100}');perform public.pani_eco_input('eco-test-gilbert','convergence','{"marker":"NØ","holdMs":3100}');assert(select(convergence->>'readyCount')::int from pani_private.eco_session where session_id='W77-02')=1,'duplicate ready counted';perform public.pani_eco_input('eco-test-eklay','convergence','{"nodes":["A","B","C"]}');perform public.pani_eco_input('eco-test-christian','convergence','{"sector":"Ø-C"}');perform public.pani_eco_input('eco-test-willy','convergence','{"sequence":["pulse","resp","neural","tonus"]}');v:=public.pani_eco_input('eco-test-aliya','inv_convergence','{"outputs":["GEN","OPS","SEC","MED","INV"],"noName":true,"fixRelation":true}');assert v->>'status'='complete'and(v->'convergence'->>'readyCount')::int=5,'ready 5/5 failed';assert v->'sixthLayer'->>'layer'='ENV'and position('Alice'in v::text)=0,'sixth layer leaked Alice';
+ v:=public.pani_eco_status('eco-test-gilbert');assert not(v->'anchor')?'secretState','secretState leaked';assert position('"solution"'in v::text)=0 and position('correctSuspect'in v::text)=0,'solution leaked';assert not has_table_privilege('anon','pani_private.eco_anchor','select'),'anon reads private anchor';assert has_function_privilege('anon','public.pani_eco_input(text,text,jsonb)','execute'),'single public dispatcher missing';assert not has_function_privilege('anon','public.pani_eco_inv_input(text,text,jsonb)','execute') and not has_function_privilege('anon','public.pani_eco_ops_edit(text,text,jsonb)','execute'),'internal ECO RPC leaked';
  raise notice 'ECO-W77 ACCEPTANCE OK // 20 PHASES // READY 5/5';
 end$test$;
 rollback;
