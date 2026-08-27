@@ -12,8 +12,12 @@ function paStatusClass(s){return ['answered','closed'].includes(s)?s:'open'}
 render=function(force=false){
   if(view!=='pani')return paBaseRender(force);
   if(!me)return;
-  alertRender();
+  let f=fingerprint();
+  if(!force&&f===fp){alertRender();return}
+  if(!force&&paniEditing($('#view'))){alertRender();return}
+  capDraft();fp=f;alertRender();
   $('#view').innerHTML=paniAssistancePage();
+  putDraft();
   navRender();
   paUpdateCrewNav();
   setTimeout(()=>paCrewRefresh(false),0);
@@ -71,7 +75,7 @@ function paMasterInject(){
   paMasterRefresh(true);
 }
 async function paMasterRefresh(renderNow=true){if(!MASTER||!pin)return;try{let d=await rpc('pani_master_assistance',{p_pin:pin});paMasterData=d||{unread:0,threads:[]};paMasterReady=true;paMasterCrewFilter();if(renderNow)paMasterRender();else{let badge=$('#paunread');if(badge)badge.textContent=paMasterData.unread?`${paMasterData.unread} NÃO LIDA${paMasterData.unread===1?'':'S'}`:'SEM PENDÊNCIAS'}}catch(e){console.error('master assistance',e)}}
-function paMasterCrewFilter(){let s=$('#pafiltercrew');if(!s)return;let old=s.value,names=[...new Map((paMasterData.threads||[]).map(t=>[t.crew_id,t.crew_name])).entries()];s.innerHTML='<option value="all">TODOS OS TRIPULANTES</option>'+names.map(([id,n])=>`<option value="${esc(id)}">${esc(n)}</option>`).join('');if(names.some(([id])=>id===old))s.value=old}
+function paMasterCrewFilter(){let s=$('#pafiltercrew');if(!s)return;let old=s.value,names=[...new Map((paMasterData.threads||[]).map(t=>[t.crew_id,t.crew_name])).entries()],html='<option value="all">TODOS OS TRIPULANTES</option>'+names.map(([id,n])=>`<option value="${esc(id)}">${esc(n)}</option>`).join('');paniStableOptions(s,html,names.some(([id])=>id===old)?old:'all')}
 function paMasterRender(){let box=$('#pamasterlist');if(!box)return;let crew=$('#pafiltercrew')?.value||'all',st=$('#pafilterstatus')?.value||'all',arr=(paMasterData.threads||[]).filter(t=>(crew==='all'||t.crew_id===crew)&&(st==='all'||(st==='unread'?t.unread:t.status===st)));let badge=$('#paunread');if(badge)badge.textContent=paMasterData.unread?`${paMasterData.unread} NÃO LIDA${paMasterData.unread===1?'':'S'}`:'SEM PENDÊNCIAS';box.innerHTML=arr.length?arr.map(t=>`<article class="pa-masteritem ${t.unread?'unread':''}" onclick="paMasterOpen(${t.id})"><div class="pa-avatar">${esc((t.crew_name||'?').split(/\s+/).map(x=>x[0]).slice(0,2).join(''))}</div><div><b>${esc(t.crew_name)}</b><small>${esc(t.mission_role||'TRIPULANTE')}</small><p><strong>${esc(t.subject)}</strong> — ${esc(paShort(t.last_message,230))}</p><small>${paDate(t.updated_at)} // ${t.last_sender==='master'?'ÚLTIMA MENSAGEM: PANI':'ÚLTIMA MENSAGEM: TRIPULANTE'}</small></div><span class="pa-status ${paStatusClass(t.status)}">${t.unread?'NOVA':paStatusLabel(t.status)}</span></article>`).join(''):'<div class="pa-zero">Nenhuma solicitação corresponde ao filtro.</div>'}
 async function paMasterOpen(id){try{let d=await rpc('pani_master_assistance_open',{p_pin:pin,p_thread:id});paOpenThreadData=d;$('#pamtname').textContent=d.crew_name;$('#pamtmeta').textContent=`${d.subject} // ${paDate(d.updated_at)} // ${d.mission_role||'TRIPULANTE'}`;$('#pamtchat').innerHTML=(d.messages||[]).map(m=>paMessageHtml(m,true)).join('');$('#pamtreply').value='';$('#pamtclosecase').textContent=d.status==='closed'?'REABRIR SOLICITAÇÃO':'ENCERRAR SOLICITAÇÃO';$('#pamastermodal').classList.remove('hidden');$('#pamtchat').scrollTop=$('#pamtchat').scrollHeight;await paMasterRefresh(true)}catch{toast('Falha ao abrir solicitação.',true)}}
 function paMasterModalClose(){$('#pamastermodal').classList.add('hidden')}
