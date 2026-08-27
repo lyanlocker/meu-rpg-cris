@@ -44,6 +44,10 @@ for required in ('ecoMasterPaintKey','ecoMasterCaptureUi','ecoMasterRestoreUi','
     assert required in eco,required
 for required in ('ecoMedAudio','ecoMedTone','window.AudioContext||window.webkitAudioContext','RESOLVER FASE',"ecoMasterAction('solve_phase'"):
     assert required in eco,required
+for required in ("ecoInputRpc(){return'pani_eco_input'",'inv_classify_card','inv_validate_pair','ops_move','ops_remove','ecoMasterFetching','},750);'):
+    assert required in eco,required
+for required in ('Presença registrada no interior de SEC às 03:17:12.','Descrição genética de G-04 troca A2 por NØ.','Cinco setores convergem em 03:17:12 ± 0,8 s.','Alef marca o mesmo padrão em suportes diferentes.'):
+    assert required in Path('public/eco-w77-qa.html').read_text(encoding='utf-8'),required
 for crew in ('gilbert','eklay','christian','willy','aliya'):assert crew in eco,crew
 assert 'Alice Velvet' not in eco and 'alice:' not in eco
 
@@ -96,6 +100,15 @@ solve_phase=Path('supabase/migrations/20260827121000_eco_master_solve_phase.sql'
 for required in ("p_action='solve_phase'",'perform pani_private.eco_advance(c)','INTERVENÇÃO DO MESTRE REGISTRADA','solve_phase_unavailable','public_log=public_log'):
     assert required in solve_phase,required
 assert "not s.released or s.status<>'active' or s.paused" in solve_phase
+inv_v2=Path('supabase/migrations/20260827234359_eco_inv_v2_and_ops_edit.sql').read_text(encoding='utf-8')
+for required in ('C1\',\'LOCALIZAR','C3\',\'DEFINIR','C7\',\'DELIMITAR','C9\',\'RELACIONAR',"jsonb_build_array('C7','C1')","jsonb_build_array('C3','C4')",'UM FENÔMENO EM CINCO SUPORTES','NO_NAME_FIX_RELATION','03:17:12.2','public.pani_eco_ops_edit'):
+    assert required in inv_v2,required
+assert 'correctCategory' not in eco and 'categoryAnswerKey' not in eco
+rupture=Path('supabase/migrations/20260827234402_eco_aliya_rupture_window.sql').read_text(encoding='utf-8')
+assert "p_payload->>'crewId'<>'aliya'" in rupture and "interval '3 seconds'" in rupture and 'pani_eco_master_action_legacy' in rupture
+dispatch=Path('supabase/migrations/20260827234405_eco_input_dispatch.sql').read_text(encoding='utf-8')
+assert 'pani_eco_input_legacy' in dispatch and "c='aliya'" in dispatch and "c='eklay'" in dispatch
+assert 'grant execute on function public.pani_eco_inv_input' not in inv_v2 and 'grant execute on function public.pani_eco_ops_edit' not in inv_v2
 print('PANI build audit OK // EVENTOS CONCLUIDOS REMOVIDOS // CORRUPTED UPDATE UI')
 PY
 

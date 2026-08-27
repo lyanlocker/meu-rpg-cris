@@ -91,6 +91,13 @@ assert.ok(!sources.eco.includes('if(repaint||ecoMasterState)'),'painel ECO ainda
 assert.ok(sources.eco.includes('ecoMasterPaintKey')&&sources.eco.includes('paniEditing(b)'),'painel ECO sem trava de edição');
 assert.ok(sources.eco.includes('window.AudioContext||window.webkitAudioContext')&&sources.eco.includes('ecoMedTone(ctx,ch,delay)'),'Willy continua sem áudio real');
 assert.ok(sources.eco.includes("ecoMasterAction('solve_phase'")&&sources.eco.includes('RESOLVER FASE'),'painel do Mestre sem resolução de fase');
+assert.ok(sources.eco.includes("ecoInputRpc(){return'pani_eco_input'")&&sources.eco.includes("'ops_move'")&&sources.eco.includes("'ops_remove'"),'Eklay sem edição persistente de peça');
+assert.ok(sources.eco.includes('Para mover, clique em uma casa vazia.')&&sources.eco.includes('DEVOLVIDAS'),'Eklay sem feedback de mover/remover');
+assert.ok(sources.eco.includes('ecoMasterFetching')&&sources.eco.includes('},750);'),'painel do Mestre não atualiza o ECO em menos de um segundo');
+assert.ok(sources.eco.includes('inv_classify_card')&&sources.eco.includes('inv_validate_pair'),'Aliya ainda envia o puzzle inteiro');
+for(const exact of ['Presença registrada no interior de SEC às 03:17:12.','Descrição genética de G-04 troca A2 por NØ.','Cinco setores convergem em 03:17:12 ± 0,8 s.','Alef marca o mesmo padrão em suportes diferentes.'])assert.ok(qa.includes(exact),`evidência oficial ausente: ${exact}`);
+assert.ok(!qa.includes("['A1','Amostra preserva massa.']")&&!qa.includes('SEC-A'),'QA ainda usa as cartas antigas da Aliya');
+assert.ok(sources.eco.includes('NOMEAR FENÔMENO')&&sources.eco.includes('NÃO NOMEAR')&&sources.eco.includes('FIXAR RELAÇÃO'),'decisão investigativa final incompleta');
 assert.ok(sources.files.includes('pfCrewPaintKey')&&sources.files.includes("view==='files'&&pfCrewPaintKey!==key"),'Arquivos sem snapshot estável');
 assert.ok(sources.files.includes("paniStableHtml($('#pfqueue')"),'fila do Mestre sem atualização estável');
 assert.ok(sources.assistance.includes('paniStableOptions(s,html'),'Assistência ainda recria opções');
