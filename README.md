@@ -13,3 +13,6 @@ Login próprio por e-mail e senha. Só membros autorizados acessam dados. O mest
 Catálogos não fazem parte deste repositório nem do bundle público: são carregados do banco somente após autorização. Nunca inserir PDFs, senhas ou chaves secretas no código.
 
 Recursos: atributos, perícias, recursos, dados, poderes, rituais, inventário, descrição e exportação/importação JSON.
+
+
+Compatibilidade Render e decisões da revisão: veja CONTINUIDADE.md.
