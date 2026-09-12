@@ -37,6 +37,7 @@
   "exclude": [
     "node_modules",
     "codigo_src",
+    "supabase/functions",
     ".export"
   ]
 }
