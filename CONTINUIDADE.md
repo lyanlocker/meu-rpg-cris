@@ -8,7 +8,7 @@ Render: npm install instala e compila quando RENDER=true. npm start inicia Next 
 
 Permissões: mestre administra perícias, habilidades, poderes, rituais e itens amaldiçoados. Jogadores podem consultar e usar esses recursos, mas não editá-los. Armas e equipamentos continuam editáveis. O trigger onix_guard_fields aplica a mesma regra a gravações diretas na API e importações.
 
-Acessos: não existe cadastro público de jogador. O mestre cria identificador, nome do personagem e senha inicial pelo painel. A Edge Function `manage-player-access` mantém a chave administrativa apenas no servidor e permite criar contas ou trocar senhas. O primeiro mestre ativa uma única vez o e-mail já autorizado em `members`.
+Acessos: não existe cadastro público nem uso de e-mail pessoal. Mestre e jogadores entram com identificadores simples; o e-mail técnico do Supabase nunca aparece na interface. O mestre cria identificador, nome do personagem e senha inicial pelo painel. A Edge Function `manage-player-access` mantém a chave administrativa apenas no servidor e permite criar contas ou trocar senhas.
 
 Rolagens: `dice_rolls` registra perícias, rolagens livres e dano. Jogadores só inserem rolagens das próprias fichas; somente o mestre consulta o histórico. A tabela participa do Supabase Realtime para atualizar o painel da mesa sem polling.
 

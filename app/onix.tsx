@@ -84,7 +84,6 @@ export default function Onix() {
   const [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
-    [authMode, setAuthMode] = useState<"login" | "activate">("login"),
     [accessMode, setAccessMode] = useState<"create" | "reset">("create"),
     [characterName, setCharacterName] = useState(""),
     [accessId, setAccessId] = useState("");
@@ -209,24 +208,11 @@ export default function Onix() {
       access = String(f.get("access") || ""),
       password = String(f.get("password") || "");
     try {
-      const r =
-        authMode === "activate"
-          ? await db.auth.signUp({
-              email: access.trim().toLowerCase(),
-              password,
-              options: { emailRedirectTo: location.origin },
-            })
-          : await db.auth.signInWithPassword({
-              email: authEmail(access),
-              password,
-            });
+      const r = await db.auth.signInWithPassword({
+        email: authEmail(access),
+        password,
+      });
       if (r.error) throw r.error;
-      if (authMode === "activate") {
-        setMessage(
-          "Confira seu e-mail para confirmar o primeiro acesso do mestre.",
-        );
-        setAuthMode("login");
-      }
     } catch (e) {
       report(e);
     } finally {
@@ -360,43 +346,29 @@ export default function Onix() {
           </h1>
           <p>Use o acesso e a senha entregues pelo mestre.</p>
           <form onSubmit={authenticate}>
-            <h2>{authMode === "login" ? "Entrar" : "Ativar mestre"}</h2>
+            <h2>Entrar</h2>
             <label>
-              {authMode === "login" ? "Acesso" : "E-mail autorizado do mestre"}
+              Acesso
               <input
                 name="access"
-                type={authMode === "login" ? "text" : "email"}
+                type="text"
                 required
                 autoComplete="username"
               />
             </label>
             <label>
-              {authMode === "login" ? "Senha" : "Criar senha"}
+              Senha
               <input
                 name="password"
                 type="password"
                 minLength={8}
                 required
-                autoComplete={
-                  authMode === "activate" ? "new-password" : "current-password"
-                }
+                autoComplete="current-password"
               />
             </label>
             <button className="primary" disabled={busy}>
               {busy ? "Aguarde…" : "Continuar"}
             </button>
-            <div className="authlinks">
-              <button
-                type="button"
-                onClick={() =>
-                  setAuthMode(authMode === "login" ? "activate" : "login")
-                }
-              >
-                {authMode === "login"
-                  ? "Primeiro acesso do mestre"
-                  : "Voltar para entrar"}
-              </button>
-            </div>
           </form>
           <p role="status">{message}</p>
         </section>
