@@ -1,0 +1,36 @@
+{
+  "package": "Fenix Claude Import",
+  "catalogFile": "lib/data/book-catalog.json",
+  "characterOptionsFile": "lib/data/character-options.json",
+  "totalRecords": 2559,
+  "byKind": {
+    "Poder": 933,
+    "Ritual": 1000,
+    "Arma": 111,
+    "Item": 515
+  },
+  "bySource": {
+    "Livro de Regras v1.3": 395,
+    "Sobrevivendo ao Horror": 216,
+    "Arquivos Secretos #6 v1.0": 27,
+    "Arquivos Secretos #7 v1.1": 16,
+    "EaF — Biblioteca Ritualística 0.7.5": 450,
+    "EaF — Arsenal dos Agentes 0.91": 1455
+  },
+  "sourceFilesAvailable": [
+    "livro de regras ordem_compressed.pdf",
+    "sobrevivendo-ao-horror-v1_compressed.pdf",
+    "Arquivos-Secretos-06-v1.0.pdf",
+    "Arquivos-Secretos-07-v1.1.pdf.pdf",
+    "EaF - Guia das Marcas 0.6.7.pdf",
+    "EaF - Biblioteca Ritualística v0.7.5.pdf",
+    "Expandindo a Fenda - Arsenal dos Agentes v0.91.pdf"
+  ],
+  "verificationStatus": "structured_catalog_extracted; page-by-page audit still recommended",
+  "rules": [
+    "Preserve source and page metadata.",
+    "Do not fabricate missing descriptions or mechanics.",
+    "Keep duplicates when their source or version differs; mark them for review.",
+    "Do not expose credentials or add secrets to the project."
+  ]
+}

@@ -1,17 +1,63 @@
-import {z} from 'zod';
-export const CLASSES=['combatente','especialista','ocultista','sobrevivente'] as const;
-export const ATTRS=['AGI','FOR','INT','PRE','VIG'] as const;
-export const SKILLS:Record<string,typeof ATTRS[number]>={Acrobacia:'AGI',Adestramento:'PRE',Artes:'PRE',Atletismo:'FOR',Atualidades:'INT',Ciências:'INT',Crime:'AGI',Diplomacia:'PRE',Enganação:'PRE',Fortitude:'VIG',Furtividade:'AGI',Iniciativa:'AGI',Intimidação:'PRE',Intuição:'PRE',Investigação:'INT',Luta:'FOR',Medicina:'INT',Ocultismo:'INT',Percepção:'PRE',Pilotagem:'AGI',Pontaria:'AGI',Profissão:'INT',Reflexos:'AGI',Religião:'PRE',Sobrevivência:'INT',Tática:'INT',Tecnologia:'INT',Vontade:'PRE'};
-const bounded=z.number().int().min(0).max(9999);
-const stat=z.object({current:bounded,max:bounded}).refine(s=>s.current<=s.max,'O valor atual não pode superar o máximo.');
-export const itemSchema=z.object({id:z.string().max(160),catalogId:z.string().max(160).default(''),name:z.string().min(1).max(150),kind:z.string().max(60),description:z.string().max(30000).default(''),source:z.string().max(150).default('Personalizado'),element:z.string().max(40).default('neutro'),circle:z.number().int().min(0).max(4).default(0),spaces:z.number().min(0).max(100).default(0),quantity:z.number().int().min(1).max(999).default(1),damage:z.string().max(50).default(''),critical:z.string().max(50).default(''),category:z.string().max(20).default('0'),range:z.string().max(40).default(''),base:z.string().max(30000).default(''),discente:z.string().max(15000).default(''),verdadeiro:z.string().max(15000).default(''),cost:z.number().int().min(0).max(999).default(0),equipped:z.boolean().default(false)});
-export const sheetSchema=z.object({name:z.string().trim().min(1).max(100),player:z.string().max(100).default(''),class:z.enum(CLASSES).default('combatente'),nex:z.number().int().min(0).max(99).default(35),level:z.number().int().min(1).max(20).default(7),stage:z.number().int().min(1).max(5).default(1),separateLevel:z.boolean().default(false),resourceMode:z.enum(['pd','standard']).default('pd'),affinity:z.string().max(40).default(''),attributes:z.object({AGI:z.number().int().min(0).max(10),FOR:z.number().int().min(0).max(10),INT:z.number().int().min(0).max(10),PRE:z.number().int().min(0).max(10),VIG:z.number().int().min(0).max(10)}).default({AGI:1,FOR:1,INT:1,PRE:1,VIG:1}),pv:stat,pd:stat,pe:stat,san:stat,defenseBonus:z.number().int().min(-100).max(100).default(0),movement:z.number().min(0).max(100).default(9),skills:z.record(z.number().int().min(-50).max(100)).default({}),items:z.array(itemSchema).max(500).default([]),conditions:z.array(z.string().max(80)).max(30).default([]),notes:z.string().max(30000).default(''),appearance:z.string().max(5000).default(''),survival:z.object({food:bounded,water:bounded,ammo:bounded,infection:z.number().int().min(0).max(100)}).default({food:0,water:0,ammo:0,infection:0})});
-export type Sheet=z.infer<typeof sheetSchema>;export type Item=z.infer<typeof itemSchema>;
-export type Character={id:string;data:Sheet;revision:number;ownerId:string|null;claimCode?:string;updatedAt:string};
-export function levelOf(s:Sheet){return s.class==='sobrevivente'?0:s.separateLevel?s.level:s.nex===99?20:Math.max(1,Math.floor(s.nex/5));}
-export function expected(s:Sheet){const v=s.attributes.VIG,p=s.attributes.PRE,l=levelOf(s),k=Math.max(0,l-1);if(s.class==='sobrevivente')return {pv:8+v+2*(s.stage-1),pd:4+p+2*(s.stage-1),pe:2+p+(s.stage-1),san:8+2*(s.stage-1)};const t={combatente:[20,4,6,3,2,2,12,3],especialista:[16,3,8,4,3,3,16,4],ocultista:[12,2,10,5,4,4,20,5]}[s.class];return {pv:t[0]+v+k*(t[1]+v),pd:t[2]+p+k*(t[3]+p),pe:t[4]+p+k*(t[5]+p),san:t[6]+k*t[7]};}
-export function freshSheet(name='Novo sobrevivente'):Sheet{return recalculate(sheetSchema.parse({name,pv:{current:1,max:1},pd:{current:1,max:1},pe:{current:1,max:1},san:{current:1,max:1}}));}
-export function recalculate(s:Sheet):Sheet{const e=expected(s);return {...s,...Object.fromEntries(Object.entries(e).map(([key,max])=>[key,{max,current:Math.max(0,max-(s[key as 'pv'].max-s[key as 'pv'].current))}]))};}
-export function capacity(s:Sheet){return s.attributes.FOR===0?2:s.attributes.FOR*5;}
-export function usedSpaces(s:Sheet){return s.items.reduce((sum,i)=>sum+i.spaces*i.quantity,0);}
-export function roll(expression:string,mode:'sum'|'max'|'min',random=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296){const m=/^(\d{1,2})d(\d{1,4})([+-]\d{1,4})?$/i.exec(expression.replace(/\s/g,''));if(!m)throw Error('Use uma expressão como 2d20+5.');const n=Number(m[1]),faces=Number(m[2]),bonus=Number(m[3]||0);if(n<1||n>40||faces<2||faces>1000)throw Error('Use de 1 a 40 dados, com 2 a 1000 faces.');const results=Array.from({length:n},()=>Math.floor(random()*faces)+1);return {expression,mode,results,total:(mode==='sum'?results.reduce((a,b)=>a+b,0):mode==='min'?Math.min(...results):Math.max(...results))+bonus};}
+import type { Agent, Item } from "./rules";
+export type Campaign = {
+  id: string;
+  owner_id?: string;
+  name: string;
+  description: string;
+  element: string;
+  notes: string;
+  rules: string;
+  invite_code?: string;
+};
+export type Roll = {
+  id: string;
+  campaign_id: string | null;
+  actor_id?: string;
+  agentName: string;
+  label: string;
+  expression: string;
+  dice: number[];
+  total: number;
+  secret: boolean;
+  created_at: string;
+};
+export type Participant = {
+  id: string;
+  name: string;
+  initiative: number;
+  pv: number;
+  maxPv: number;
+  hidden: boolean;
+  conditions: string;
+};
+export type Encounter = {
+  id: string;
+  campaign_id: string | null;
+  name: string;
+  round: number;
+  turn: number;
+  active: boolean;
+  participants: Participant[];
+};
+export type Brew = Item & { version: number; source: string };
+export type Member = {
+  id: string;
+  campaign_id: string;
+  user_id: string;
+  status: string;
+  display_name: string;
+};
+export type State = {
+  agents: Agent[];
+  campaigns: Campaign[];
+  rolls: Roll[];
+  encounters: Encounter[];
+  brews: Brew[];
+};
+export const emptyState: State = {
+  agents: [],
+  campaigns: [],
+  rolls: [],
+  encounters: [],
+  brews: [],
+};

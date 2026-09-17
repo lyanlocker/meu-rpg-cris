@@ -1,2 +1,4 @@
-import Onix from './onix';
-export default function Page(){return <Onix/>;}
+import AgentList from "@/components/agent-list";
+export default function Page() {
+  return <AgentList />;
+}
